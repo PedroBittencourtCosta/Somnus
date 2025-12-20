@@ -25,6 +25,10 @@ class RespostaQuestionario(models.Model):
     questionario = models.ForeignKey(Questionario, on_delete=models.CASCADE)
     data_submissao = models.DateTimeField(auto_now_add=True) 
 
+    class Meta:
+        verbose_name = 'Resposta de Questionário'
+        verbose_name_plural = 'Respostas dos Questionários'
+
 class RespostaPergunta(models.Model):
     resposta_questionario = models.ForeignKey(RespostaQuestionario, related_name='respostas', on_delete=models.CASCADE)
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
@@ -35,3 +39,7 @@ class RegraEquacao(models.Model):
     questionario = models.OneToOneField(Questionario, on_delete=models.CASCADE)
     nome = models.CharField(max_length=100) 
     logica = models.TextField(help_text="Explicação ou fórmula para o cálculo")
+
+    class Meta:
+        verbose_name = 'Regra de Cálculo'
+        verbose_name_plural = 'Regras de Cálculos'

@@ -11,3 +11,7 @@ class AceiteTCLE(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     tcle = models.ForeignKey(TCLE, on_delete=models.CASCADE)
     data_aceite = models.DateTimeField(auto_now_add=True) 
+
+    class Meta:
+        verbose_name = 'Aceite de TCLE'
+        verbose_name_plural = 'Aceites de TCLE'
