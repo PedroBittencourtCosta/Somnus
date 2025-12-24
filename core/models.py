@@ -15,11 +15,28 @@ class Pergunta(models.Model):
     
     questionario = models.ForeignKey(Questionario, related_name='perguntas', on_delete=models.CASCADE)
     conteudo = models.TextField()
-    ordem = models.IntegerField(default=0)
+    ordem = models.PositiveIntegerField(default=1, help_text="A ordem será sugerida automaticamente.")
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default='MC')
+
+    class Meta:
+        verbose_name = 'Pergunta'
+        verbose_name_plural = 'Perguntas'
+        # ESTA LINHA ABAIXO É O QUE RESOLVE O ERRO:
+        ordering = ['ordem']
 
     def __str__(self):
         return self.conteudo
+    
+    def save(self, *args, **kwargs):
+        # Se for uma nova pergunta (não tem ID ainda) e a ordem for 0
+        if not self.pk and self.ordem == 0:
+            ultimo = Pergunta.objects.filter(questionario=self.questionario).order_by('-ordem').first()
+            if ultimo:
+                self.ordem = ultimo.ordem + 1
+            else:
+                self.ordem = 1
+        super().save(*args, **kwargs)
+
 
 class Alternativa(models.Model):
     pergunta = models.ForeignKey(Pergunta, related_name='alternativas', on_delete=models.CASCADE)
