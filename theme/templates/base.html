@@ -1,26 +1,25 @@
 {% load static tailwind_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-    <title>Django Tailwind</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}SOMNUS - Avaliação do Sono{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     {% tailwind_css %}
 </head>
+<body class="font-poppins bg-gray-50 text-somnus-blue-deep flex flex-col min-h-screen">
+    {% include 'partials/_navbar.html' %}
 
-<body class="bg-gray-50 text-black font-serif leading-normal tracking-normal">
+    <main class="flex-grow">
+        {% block content %}
+        {% endblock content %}
+    </main>
 
-    <div class="toast toast-top toast-end">
-        <div class="alert alert-info">
-            <span>Hello from daisyUi 👋</span>
-        </div>
-    </div>
+    {% include 'partials/_footer.html' %}
 
-<div class="container mx-auto">
-    <section class="flex items-center justify-center h-screen">
-        <h1 class="text-5xl">Django + Tailwind = ❤️</h1>
-    </section>
-</div>
+    {% block extra_js %}{% endblock extra_js %}
 </body>
 </html>
