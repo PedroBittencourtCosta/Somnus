@@ -1,5 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Importação principal do Tailwind v4 */
+@import "tailwindcss";
+
+/* Plugins do Flowbite e Tailwind (v4 usa diretiva @plugin) */
+@plugin "flowbite/plugin";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/aspect-ratio";
+
+/* Onde o Tailwind deve procurar classes (substitui o 'content' do .js) */
+@source "../templates/**/*.html";
+@source "../../templates/**/*.html";
+@source "../../**/templates/**/*.html";
+@source "../node_modules/flowbite";
+
+@theme {
+  /* Configuração de Fontes */
+  --font-poppins: "Poppins", sans-serif;
+  --font-sans: var(--font-poppins);
+
+  /* Suas Cores Customizadas (Variáveis CSS na v4) */
+  --color-somnus-blue-deep: #253786;
+  --color-somnus-blue-inst: #0067b1;
+  --color-somnus-green-light: #76b82a;
+  --color-somnus-green-dark: #009640;
+}
