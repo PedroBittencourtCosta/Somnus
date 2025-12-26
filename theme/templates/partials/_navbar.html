@@ -1,27 +1,33 @@
+{% load static %}
 <nav class="bg-white border-b border-gray-100 font-poppins sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4">
-        <div class="flex justify-between items-center h-16">
-            <div class="flex-shrink-0 text-2xl font-bold text-somnus-blue-deep">
-                SOMNUS
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-20">
+            
+            <div class="flex-shrink-0 flex items-center">
+                <a href="/">
+                    <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" class="h-10 md:h-12 w-auto">
+                </a>
             </div>
 
-            <div class="hidden md:block flex-1 max-w-md mx-8">
-                <div class="relative">
+            <div class="hidden md:flex flex-1 justify-center px-10">
+                <div class="relative w-full max-w-md">
                     <input type="text" placeholder="Buscar questionários" 
-                           class="w-full bg-gray-100 border-none rounded-full py-2 px-4 focus:ring-2 focus:ring-somnus-blue-inst">
+                           class="w-full bg-gray-100 border-none rounded-full py-2.5 px-5 focus:ring-2 focus:ring-somnus-blue-inst text-sm">
                 </div>
             </div>
 
-            <div class="hidden md:flex items-center space-x-6">
-                <a href="#" class="text-gray-600 hover:text-somnus-blue-deep">Início</a>
-                <a href="#" class="text-gray-600 hover:text-somnus-blue-deep">Avaliação</a>
-                <a href="#" class="text-gray-600 hover:text-somnus-blue-deep">Notificações</a>
-                <a href="#" class="bg-somnus-blue-deep text-white px-6 py-2 rounded-full hover:bg-somnus-blue-inst transition">Entrar</a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#" class="text-gray-600 hover:text-somnus-blue-deep font-medium text-sm transition">Avaliação</a>
+                <a href="#" class="bg-somnus-blue-deep text-white px-8 py-2.5 rounded-full font-semibold text-sm hover:bg-somnus-blue-inst transition shadow-sm">
+                    Entrar
+                </a>
             </div>
 
-            <div class="md:hidden">
-                <button class="text-somnus-blue-deep p-2">
-                    <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+            <div class="md:hidden flex items-center">
+                <button type="button" class="text-somnus-blue-deep p-2 focus:outline-none">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+                    </svg>
                 </button>
             </div>
         </div>
