@@ -1,11 +1,11 @@
 {% load static %}
 <nav class="bg-white border-b border-gray-100 font-poppins sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-20">
+        <div class="flex justify-between items-center h-16 md:h-20">
             
             <div class="flex-shrink-0 flex items-center">
-                <a href="/">
-                    <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" class="h-10 md:h-12 w-auto">
+                <a href="/" class="flex items-center">
+                    <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" class="h-7 w-auto md:h-12 transition-all">
                 </a>
             </div>
 
@@ -23,10 +23,20 @@
                 </a>
             </div>
 
-            <div class="md:hidden flex items-center">
-                <button type="button" class="text-somnus-blue-deep p-2 focus:outline-none">
-                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+            <div class="md:hidden flex items-center gap-1">
+                <button type="button" class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                    </svg>
+                </button>
+
+                <a href="#" class="bg-somnus-blue-deep text-white px-3 py-1.5 rounded-lg font-semibold text-[11px] hover:bg-somnus-blue-inst transition whitespace-nowrap">
+                    Entrar
+                </a>
+
+                <button data-collapse-toggle="mobile-menu" type="button" class="inline-flex items-center p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none">
+                    <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h14"/>
                     </svg>
                 </button>
             </div>
