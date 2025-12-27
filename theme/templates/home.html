@@ -1,9 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="flex flex-col min-h-[80vh]">
+<div class="flex flex-col">
 
-    <section class="flex flex-col items-center justify-center px-6 py-20 md:py-32 text-center bg-white">
+    <section class="flex flex-col items-center justify-center px-6 py-20 md:min-h-[90vh] text-center bg-white relative">
         <h1 class="text-4xl md:text-7xl font-extrabold text-somnus-blue-deep mb-8 leading-tight tracking-tight">
             Avaliação da <br> 
             <span class="text-somnus-blue-inst">Qualidade do Sono</span>
@@ -13,17 +13,21 @@
             Utilizamos protocolos validados para analisar sua saúde noturna e fornecer um prognóstico personalizado sobre Transtornos Mentais Comuns (TMC).
         </p>
 
-        <div class="flex flex-col sm:flex-row gap-4 items-center">
+        <div class="flex flex-col items-center gap-10 md:gap-14">
             <a href="#" class="bg-somnus-green-dark hover:bg-somnus-green-light text-white px-12 py-4 rounded-full font-bold text-xl transition-all shadow-lg hover:scale-105 transform">
                 Avaliar agora
             </a>
-            <a href="#como-funciona" class="text-somnus-blue-deep font-semibold hover:underline px-6 py-4">
-                Saiba como funciona ↓
+            
+            <a href="#como-funciona" class="text-somnus-blue-deep font-semibold hover:underline flex flex-col items-center gap-2 group">
+                <span class="text-lg">Saiba como funciona</span>
+                <svg class="w-6 h-6 animate-bounce group-hover:text-somnus-blue-inst" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7"></path>
+                </svg>
             </a>
         </div>
     </section>
 
-    <section id="como-funciona" class="bg-gray-100/50 py-20 px-6 border-t border-gray-100">
+    <section id="como-funciona" class="bg-gray-100/50 py-24 px-6 border-t border-gray-100">
         <div class="max-w-7xl mx-auto">
             <div class="text-center mb-16">
                 <h2 class="text-3xl md:text-4xl font-bold text-somnus-blue-deep mb-4">Como funciona a nossa avaliação</h2>
