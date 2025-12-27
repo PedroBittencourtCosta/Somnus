@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     'theme',
     'accounts',
     'ethics',
+    'adminsortable2',
 ]
 
 TAILWIND_APP_NAME = 'theme'

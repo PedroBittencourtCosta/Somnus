@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="flex flex-col">
+
+    <section class="flex flex-col items-center justify-center px-6 py-20 md:min-h-[90vh] text-center bg-white relative">
+        <h1 class="text-4xl md:text-7xl font-extrabold text-somnus-blue-deep mb-8 leading-tight tracking-tight">
+            Avaliação da <br> 
+            <span class="text-somnus-blue-inst">Qualidade do Sono</span>
+        </h1>
+
+        <p class="text-gray-600 text-lg md:text-xl mb-12 max-w-3xl leading-relaxed mx-auto">
+            Utilizamos protocolos validados para analisar sua saúde noturna e fornecer um prognóstico personalizado sobre Transtornos Mentais Comuns (TMC).
+        </p>
+
+        <div class="flex flex-col items-center gap-10 md:gap-14">
+            <a href="#" class="bg-somnus-green-dark hover:bg-somnus-green-light text-white px-12 py-4 rounded-full font-bold text-xl transition-all shadow-lg hover:scale-105 transform">
+                Avaliar agora
+            </a>
+            
+            <a href="#como-funciona" class="text-somnus-blue-deep font-semibold hover:underline flex flex-col items-center gap-2 group">
+                <span class="text-lg">Saiba como funciona</span>
+                <svg class="w-6 h-6 animate-bounce group-hover:text-somnus-blue-inst" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7"></path>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <section id="como-funciona" class="bg-gray-100/50 py-24 px-6 border-t border-gray-100">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl md:text-4xl font-bold text-somnus-blue-deep mb-4">Como funciona a nossa avaliação</h2>
+                <div class="h-1.5 w-20 bg-somnus-green-dark mx-auto rounded-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition">
+                    <div class="w-16 h-16 bg-blue-50 text-somnus-blue-inst rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        📋
+                    </div>
+                    <h3 class="text-xl font-bold text-somnus-blue-deep mb-4">Questionário</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        Responda perguntas sobre sua rotina, hábitos de sono e sintomas emocionais de forma segura.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition">
+                    <div class="w-16 h-16 bg-blue-50 text-somnus-blue-inst rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        🧠
+                    </div>
+                    <h3 class="text-xl font-bold text-somnus-blue-deep mb-4">Processamento</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        Nossa ferramenta processa suas respostas cruzando dados de qualidade de sono com indicadores de saúde mental.
+                    </p>
+                </div>
+
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center text-center hover:shadow-md transition">
+                    <div class="w-16 h-16 bg-blue-50 text-somnus-blue-inst rounded-2xl flex items-center justify-center text-3xl mb-6">
+                        📄
+                    </div>
+                    <h3 class="text-xl font-bold text-somnus-blue-deep mb-4">Resultado</h3>
+                    <p class="text-gray-500 text-sm leading-relaxed">
+                        Receba um prognóstico imediato e recomendações personalizadas para melhorar seu bem-estar.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

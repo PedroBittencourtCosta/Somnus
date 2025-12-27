@@ -1,11 +1,28 @@
-@import "tailwindcss";
-@plugin "daisyui";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/**
-  * A catch-all path to Django template files, JavaScript, and Python files
-  * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
-  *
-  * If your final CSS file is not being updated after code changes, you may want to broaden or narrow
-  * the scope of this path.
-  */
-@source "../../../**/*.{html,py,js}";
+/* Importação principal do Tailwind v4 */
+@import "tailwindcss";
+
+/* Plugins do Flowbite e Tailwind (v4 usa diretiva @plugin) */
+@plugin "flowbite/plugin";
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+@plugin "@tailwindcss/aspect-ratio";
+
+/* Onde o Tailwind deve procurar classes (substitui o 'content' do .js) */
+@source "../templates/**/*.html";
+@source "../../templates/**/*.html";
+@source "../../**/templates/**/*.html";
+@source "../node_modules/flowbite";
+
+@theme {
+  /* Configuração de Fontes */
+  --font-poppins: "Poppins", sans-serif;
+  --font-sans: var(--font-poppins);
+
+  /* Suas Cores Customizadas (Variáveis CSS na v4) */
+  --color-somnus-blue-deep: #253786;
+  --color-somnus-blue-inst: #0067b1;
+  --color-somnus-green-light: #76b82a;
+  --color-somnus-green-dark: #009640;
+}
