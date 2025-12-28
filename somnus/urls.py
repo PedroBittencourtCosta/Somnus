@@ -11,7 +11,8 @@ admin.site.index_title = "Bem-vindo ao Gerenciador da Pesquisa"
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.index_view),
+    path('', views.index_view, name="home"),
+    path("accounts/", include("accounts.urls")),
 ]
 
 if settings.DEBUG:

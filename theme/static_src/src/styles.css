@@ -26,3 +26,8 @@
   --color-somnus-green-light: #76b82a;
   --color-somnus-green-dark: #009640;
 }
+
+div[modal-backdrop] {
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Quase transparente */
+    backdrop-filter: blur(4px); /* Desfoca o que está atrás */
+}

@@ -23,10 +23,16 @@ class Usuario(AbstractUser):
 
     SEXO_CHOICES = [('F', 'Feminino'), ('M', 'Masculino')]
 
+    email = models.EmailField('E-mail', unique=True)
+
     sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
     cor_raca = models.CharField(max_length=1, choices=COR_RACA_CHOICES) # [cite: 639]
     estado_civil = models.CharField(max_length=1, choices=ESTADO_CIVIL_CHOICES) # [cite: 639]
     data_nascimento = models.DateField(null=True, blank=True)
+
+    USERNAME_FIELD = 'email'
+    # Campos obrigatórios ao criar superusuário via terminal (além do e-mail e senha)
+    REQUIRED_FIELDS = ['username']
 
     def __str__(self):
         return self.username
