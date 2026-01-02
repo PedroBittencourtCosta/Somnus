@@ -25,10 +25,10 @@
                         <a href="{% url 'logout' %}" class="text-red-500 hover:text-red-700 font-bold text-sm transition">Sair</a>
                     </div>
                 {% else %}
-                    <button data-modal-target="login-modal" data-modal-toggle="login-modal" type="button" 
+                    <a href="{% url 'login' %}" 
                         class="bg-somnus-blue-deep text-white px-8 py-2.5 rounded-full font-semibold text-sm hover:bg-somnus-blue-inst transition shadow-sm">
                         Entrar
-                    </button>
+                    </a>
                 {% endif %}
             </div>
 
@@ -42,10 +42,10 @@
                 {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}" class="text-red-500 font-bold text-sm px-4">Sair</a>
                 {% else %}
-                    <button data-modal-target="login-modal" data-modal-toggle="login-modal" type="button" 
+                    <a href="{% url 'login' %}" 
                         class="bg-somnus-blue-deep text-white px-6 py-2 rounded-full font-semibold text-xs hover:bg-somnus-blue-inst transition shadow-sm">
                         Entrar
-                    </button>
+                    </a>
                 {% endif %}
 
                 <button data-collapse-toggle="mobile-menu" type="button" class="inline-flex items-center p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none">

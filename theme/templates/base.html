@@ -12,8 +12,6 @@
 </head>
 <body class="font-poppins bg-gray-50 text-somnus-blue-deep flex flex-col min-h-screen">
     {% include 'partials/_navbar.html' %}
-    
-    {% include 'modal_login.html' %}
 
     <main class="flex-grow">
         {% block content %}
@@ -23,19 +21,7 @@
     {% include 'partials/_footer.html' %}
 
     {% block extra_js %}{% endblock extra_js %}
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            // Verifica se existe uma mensagem de erro na página
-            const hasError = document.getElementById('alert-login');
-            
-            if (hasError) {
-                // Inicializa e abre o modal do Flowbite automaticamente
-                const $targetEl = document.getElementById('login-modal');
-                const modal = new Modal($targetEl);
-                modal.show();
-            }
-        });
-    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/flowbite@3.0.0/dist/flowbite.min.js"></script>
 </body>
 </html>
