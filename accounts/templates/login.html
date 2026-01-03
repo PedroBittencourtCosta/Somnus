@@ -14,20 +14,14 @@
 
     <div class="w-full max-w-md">
         
-        <div class="mb-6">
-            <a href="/" class="inline-flex items-center text-sm text-gray-500 hover:text-somnus-blue-deep transition">
-                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-                </svg>
-                Voltar para o início
-            </a>
-        </div>
 
-        <div class="bg-white rounded-[2.5rem] shadow-2xl border border-gray-100 p-8 md:p-12">
+        <div class="bg-white rounded-lg shadow-md border border-gray-100
+            px-8 py-24
+            md:px-12 md:py-16">
+
             
-            <div class="text-center mb-10">
+            <div class="text-center mb-10 ">
                 <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" class="h-12 w-auto mx-auto mb-6">
-                <h2 class="text-3xl font-bold text-somnus-blue-deep">Entrar</h2>
                 <p class="text-sm text-gray-500 mt-3 px-4 leading-relaxed">
                     Ao continuar, você concorda com nosso Contrato de Usuário e Política de Privacidade.
                 </p>
@@ -64,10 +58,17 @@
                     </div>
                 </div>
 
-                <button type="submit" 
-                    class="w-full bg-somnus-blue-deep text-white font-bold py-5 rounded-full shadow-lg transition-all hover:bg-somnus-blue-inst transform active:scale-95 text-lg">
-                    Continuar
-                </button>
+                <div class="flex justify-center">
+                    <button type="submit"
+                        class="bg-somnus-blue-deep text-white font-bold
+                            px-12 py-8
+                            rounded-full shadow-lg
+                            transition-all hover:bg-somnus-blue-inst
+                            transform active:scale-95
+                            text-lg">
+                        Continuar
+                    </button>
+                </div>
             </form>
 
             <div class="mt-10 text-center">
