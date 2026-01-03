@@ -32,28 +32,47 @@
                 {% endif %}
             </div>
 
-            <div class="md:hidden flex items-center gap-1">
-                <button type="button" class="p-1.5 text-gray-500 hover:bg-gray-100 rounded-full transition">
+            <div class="md:hidden flex items-center">
+                <button type="button" class="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
                     </svg>
                 </button>
 
-                {% if user.is_authenticated %}
-                    <a href="{% url 'logout' %}" class="text-red-500 font-bold text-sm px-4">Sair</a>
-                {% else %}
+                {% if not user.is_authenticated %}
                     <a href="{% url 'login' %}" 
-                        class="bg-somnus-blue-deep text-white px-6 py-2 rounded-full font-semibold text-xs hover:bg-somnus-blue-inst transition shadow-sm">
+                        class="bg-somnus-blue-deep text-white px-6 py-2 rounded-full font-semibold text-xs hover:bg-somnus-blue-inst transition shadow-sm mr-1">
                         Entrar
                     </a>
                 {% endif %}
 
-                <button data-collapse-toggle="mobile-menu" type="button" class="inline-flex items-center p-1.5 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none">
+                <button data-collapse-toggle="mobile-menu" type="button" class="inline-flex items-center p-2 text-gray-500 rounded-lg hover:bg-gray-100 focus:outline-none">
                     <svg class="w-6 h-6 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M5 7h14M5 12h14M5 17h14"/>
                     </svg>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t border-gray-100">
+        <div class="px-4 pt-2 pb-4 space-y-1">
+            <a href="#" class="block px-3 py-3 text-base font-medium text-gray-600 hover:bg-gray-50 rounded-lg">Avaliação</a>
+            
+            {% if user.is_authenticated %}
+                <a href="#" class="flex items-center px-3 py-3 text-base font-medium text-somnus-blue-deep hover:bg-gray-50 rounded-lg">
+                    <svg class="w-6 h-6 mr-3 text-gray-800" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-width="2" d="M7 17v1a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-1a3 3 0 0 0-3-3h-4a3 3 0 0 0-3 3Zm8-9a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"/>
+                    </svg>
+                    Perfil
+                </a>
+                <a href="{% url 'logout' %}" class="flex items-center px-3 py-3 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg">
+                    <svg class="w-6 h-6 mr-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H8m12 0-4 4m4-4-4-4M9 4H7a3 3 0 0 0-3 3v10a3 3 0 0 0 3 3h2"/>
+                    </svg>
+                    Sair
+                </a>
+            {% endif %}
         </div>
     </div>
 </nav>
