@@ -1,0 +1,38 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Painel Somnus - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    {% tailwind_css %}
+</head>
+<body class="font-poppins bg-gray-50 flex min-h-screen">
+    <aside class="w-64 bg-somnus-blue-deep text-white flex-shrink-0 flex flex-col transition-all">
+        <div class="p-6 text-center border-b border-white/10">
+            <img src="{% static 'images/Marca - Sonmus.png' %}" class="h-8 mx-auto brightness-0 invert">
+        </div>
+        <nav class="flex-grow p-4 space-y-2">
+            <p class="text-[10px] uppercase tracking-widest text-white/50 px-3">Gestão</p>
+            <a href="{% url 'admin_pacientes' %}" class="flex items-center p-3 hover:bg-white/10 rounded-xl transition">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                Pacientes
+            </a>
+            <a href="#" class="flex items-center p-3 hover:bg-white/10 rounded-xl transition">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 00 2 2h10a2 2 0 00 2-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 00 2 2h2a2 2 0 00 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"></path></svg>
+                Questionários
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-grow overflow-y-auto">
+        <header class="bg-white border-b border-gray-100 p-6 flex justify-between items-center sticky top-0">
+            <h1 class="text-xl font-bold text-somnus-blue-deep">{% block header_title %}Painel Administrativo{% endblock %}</h1>
+            <span class="text-sm text-gray-500">Olá, Admin</span>
+        </header>
+        <div class="p-8">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+</body>
+</html>
