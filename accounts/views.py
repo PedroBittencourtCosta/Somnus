@@ -3,7 +3,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
 def login_view(request):
-    # 1. Se já estiver logado, não precisa ver o login
+    # 1. Se o usuário já estiver logado, ele é enviado para a home
     if request.user.is_authenticated:
         return redirect('home')
 
@@ -11,21 +11,23 @@ def login_view(request):
         email_login = request.POST.get('email')
         senha_login = request.POST.get('password')
 
+        # O authenticate utiliza o e-mail como username se o seu model estiver configurado assim
         user = authenticate(request, username=email_login, password=senha_login)
 
         if user is not None:
             login(request, user)
+            # Login bem-sucedido: vai para a home do Somnus
             return redirect('home')
         else:
+            # Erro de credenciais: exibe mensagem e permanece na página de login
             messages.error(request, "E-mail ou senha inválidos.")
-            # Redireciona para a mesma página onde o usuário tentou logar
-            return redirect(request.META.get('HTTP_REFERER', 'home'))
+            return render(request, 'login.html')
     
-    # 2. Caso o usuário acesse via barra de endereços (GET)
-    # Enviamos uma mensagem informativa para disparar o JavaScript do modal
-    messages.info(request, "abrir_modal")
-    return redirect('home')
+    # 2. Caso o acesso seja via GET (usuário entrou na URL /login/)
+    # Agora apenas renderizamos a nova página independente
+    return render(request, 'login.html')
 
 def logout_view(request):
+    # Encerra a sessão e manda para a home (onde o usuário verá o botão 'Entrar' novamente)
     logout(request)
     return redirect('home')
