@@ -1,0 +1,94 @@
+/* Importar a fonte Poppins para o Admin */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --somnus-blue: #253786;
+    --somnus-green: #76b82a;
+}
+
+/* Aplicar Poppins em tudo */
+body, h1, h2, h3, .main-sidebar, .nav-link {
+    font-family: 'Poppins', sans-serif !important;
+}
+
+/* Mudar cor da barra lateral (Sidebar) */
+.main-sidebar {
+    background-color: var(--somnus-blue) !important;
+}
+
+/* Ajustar cor de destaque nos itens selecionados da sidebar */
+.nav-pills .nav-link.active, .sidebar-dark-primary .nav-pills .nav-link.active {
+    background-color: var(--somnus-green) !important;
+    color: white !important;
+}
+
+/* Cor do Header (Barra superior) */
+.main-header {
+    border-bottom: 3px solid var(--somnus-green) !important;
+}
+
+/* Botões do Admin */
+.btn-primary, .btn-info {
+    background-color: var(--somnus-blue) !important;
+    border-color: var(--somnus-blue) !important;
+}
+
+.btn-success {
+    background-color: var(--somnus-green) !important;
+    border-color: var(--somnus-green) !important;
+}
+
+/* --- 1. Ajuste da Logo (Remover corte e forma geométrica) --- */
+.brand-link {
+    background: transparent !important; /* Remove fundos ou gradientes extras */
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    height: 64px !important; /* Altura padrão da barra superior */
+    padding: 5px !important;
+    border-bottom: none !important;
+}
+
+/* Remove qualquer forma/triângulo criado por pseudo-elementos */
+.brand-link::before, .brand-link::after {
+    display: none !important;
+}
+
+.brand-link .brand-image {
+    float: none !important;
+    margin: 0 !important;
+    max-height: 50px !important; /* Aumenta um pouco para ocupar o retângulo */
+    width: auto !important;
+    object-fit: contain !important; /* Garante que a imagem não distorça */
+    opacity: 1 !important;
+    box-shadow: none !important;
+}
+
+/* --- 2. Ajuste de Largura da Sidebar e Scroll Horizontal --- */
+:root {
+    /* Ajustamos a largura para dar mais espaço aos textos dos menus */
+    --sidebar-width: 270px; 
+}
+
+/* Aplica a nova largura na sidebar */
+.main-sidebar, 
+.main-sidebar::before {
+    width: var(--sidebar-width) !important;
+}
+
+/* Ajusta o conteúdo principal para não ser sobreposto pela sidebar mais larga */
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .content-wrapper,
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-footer,
+body:not(.sidebar-mini-md):not(.sidebar-mini-xs):not(.layout-top-nav) .main-header {
+    margin-left: var(--sidebar-width) !important;
+}
+
+/* Remove definitivamente a opção de rolagem lateral no menu */
+.sidebar {
+    overflow-x: hidden !important;
+}
+
+/* Ajusta os itens da lista para não "vazarem" para os lados */
+.nav-sidebar .nav-item {
+    width: 100% !important;
+}

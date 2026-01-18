@@ -38,6 +38,9 @@ AUTH_USER_MODEL = 'accounts.Usuario'
 # Application definition
 
 INSTALLED_APPS = [
+
+    'jazzmin',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -147,3 +150,55 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 NPM_BIN_PATH = 'C:\\Program Files\\nodejs\\npm.cmd'
+
+JAZZMIN_SETTINGS = {
+    # Título da aba no navegador
+    "site_title": "Somnus Admin",
+    
+    # Título no painel (Header)
+    "site_header": "Somnus",
+    
+    # Logo que aparece no login e no canto superior esquerdo (deve estar em static)
+    "site_brand": "Somnus",
+    "site_logo": "images/Marca - Sonmus.png", # Ajuste o caminho conforme seu static
+    
+    # Logo para a tela de login (opcional)
+    "login_logo": "images/Marca - Sonmus.png",
+
+    # Mensagem de boas-vindas na tela de login
+    "welcome_sign": "Bem-vindo ao Gerenciador Somnus",
+
+    # Copyright no rodapé
+    "copyright": "Somnus",
+
+    # --- Customização Visual ---
+    # Injetar o CSS customizado que criaremos abaixo
+    "custom_css": "css/admin_custom.css",
+    
+    # UI Builder (deixe True enquanto estiver testando para ver as mudanças ao vivo)
+    "show_ui_builder": True,
+}
+
+JAZZMIN_UI_TWEAKS = {
+    "navbar_small_text": False,
+    "footer_small_text": False,
+    "body_small_text": False,
+    "brand_small_text": False,
+    "brand_colour": "navbar-white", # Cor do texto da marca
+    "accent": "accent-primary",
+    "navbar": "navbar-white navbar-light", # Deixa o topo limpo para destacar a borda verde
+    "no_navbar_border": True,
+    "navbar_fixed": True,
+    "layout_boxed": False,
+    "footer_fixed": False,
+    "sidebar_fixed": True,
+    "sidebar": "sidebar-dark-primary", # Base escura para aplicarmos o blue-deep
+    "sidebar_nav_small_text": False,
+    "sidebar_disable_expand": False,
+    "sidebar_nav_child_indent": False,
+    "sidebar_nav_compact_style": False,
+    "sidebar_nav_legacy_style": False,
+    "sidebar_nav_flat_style": False,
+    "theme": "default",
+    "dark_mode_theme": None,
+}
