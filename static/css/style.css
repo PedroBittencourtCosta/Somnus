@@ -1,0 +1,30 @@
+/* Importação da Fonte Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+:root {
+    /* Configuração de Fontes */
+    --bs-body-font-family: 'Poppins', sans-serif;
+
+    /* Suas Cores Customizadas */
+    --somnus-blue-deep: #253786;
+    --somnus-blue-inst: #0067b1;
+    --somnus-green-light: #76b82a;
+    --somnus-green-dark: #009640;
+
+    /* Sobrescrevendo cores padrão do Bootstrap (Opcional) */
+    --bs-primary: var(--somnus-blue-inst);
+    --bs-success: var(--somnus-green-light);
+}
+
+/* Classes utilitárias para facilitar o uso */
+.text-somnus-blue { color: var(--somnus-blue-deep); }
+.bg-somnus-green { background-color: var(--somnus-green-dark); }
+.btn-somnus {
+    background-color: var(--somnus-blue-inst);
+    color: white;
+    border: none;
+}
+.btn-somnus:hover {
+    background-color: var(--somnus-blue-deep);
+    color: white;
+}

@@ -1,3 +1,4 @@
+{% load static %}
 {% load django_bootstrap5 %}
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -9,12 +10,7 @@
     {# Inserindo o CSS do Bootstrap 5 automaticamente #}
     {% bootstrap_css %}
 
-    <style>
-        /* CSS customizado para dar a identidade do Somnus */
-        body { background-color: #f8f9fa; }
-        .navbar { border-bottom: 2px solid #dee2e6; }
-        .card { border-radius: 12px; }
-    </style>
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
 

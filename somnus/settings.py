@@ -145,8 +145,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
-
-NPM_BIN_PATH = 'C:\\Program Files\\nodejs\\npm.cmd'
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 
 JAZZMIN_SETTINGS = {
     # Título da aba no navegador
