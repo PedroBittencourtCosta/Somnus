@@ -20,7 +20,7 @@
 .text-somnus-blue { color: var(--somnus-blue-deep); }
 .bg-somnus-green { background-color: var(--somnus-green-dark); }
 .btn-somnus {
-    background-color: var(--somnus-blue-inst);
+    background-color: var(--somnus-blue-inst);  
     color: white;
     border: none;
 }
