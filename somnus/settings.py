@@ -48,15 +48,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'django_bootstrap5',
     'core',
-    'tailwind',
-    'theme',
     'accounts',
     'ethics',
     'adminsortable2',
 ]
-
-TAILWIND_APP_NAME = 'theme'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -68,14 +65,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-if DEBUG:
-    # Add django_browser_reload only in DEBUG mode
-    INSTALLED_APPS += ["django_browser_reload"]
+# if DEBUG:
+#     # Add django_browser_reload only in DEBUG mode
+#     INSTALLED_APPS += ["django_browser_reload"]
 
-    # Add django_browser_reload middleware only in DEBUG mode
-    MIDDLEWARE += [
-        "django_browser_reload.middleware.BrowserReloadMiddleware",
-    ]
+#     # Add django_browser_reload middleware only in DEBUG mode
+#     MIDDLEWARE += [
+#         "django_browser_reload.middleware.BrowserReloadMiddleware",
+#     ]
 
 
 ROOT_URLCONF = 'somnus.urls'
@@ -83,7 +80,7 @@ ROOT_URLCONF = 'somnus.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
