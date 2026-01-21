@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 
+from accounts.forms import UsuarioCreationForm
+
 def login_view(request):
     # 1. Se já estiver logado, não precisa ver o login
     if request.user.is_authenticated:
@@ -29,3 +31,16 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
+
+def cadastro_view(request):
+    if request.method == 'POST':
+        form = UsuarioCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Cadastro realizado com sucesso! Faça login para continuar.')
+            messages.info(request, 'abrir_modal') 
+            return redirect('home')
+    else:
+        form = UsuarioCreationForm()
+    
+    return render(request, 'cadastro.html', {'form': form})
