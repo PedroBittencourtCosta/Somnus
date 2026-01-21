@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="home-wrapper">
+
+    <section class="d-flex flex-column align-items-center justify-content-center px-3 py-5 min-vh-100 text-center bg-white">
+        <h1 class="display-3 fw-bolder mb-4 leading-tight tracking-tight" style="color: var(--somnus-blue-deep);">
+            Avaliação da <br> 
+            <span style="color: var(--somnus-blue-inst);">Qualidade do Sono</span>
+        </h1>
+
+        <p class="lead text-muted mb-5 mx-auto" style="max-width: 800px;">
+            Utilizamos protocolos validados para analisar sua saúde noturna e fornecer um prognóstico personalizado sobre sua saúde e bem-estar.
+        </p>
+
+        <div class="d-flex flex-column align-items-center gap-4">
+            <a href="#" class="btn btn-lg px-5 py-3 rounded-pill fw-bold text-white shadow-lg btn-evaluate" 
+               style="background-color: var(--somnus-green-dark); font-size: 1.25rem; transition: transform 0.2s;">
+                Avaliar agora
+            </a>
+            
+            <a href="#como-funciona" class="text-decoration-none fw-semibold d-flex flex-column align-items-center gap-2 mt-4" 
+               style="color: var(--somnus-blue-deep);">
+                <span class="fs-5">Saiba como funciona</span>
+                <svg width="24" height="24" class="animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7-7-7m14-8l-7 7-7-7"></path>
+                </svg>
+            </a>
+        </div>
+    </section>
+
+    <section id="como-funciona" class="py-5 bg-light border-top w-100">
+        <div class="container py-5"> <div class="text-center mb-5">
+                <h2 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">Como funciona a nossa avaliação</h2>
+                <div class="mx-auto rounded-pill" style="height: 6px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+            </div>
+
+            <div class="row g-4 mt-2">
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center hover-shadow transition">
+                        <div class="mx-auto bg-primary bg-opacity-10 rounded-4 d-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px; font-size: 2rem;">
+                            📋
+                        </div>
+                        <h3 class="h5 fw-bold mb-3" style="color: var(--somnus-blue-deep);">Questionário</h3>
+                        <p class="text-muted small leading-relaxed">
+                            Responda perguntas sobre sua rotina, hábitos de sono e sintomas de forma segura.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center hover-shadow transition">
+                        <div class="mx-auto bg-primary bg-opacity-10 rounded-4 d-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px; font-size: 2rem;">
+                            🧠
+                        </div>
+                        <h3 class="h5 fw-bold mb-3" style="color: var(--somnus-blue-deep);">Processamento</h3>
+                        <p class="text-muted small leading-relaxed">
+                            Nossa ferramenta processa suas respostas cruzando dados de qualidade de sono com indicadores de saúde.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm p-4 rounded-4 text-center hover-shadow transition">
+                        <div class="mx-auto bg-primary bg-opacity-10 rounded-4 d-flex align-items-center justify-content-center mb-4" style="width: 64px; height: 64px; font-size: 2rem;">
+                            📄
+                        </div>
+                        <h3 class="h5 fw-bold mb-3" style="color: var(--somnus-blue-deep);">Resultado</h3>
+                        <p class="text-muted small leading-relaxed">
+                            Receba um prognóstico imediato e recomendações personalizadas para melhorar seu bem-estar.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<style>
+    .min-vh-100 { min-height: 90vh; }
+    
+    .btn-evaluate:hover {
+        background-color: var(--somnus-green-light) !important;
+        transform: scale(1.05);
+    }
+
+    .hover-shadow:hover {
+        box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
+        transform: translateY(-5px);
+    }
+
+    .animate-bounce {
+        animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+        40% {transform: translateY(-10px);}
+        60% {transform: translateY(-5px);}
+    }
+</style>
+{% endblock %}
