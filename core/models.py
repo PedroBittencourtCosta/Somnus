@@ -15,7 +15,7 @@ class Secao(models.Model):
     LAYOUT_CHOICES = [('LISTA', 'Lista Vertical'), ('TABELA', 'Tabela (Matriz)')]
     
     questionario = models.ForeignKey(Questionario, related_name='secoes', on_delete=models.CASCADE)
-    titulo = models.CharField(max_length=200, help_text="Ex: Escala DASS-21 ou Dados Demográficos")
+    titulo = models.CharField(blank=True, max_length=200, help_text="Ex: Escala DASS-21 ou Dados Demográficos")
     instrucao = models.TextField(blank=True, help_text="Instruções específicas para esta parte do questionário")
     ordem = models.PositiveIntegerField(default=1)
     layout = models.CharField(max_length=10, choices=LAYOUT_CHOICES, default='LISTA')
