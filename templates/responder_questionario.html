@@ -1,91 +1,85 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
-{% load static %}
-
 {% block content %}
 <div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-9">
-            
+    {% comment %} <div class="mb-5 text-center">
+        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">{{ questionario.titulo }}</h1>
+        <p class="text-muted">{{ questionario.descricao }}</p>
+    </div> {% endcomment %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        {% for secao in secoes %}
             <div class="mb-5">
-                <div class="d-flex justify-content-between align-items-end mb-2">
-                    <h4 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Progresso da Avaliação</h4>
-                    <span class="badge rounded-pill px-3 py-2" style="background-color: var(--somnus-blue-inst);">
-                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
-                    </span>
-                </div>
-                
-                <div class="progress" style="height: 12px; border-radius: 10px; background-color: #e9ecef;">
-                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                         role="progressbar" 
-                         style="width: {{ progresso }}%; background-color: var(--somnus-green-dark);" 
-                         aria-valuenow="{{ progresso }}" aria-valuemin="0" aria-valuemax="100"></div>
-                </div>
-            </div>
-
-            <form method="post" id="form-questionario">
-                {% csrf_token %}
-                
-                {% for pergunta in page_obj %}
-                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
-                    <div class="card-body p-4 p-md-5">
-                        <h5 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">
-                            {{ pergunta.ordem }}. {{ pergunta.conteudo }}
-                        </h5>
-
-                        {% if pergunta.tipo == 'MC' %}
-                            <div class="list-group list-group-flush border-0">
-                                {% for alternativa in pergunta.alternativas.all %}
-                                <label class="list-group-item border-0 py-3 px-0 d-flex align-items-center cursor-pointer">
-                                    <input class="form-check-input me-3" type="radio" 
-                                           name="pergunta_{{ pergunta.id }}" 
-                                           value="{{ alternativa.id }}"
-                                           {% if respostas_preenchidas|get_item:pergunta.id == alternativa.id|stringformat:"s" %}checked{% endif %}
-                                           required>
-                                    <span class="fs-6">{{ alternativa.conteudo }}</span>
-                                </label>
-                                {% endfor %}
-                            </div>
-                        {% else %}
-                            <textarea name="pergunta_{{ pergunta.id }}" class="form-control bg-light border-0 rounded-3 p-3" 
-                                      rows="3" placeholder="Sua resposta..." required>{{ respostas_preenchidas|get_item:pergunta.id }}</textarea>
-                        {% endif %}
+                <h3 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">{{ secao.titulo }}</h3>
+                {% if secao.instrucao %}
+                    <div class="alert alert-light border-start border-4 border-primary mb-4">
+                        {{ secao.instrucao|linebreaks }}
                     </div>
-                </div>
-                {% endfor %}
+                {% endif %}
 
-                <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
-                    {% if page_obj.has_previous %}
-                        <button type="submit" name="acao" value="anterior" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
-                            ← Anterior
-                        </button>
-                    {% else %}
-                        <div></div> {% endif %}
+                {% if secao.layout == 'TABELA' %}
+                    <div class="table-responsive card shadow-sm rounded-4 p-3">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Pergunta</th>
+                                    {% for alt in secao.perguntas.first.alternativas.all %}
+                                        <th class="text-center">{{ alt.conteudo }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pergunta in secao.perguntas.all %}
+                                    <tr>
+                                        <td>{{ pergunta.conteudo }}</td>
+                                        {% for alternativa in pergunta.alternativas.all %}
+                                            <td class="text-center">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="pergunta_{{ pergunta.id }}" 
+                                                       value="{{ alternativa.id }}" required>
+                                            </td>
+                                        {% endfor %}
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+    {% for pergunta in secao.perguntas.all %}
+        <div class="card border-0 shadow-sm mb-3 rounded-4">
+            <div class="card-body p-4">
+                <p class="fw-bold mb-3">{{ pergunta.conteudo }}</p>
+                
+                {% if pergunta.tipo == 'MC' %}
+                    {% for alternativa in pergunta.alternativas.all %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input" type="radio" 
+                                   name="pergunta_{{ pergunta.id }}" 
+                                   value="{{ alternativa.id }}" required>
+                            <label class="form-check-label">{{ alternativa.conteudo }}</label>
+                        </div>
+                    {% endfor %}
+                
+                {% elif pergunta.tipo == 'TX' %}
+                                    <div class="mt-2">
+                                        <input type="text" 
+                                            name="pergunta_{{ pergunta.id }}" 
+                                            class="form-control bg-light border-0 rounded-3 p-3" 
+                                            placeholder="Digite sua resposta aqui..."
+                                        >
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        {% endfor %}
 
-                    {% if page_obj.has_next %}
-                        <button type="submit" name="acao" value="proximo" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm" style="background-color: var(--somnus-blue-deep); border: none;">
-                            Próximo →
-                        </button>
-                    {% else %}
-                        <button type="submit" name="acao" value="finalizar" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm" style="background-color: var(--somnus-green-dark); border: none;">
-                            Finalizar e Enviar
-                        </button>
-                    {% endif %}
-                </div>
-            </form>
-
+        <div class="d-grid mt-5">
+            <button type="submit" class="btn btn-primary btn-lg rounded-pill fw-bold">Finalizar e Enviar</button>
         </div>
-    </div>
+    </form>
 </div>
-
-<style>
-    .cursor-pointer { cursor: pointer; }
-    .form-check-input:checked {
-        background-color: var(--somnus-blue-inst);
-        border-color: var(--somnus-blue-inst);
-    }
-    .list-group-item:hover {
-        background-color: #f8f9fa;
-    }
-</style>
 {% endblock %}

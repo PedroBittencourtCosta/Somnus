@@ -9,33 +9,41 @@ class Questionario(models.Model):
 
     def __str__(self):
         return self.titulo
+    
+class Secao(models.Model):
+    # Tipos de layout para a seção
+    LAYOUT_CHOICES = [('LISTA', 'Lista Vertical'), ('TABELA', 'Tabela (Matriz)')]
+    
+    questionario = models.ForeignKey(Questionario, related_name='secoes', on_delete=models.CASCADE)
+    titulo = models.CharField(max_length=200, help_text="Ex: Escala DASS-21 ou Dados Demográficos")
+    instrucao = models.TextField(blank=True, help_text="Instruções específicas para esta parte do questionário")
+    ordem = models.PositiveIntegerField(default=1)
+    layout = models.CharField(max_length=10, choices=LAYOUT_CHOICES, default='LISTA')
+
+    class Meta:
+        ordering = ['ordem']
+        verbose_name = 'Seção'
+        verbose_name_plural = 'Seções'
+
+    def __str__(self):
+        return f"{self.titulo} - {self.questionario.titulo}"
 
 class Pergunta(models.Model):
     TIPO_CHOICES = [('MC', 'Múltipla Escolha'), ('TX', 'Texto Livre')]
     
-    questionario = models.ForeignKey(Questionario, related_name='perguntas', on_delete=models.CASCADE)
+    # Agora a pergunta pertence a uma Seção, não mais direto ao Questionário
+    secao = models.ForeignKey(Secao, related_name='perguntas', on_delete=models.CASCADE)
     conteudo = models.TextField()
-    ordem = models.PositiveIntegerField(default=1, help_text="A ordem será sugerida automaticamente.")
+    ordem = models.PositiveIntegerField(default=1)
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default='MC')
 
     class Meta:
+        ordering = ['ordem']
         verbose_name = 'Pergunta'
         verbose_name_plural = 'Perguntas'
-        # ESTA LINHA ABAIXO É O QUE RESOLVE O ERRO:
-        ordering = ['ordem']
 
     def __str__(self):
         return self.conteudo
-    
-    def save(self, *args, **kwargs):
-        # Se for uma nova pergunta (não tem ID ainda) e a ordem for 0
-        if not self.pk and self.ordem == 0:
-            ultimo = Pergunta.objects.filter(questionario=self.questionario).order_by('-ordem').first()
-            if ultimo:
-                self.ordem = ultimo.ordem + 1
-            else:
-                self.ordem = 1
-        super().save(*args, **kwargs)
 
 
 class Alternativa(models.Model):
@@ -60,6 +68,10 @@ class RespostaPergunta(models.Model):
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
     alternativa = models.ForeignKey(Alternativa, on_delete=models.SET_NULL, null=True, blank=True)
     resposta_texto = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        # Retorna o e-mail do usuário e o início da pergunta para fácil identificação
+        return f"Resp: {self.resposta_questionario.usuario.email} - Pergunta: {self.pergunta.conteudo[:30]}..."
 
 class RegraEquacao(models.Model):
     questionario = models.OneToOneField(Questionario, on_delete=models.CASCADE)
