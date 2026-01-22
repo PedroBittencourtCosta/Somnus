@@ -13,6 +13,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index_view, name="home"),
     path("accounts/", include("accounts.urls")),
+    path("questionario/", include("core.urls")),
 ]
 
 # if settings.DEBUG:

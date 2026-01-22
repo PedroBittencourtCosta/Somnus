@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-end mb-2">
+                    <h4 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Progresso da Avaliação</h4>
+                    <span class="badge rounded-pill px-3 py-2" style="background-color: var(--somnus-blue-inst);">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+                    </span>
+                </div>
+                
+                <div class="progress" style="height: 12px; border-radius: 10px; background-color: #e9ecef;">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" 
+                         style="width: {{ progresso }}%; background-color: var(--somnus-green-dark);" 
+                         aria-valuenow="{{ progresso }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+
+            <form method="post" id="form-questionario">
+                {% csrf_token %}
+                
+                {% for pergunta in page_obj %}
+                <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                    <div class="card-body p-4 p-md-5">
+                        <h5 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">
+                            {{ pergunta.ordem }}. {{ pergunta.conteudo }}
+                        </h5>
+
+                        {% if pergunta.tipo == 'MC' %}
+                            <div class="list-group list-group-flush border-0">
+                                {% for alternativa in pergunta.alternativas.all %}
+                                <label class="list-group-item border-0 py-3 px-0 d-flex align-items-center cursor-pointer">
+                                    <input class="form-check-input me-3" type="radio" 
+                                           name="pergunta_{{ pergunta.id }}" 
+                                           value="{{ alternativa.id }}"
+                                           {% if respostas_preenchidas|get_item:pergunta.id == alternativa.id|stringformat:"s" %}checked{% endif %}
+                                           required>
+                                    <span class="fs-6">{{ alternativa.conteudo }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <textarea name="pergunta_{{ pergunta.id }}" class="form-control bg-light border-0 rounded-3 p-3" 
+                                      rows="3" placeholder="Sua resposta..." required>{{ respostas_preenchidas|get_item:pergunta.id }}</textarea>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+
+                <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+                    {% if page_obj.has_previous %}
+                        <button type="submit" name="acao" value="anterior" class="btn btn-outline-secondary rounded-pill px-4 py-2 fw-bold">
+                            ← Anterior
+                        </button>
+                    {% else %}
+                        <div></div> {% endif %}
+
+                    {% if page_obj.has_next %}
+                        <button type="submit" name="acao" value="proximo" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm" style="background-color: var(--somnus-blue-deep); border: none;">
+                            Próximo →
+                        </button>
+                    {% else %}
+                        <button type="submit" name="acao" value="finalizar" class="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm" style="background-color: var(--somnus-green-dark); border: none;">
+                            Finalizar e Enviar
+                        </button>
+                    {% endif %}
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<style>
+    .cursor-pointer { cursor: pointer; }
+    .form-check-input:checked {
+        background-color: var(--somnus-blue-inst);
+        border-color: var(--somnus-blue-inst);
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+{% endblock %}

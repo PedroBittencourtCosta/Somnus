@@ -38,7 +38,7 @@
 
             <ul class="navbar-nav align-items-md-center gap-md-4 mt-3 mt-md-0">
                 <li class="nav-item">
-                    <a href="#" class="nav-link text-secondary fw-medium" style="font-size: 0.9rem;">Avaliação</a>
+                    <a href="{% url 'lista_questionarios' %}" class="nav-link text-secondary fw-medium" style="font-size: 0.9rem;">Avaliação</a>
                 </li>
 
                 {% if user.is_authenticated %}
