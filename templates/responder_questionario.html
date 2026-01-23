@@ -5,105 +5,122 @@
 <div class="container py-5">
     <div class="mb-5">
         <div class="progress" style="height: 10px; border-radius: 10px;">
-            <div class="progress-bar progress-bar-striped progress-bar-animated" 
-                 role="progressbar" style="width: {{ progresso }}%; background-color: var(--somnus-green-dark);"></div>
-        </div>
-        <div class="text-center mt-2">
-            <small class="text-muted">Etapa {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</small>
+            <div class="progress-bar" role="progressbar" style="width: {{ progresso }}%; background-color: var(--somnus-green-dark);"></div>
         </div>
     </div>
 
     <form method="post" id="form-questionario">
         {% csrf_token %}
         
-        <div class="mb-5">
-            <h2 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">{{ secao.titulo }}</h2>
-            {% if secao.instrucao %}
-                <div class="alert alert-light border-start border-4 border-primary mb-4 shadow-sm">
-                    {{ secao.instrucao|linebreaks }}
-                </div>
-            {% endif %}
+        <h2 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">{{ secao.titulo }}</h2>
+        {% if secao.instrucao %}
+            <div class="alert alert-light border-start border-4 border-primary mb-4 shadow-sm">
+                {{ secao.instrucao|linebreaks }}
+            </div>
+        {% endif %}
 
-            {% if secao.layout == 'TABELA' %}
-                <div class="table-responsive card shadow-sm rounded-4 p-3 border-0">
-                    <table class="table align-middle">
-                        <thead>
-                            <tr>
-                                <th>Questão</th>
-                                {% for alt in secao.perguntas.first.alternativas.all %}
-                                    <th class="text-center">{{ alt.conteudo }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for pergunta in secao.perguntas.all %}
-                                <tr>
-                                    <td class="small fw-bold">{{ pergunta.conteudo }}</td>
-                                    {% for alternativa in pergunta.alternativas.all %}
-                                        <td class="text-center">
-                                            <input class="form-check-input" type="radio" 
-                                                   name="pergunta_{{ pergunta.id }}" 
-                                                   value="{{ alternativa.id }}"
-                                                   {% if respostas_preenchidas|get_item:pergunta.id == alternativa.id|stringformat:"s" %}checked{% endif %}
-                                                   required>
-                                        </td>
-                                    {% endfor %}
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                {% for pergunta in secao.perguntas.all %}
-                    <div class="card border-0 shadow-sm mb-4 rounded-4">
-                        <div class="card-body p-4">
-                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">{{ pergunta.conteudo }}</h5>
-                            
-                            {% if pergunta.tipo == 'MC' %}
-                                {% for alternativa in pergunta.alternativas.all %}
-                                    <div class="form-check mb-2">
-                                        <input class="form-check-input" type="radio" 
-                                               name="pergunta_{{ pergunta.id }}" 
-                                               value="{{ alternativa.id }}"
-                                               {% if respostas_preenchidas|get_item:pergunta.id == alternativa.id|stringformat:"s" %}checked{% endif %}
-                                               required>
-                                        <label class="form-check-label">{{ alternativa.conteudo }}</label>
-                                    </div>
-                                {% endfor %}
-                            {% elif pergunta.tipo == 'TX' %}
-                                <div class="mt-2">
-                                    <input type="text" name="pergunta_{{ pergunta.id }}" 
-                                           class="form-control bg-light border-0 rounded-3 p-3" 
-                                           placeholder="Sua resposta..."
-                                           value="{{ respostas_preenchidas|get_item:pergunta.id|default:'' }}"
-                                           required>
-                                </div>
-                            {% endif %}
+        {% for pergunta in secao.perguntas.all %}
+            <div class="card border-0 shadow-sm mb-4 rounded-4 pergunta-card" 
+                 id="card_pergunta_{{ pergunta.id }}"
+                 {% if pergunta.depende_de_alternativa %}
+                    data-depende-id="{{ pergunta.depende_de_alternativa.id }}"
+                    style="display: none;" 
+                 {% endif %}>
+                
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">
+                        {{ pergunta.conteudo }}
+                        {% if pergunta.obrigatoria %}
+                            <span class="text-danger" title="Obrigatório">*</span>
+                        {% endif %}
+                    </h5>
+
+                    {% if pergunta.tipo == 'TX' or pergunta.tipo == 'MX' %}
+                        <div class="mb-3">
+                            <label class="small text-muted mb-1">Especifique ou complete se necessário:</label>
+                            <input type="text" 
+                                   name="pergunta_{{ pergunta.id }}_texto" 
+                                   class="form-control bg-light border-0 rounded-3 p-3 input-pergunta"
+                                   value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}"
+                                   {% if pergunta.obrigatoria and not pergunta.depende_de_alternativa %}required{% endif %}>
                         </div>
-                    </div>
-                {% endfor %}
-            {% endif %}
-        </div>
+                    {% endif %}
+
+                    {% if pergunta.tipo == 'MC' or pergunta.tipo == 'MX' %}
+                        <div class="d-flex flex-wrap gap-3">
+                            {% for alternativa in pergunta.alternativas.all %}
+                                <div class="form-check">
+                                    <input class="form-check-input alternativa-radio" 
+                                           type="radio" 
+                                           name="pergunta_{{ pergunta.id }}" 
+                                           id="alt_{{ alternativa.id }}"
+                                           value="{{ alternativa.id }}"
+                                           data-alt-id="{{ alternativa.id }}"
+                                           {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:"s" %}checked{% endif %}
+                                           {% if pergunta.obrigatoria and not pergunta.depende_de_alternativa %}required{% endif %}>
+                                    <label class="form-check-label" for="alt_{{ alternativa.id }}">
+                                        {{ alternativa.conteudo }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
 
         <div class="d-flex justify-content-between mt-5">
             {% if page_obj.has_previous %}
-                <button type="submit" name="acao" value="anterior" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">
-                    ← Voltar
-                </button>
+                <button type="submit" name="acao" value="anterior" class="btn btn-outline-secondary rounded-pill px-4 fw-bold">Voltar</button>
             {% else %}
                 <div></div>
             {% endif %}
 
             {% if page_obj.has_next %}
-                <button type="submit" name="acao" value="proximo" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" style="background-color: var(--somnus-blue-deep); border: none;">
-                    Próxima Etapa →
-                </button>
+                <button type="submit" name="acao" value="proximo" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm" style="background-color: var(--somnus-blue-deep); border: none;">Próximo</button>
             {% else %}
-                <button type="submit" name="acao" value="finalizar" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" style="background-color: var(--somnus-green-dark); border: none;">
-                    Finalizar Avaliação
-                </button>
+                <button type="submit" name="acao" value="finalizar" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm" style="background-color: var(--somnus-green-dark); border: none;">Finalizar</button>
             {% endif %}
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const radios = document.querySelectorAll('.alternativa-radio');
+
+    function atualizarVisibilidade() {
+        const selecionados = Array.from(document.querySelectorAll('.alternativa-radio:checked'))
+                                  .map(r => r.getAttribute('data-alt-id'));
+
+        document.querySelectorAll('.pergunta-card[data-depende-id]').forEach(card => {
+            const dependeDeId = card.getAttribute('data-depende-id');
+            const inputsInternos = card.querySelectorAll('input');
+            
+            if (selecionados.includes(dependeDeId)) {
+                card.style.display = 'block';
+                // Ativa a obrigatoriedade se a pergunta for marcada como obrigatória no banco
+                inputsInternos.forEach(input => {
+                    if (!input.name.includes('_texto')) input.required = true;
+                });
+            } else {
+                card.style.display = 'none';
+                inputsInternos.forEach(input => {
+                    input.required = false;
+                    // Opcional: limpa o valor se for escondido
+                    // if (input.type === 'text') input.value = '';
+                    // if (input.type === 'radio') input.checked = false;
+                });
+            }
+        });
+    }
+
+    radios.forEach(radio => {
+        radio.addEventListener('change', atualizarVisibilidade);
+    });
+
+    // Executa ao carregar a página para manter estado em caso de "Voltar"
+    atualizarVisibilidade();
+});
+</script>
 {% endblock %}

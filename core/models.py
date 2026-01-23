@@ -29,7 +29,18 @@ class Secao(models.Model):
         return f"{self.titulo} - {self.questionario.titulo}"
 
 class Pergunta(models.Model):
-    TIPO_CHOICES = [('MC', 'Múltipla Escolha'), ('TX', 'Texto Livre')]
+    TIPO_CHOICES = [('MC', 'Múltipla Escolha'), ('TX', 'Texto Livre'), ('MX', 'Mista (Opções + Texto)')]
+
+    # ... campos existentes ...
+    obrigatoria = models.BooleanField(default=True)
+    # Define qual escolha anterior faz esta pergunta aparecer
+    depende_de_alternativa = models.ForeignKey(
+        'Alternativa', 
+        on_delete=models.SET_NULL, 
+        null=True, blank=True,
+        related_name='perguntas_dependentes',
+        help_text="Esta pergunta só aparece se esta alternativa for marcada."
+    )
     
     # Agora a pergunta pertence a uma Seção, não mais direto ao Questionário
     secao = models.ForeignKey(Secao, related_name='perguntas', on_delete=models.CASCADE)

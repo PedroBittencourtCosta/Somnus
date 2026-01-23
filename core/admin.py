@@ -37,7 +37,7 @@ class SecaoInline(SortableInlineAdminMixin, admin.TabularInline):
 # 5. Admin de Seção: Para gerenciar as Perguntas de uma escala específica
 @admin.register(Secao)
 class SecaoAdmin(SortableAdminBase, admin.ModelAdmin):
-    list_display = ('titulo', 'questionario', 'ordem', 'layout')
+    list_display = ('titulo', 'questionario', 'ordem',)
     list_filter = ('questionario',)
     inlines = [PerguntaInline]
 
