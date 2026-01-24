@@ -19,7 +19,7 @@ def login_view(request):
             login(request, user)
             return redirect('home')
         else:
-            messages.error(request, "E-mail ou senha inválidos.")
+            messages.error(request, "E-mail ou senha inválidos.", extra_tags='login_modal')
             # Redireciona para a mesma página onde o usuário tentou logar
             return redirect(request.META.get('HTTP_REFERER', 'home'))
     
