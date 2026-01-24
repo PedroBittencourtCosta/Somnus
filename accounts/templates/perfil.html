@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+            <div class="mb-4">
+                <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Meu Perfil</h2>
+                <p class="text-muted">Gerencie suas informações pessoais e dados de contato.</p>
+            </div>
+
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form method="post" class="needs-validation">
+                        {% csrf_token %}
+                        
+                        <div class="row g-3">
+                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Informações de Conta</h5>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.username placeholder="Nome de usuário" %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.email placeholder="E-mail" %}
+                            </div>
+
+                            <hr class="my-4 opacity-0">
+                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Dados Sociodemográficos</h5>
+                            
+                            <div class="col-md-6">
+                                {% bootstrap_field form.data_nascimento %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.sexo %}
+                            </div>
+
+                            <div class="col-md-6">
+                                {% bootstrap_field form.cor_raca %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.estado_civil %}
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2 mt-5">
+                            <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white shadow-sm py-3"
+                                    style="background-color: var(--somnus-blue-deep);">
+                                Salvar Alterações
+                            </button>
+                            <a href="{% url 'home' %}" class="btn btn-link btn-sm text-decoration-none text-muted">Voltar para o início</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Estilos para manter a consistência Somnus */
+    .form-control, .form-select {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #eee;
+    }
+    .form-control:focus, .form-select:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.25rem rgba(0, 103, 177, 0.1);
+    }
+    label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+    }
+</style>
+{% endblock %}

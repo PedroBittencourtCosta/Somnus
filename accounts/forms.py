@@ -13,3 +13,16 @@ class UsuarioCreationForm(UserCreationForm):
         widgets = {
             'data_nascimento': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class PerfilForm(forms.ModelForm):
+    class Meta:
+        model = Usuario
+        fields = ['username', 'email', 'data_nascimento', 'sexo', 'cor_raca', 'estado_civil']
+        widgets = {
+            'data_nascimento': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Opcional: Desabilitar o e-mail se você não quiser que ele mude a chave de login
+        # self.fields['email'].disabled = True

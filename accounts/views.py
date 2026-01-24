@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
-
+from .forms import PerfilForm
+from django.contrib.auth.decorators import login_required
 from accounts.forms import UsuarioCreationForm
 
 def login_view(request):
@@ -44,3 +45,16 @@ def cadastro_view(request):
         form = UsuarioCreationForm()
     
     return render(request, 'cadastro.html', {'form': form})
+
+@login_required
+def perfil_view(request):
+    if request.method == 'POST':
+        form = PerfilForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Seus dados foram atualizados com sucesso!")
+            return redirect('perfil')
+    else:
+        form = PerfilForm(instance=request.user)
+    
+    return render(request, 'perfil.html', {'form': form})
