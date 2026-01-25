@@ -3,6 +3,8 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
+from ethics.models import TCLE, AceiteTCLE
 from .models import Questionario, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
 
 def index_view(request: HttpRequest):
@@ -11,6 +13,31 @@ def index_view(request: HttpRequest):
 @login_required
 def responder_questionario(request, pk):
     questionario = get_object_or_404(Questionario, pk=pk)
+
+    # 1. Busca a versão mais recente do TCLE
+    ultimo_tcle = TCLE.objects.order_by('-versao').first()
+    
+    # 2. Verifica se o usuário já aceitou esta versão específica
+    # Se NÃO houver TCLE cadastrado no banco, não podemos exibir o modal
+    if not ultimo_tcle:
+        # Você pode decidir se permite responder sem TCLE ou se mostra um erro
+        messages.warning(request, "Atenção: Nenhum Termo de Consentimento (TCLE) foi encontrado no sistema.")
+        # Segue a lógica normal se não houver termo
+        ja_aceitou = True 
+    else:
+        ja_aceitou = AceiteTCLE.objects.filter(usuario=request.user, tcle=ultimo_tcle).exists()
+
+    # 3. Se não aceitou, enviamos o conteúdo do TCLE para o modal
+    if not ja_aceitou and ultimo_tcle:
+        # Reutilizamos a lógica de seções mas enviamos a flag do modal
+        context = {
+            'questionario': questionario,
+            'exibir_tcle': True,
+            'tcle': ultimo_tcle,
+        }
+        # Renderiza a mesma página, mas o JS abrirá o modal
+        return render(request, 'responder_questionario.html', context)
+
     secoes_list = questionario.secoes.all().order_by('ordem')
     
     paginator = Paginator(secoes_list, 1)

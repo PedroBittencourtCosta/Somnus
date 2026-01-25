@@ -8,7 +8,7 @@ class TCLE(models.Model):
     data_criacao = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.versao
+        return f"Versão {self.versao}"
 
 class AceiteTCLE(models.Model):
     usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
