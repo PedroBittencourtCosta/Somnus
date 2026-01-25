@@ -110,28 +110,41 @@ def lista_questionarios(request):
 @login_required
 @medico_ou_admin_required
 def dashboard_respostas(request):
-    # Carrega as respostas com os dados relacionados para otimizar o banco
-    respostas = RespostaQuestionario.objects.select_related('usuario', 'questionario').all().order_by('-data_submissao')
-    return render(request, 'dashboard_respostas.html', {'respostas': respostas})
+    # Ordenação decrescente por data de submissão
+    respostas_list = RespostaQuestionario.objects.select_related('usuario', 'questionario').all().order_by('-data_submissao')
+    
+    # Paginação: 10 itens por página
+    paginator = Paginator(respostas_list, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
 
 @login_required
 @medico_ou_admin_required
-def exportar_respostas_csv(request):
-    # Configura o tipo de resposta para CSV
+def exportar_respostas_csv(request, pk):
+    # Busca a resposta específica do questionário
+    res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
+    
     response = HttpResponse(content_type='text/csv')
-    response['Content-Disposition'] = 'attachment; filename="respostas_somnus.csv"'
-    response.write(u'\ufeff'.encode('utf8')) # Bom para o Excel abrir com acentuação correta
+    filename = f"somnus_{res_quest.usuario.username}_{res_quest.id}.csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    response.write(u'\ufeff'.encode('utf8')) 
 
     writer = csv.writer(response, delimiter=';')
-    writer.writerow(['Usuário', 'E-mail', 'Questionário', 'Data de Submissão'])
+    
+    # Cabeçalho do arquivo
+    writer.writerow(['Pergunta', 'Resposta Selecionada', 'Texto Adicional/Livre', 'Valor/Score'])
 
-    respostas = RespostaQuestionario.objects.select_related('usuario', 'questionario').all()
-    for r in respostas:
+    # Busca todas as respostas das perguntas deste questionário específico
+    respostas_perguntas = RespostaPergunta.objects.filter(resposta_questionario=res_quest).select_related('pergunta', 'alternativa')
+
+    for rp in respostas_perguntas:
         writer.writerow([
-            r.usuario.get_full_name() or r.usuario.username,
-            r.usuario.email,
-            r.questionario.titulo,
-            r.data_submissao.strftime('%d/%m/%Y %H:%M')
+            rp.pergunta.conteudo,
+            rp.alternativa.conteudo if rp.alternativa else "N/A",
+            rp.resposta_texto if rp.resposta_texto else "",
+            rp.alternativa.valor if rp.alternativa else ""
         ])
 
     return response
