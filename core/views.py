@@ -1,8 +1,11 @@
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+
+import csv
+from .decorators import medico_ou_admin_required
 
 from ethics.models import TCLE, AceiteTCLE
 from .models import Questionario, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
@@ -101,3 +104,34 @@ def lista_questionarios(request):
     # Busca todos os questionários cadastrados
     questionarios = Questionario.objects.all().order_by('-data_criacao')
     return render(request, 'lista_questionarios.html', {'questionarios': questionarios})
+
+
+
+@login_required
+@medico_ou_admin_required
+def dashboard_respostas(request):
+    # Carrega as respostas com os dados relacionados para otimizar o banco
+    respostas = RespostaQuestionario.objects.select_related('usuario', 'questionario').all().order_by('-data_submissao')
+    return render(request, 'dashboard_respostas.html', {'respostas': respostas})
+
+@login_required
+@medico_ou_admin_required
+def exportar_respostas_csv(request):
+    # Configura o tipo de resposta para CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="respostas_somnus.csv"'
+    response.write(u'\ufeff'.encode('utf8')) # Bom para o Excel abrir com acentuação correta
+
+    writer = csv.writer(response, delimiter=';')
+    writer.writerow(['Usuário', 'E-mail', 'Questionário', 'Data de Submissão'])
+
+    respostas = RespostaQuestionario.objects.select_related('usuario', 'questionario').all()
+    for r in respostas:
+        writer.writerow([
+            r.usuario.get_full_name() or r.usuario.username,
+            r.usuario.email,
+            r.questionario.titulo,
+            r.data_submissao.strftime('%d/%m/%Y %H:%M')
+        ])
+
+    return response

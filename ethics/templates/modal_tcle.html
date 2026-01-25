@@ -3,26 +3,45 @@
         <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header border-0 px-4 pt-4">
-                    <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Termo de Consentimento (TCLE)</h5>
+                    <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Termo de Consentimento Livre e Esclarecido (TCLE)</h5>
                 </div>
+                
                 <div class="modal-body px-4">
-                    <p class="text-muted small mb-3">Versão do documento: {{ tcle.versao }}</p>
-                    <div class="p-3 bg-light rounded-3" style="max-height: 400px; overflow-y: auto; font-size: 0.9rem; line-height: 1.6;">
-                        {{ tcle.conteudo|linebreaks }}
+                    {% comment %} <div class="alert alert-info border-0 rounded-3 mb-3 py-2" style="background-color: rgba(0, 103, 177, 0.1); color: var(--somnus-blue-deep);">
+                        <small><strong>Participante:</strong> {{ user.first_name|default:user.username }}</small>
+                    </div> {% endcomment %}
+
+                    <p class="text-muted small mb-2">Versão do documento: {{ tcle.versao }}</p>
+                    
+                    <div class="p-4 bg-light rounded-4" style="max-height: 450px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6; color: #444;">
+                        <div class="tcle-content">
+                            {{ tcle.conteudo|linebreaks }}
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <p class="fw-bold mb-2">Contatos de Responsabilidade:</p>
+                        <ul class="list-unstyled small">
+                            <li><strong>Pesquisador:</strong> Prof. Dr. Renato Canevari Dutra da Silva [cite: 28]</li>
+                            <li><strong>Telefone:</strong> (64) 3620-2297 [cite: 29]</li>
+                            <li><strong>Comitê de Ética (UniRV):</strong> (64) 3622-1446 | cep@unirv.edu.br [cite: 34]</li>
+                        </ul>
                     </div>
-                    <div class="form-check mt-3">
-                        <input class="form-check-input" type="checkbox" id="checkAceite">
-                        <label class="form-check-label small fw-medium" for="checkAceite">
-                            Li e concordo com os termos da pesquisa.
+
+                    <div class="form-check mt-3 p-3 rounded-3" style="background-color: #f8f9fa;">
+                        <input class="form-check-input ms-0 me-2" type="checkbox" id="checkAceite">
+                        <label class="form-check-label small fw-bold" for="checkAceite" style="color: var(--somnus-blue-deep);">
+                            Eu, {{ user.first_name|default:user.username }}, li e concordo voluntariamente em participar desta pesquisa.
                         </label>
                     </div>
                 </div>
+
                 <div class="modal-footer border-0 px-4 pb-4">
                     <form action="{% url 'aceitar_tcle' tcle.id %}" method="POST" class="w-100">
                         {% csrf_token %}
-                        <button type="submit" id="btnAceitar" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm" 
+                        <button type="submit" id="btnAceitar" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm" 
                                 style="background-color: var(--somnus-blue-deep); border: none;" disabled>
-                            Confirmar e Continuar
+                            Confirmar Aceite e Iniciar Avaliação
                         </button>
                     </form>
                 </div>
@@ -32,18 +51,18 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Abre o modal automaticamente se a flag 'exibir_tcle' for True
             {% if exibir_tcle %}
                 var tcleModal = new bootstrap.Modal(document.getElementById('tcleModal'));
                 tcleModal.show();
             {% endif %}
 
-            // Habilita o botão apenas se o checkbox estiver marcado
             const check = document.getElementById('checkAceite');
             const btn = document.getElementById('btnAceitar');
             if(check) {
                 check.addEventListener('change', function() {
                     btn.disabled = !this.checked;
+                    // Efeito visual no botão
+                    btn.style.opacity = this.checked ? "1" : "0.6";
                 });
             }
         });

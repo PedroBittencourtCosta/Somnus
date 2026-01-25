@@ -18,3 +18,9 @@ class AceiteTCLE(models.Model):
     class Meta:
         verbose_name = 'Aceite de TCLE'
         verbose_name_plural = 'Aceites de TCLE'
+        # AJUSTE 1: Garante que o usuário aceite cada versão apenas uma vez
+        unique_together = ('usuario', 'tcle')
+
+    # AJUSTE 2: Facilita a auditoria no Django Admin
+    def __str__(self):
+        return f"Aceite: {self.usuario.email} - v{self.tcle.versao}"
