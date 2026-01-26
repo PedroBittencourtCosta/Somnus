@@ -31,15 +31,39 @@ class Secao(models.Model):
 class Pergunta(models.Model):
     TIPO_CHOICES = [('MC', 'Múltipla Escolha'), ('TX', 'Texto Livre'), ('MX', 'Mista (Opções + Texto)')]
 
+    # Novas opções de validação para tipo MX
+    VALIDACAO_MX_CHOICES = [
+        ('QUALQUER', 'Pelo menos um (Opção OU Texto)'),
+        ('AMBOS', 'Ambos obrigatórios (Opção E Texto)'),
+        ('APENAS_OPCAO', 'Obrigatório selecionar opção'),
+        ('APENAS_TEXTO', 'Obrigatório preencher texto'),
+    ]
+
+    # Campo para configurar a lógica da pergunta mista
+    config_mista = models.CharField(
+        max_length=15, 
+        choices=VALIDACAO_MX_CHOICES, 
+        default='QUALQUER',
+        help_text="Define a regra de obrigatoriedade para perguntas mistas."
+    )
+
     # ... campos existentes ...
     obrigatoria = models.BooleanField(default=True)
     # Define qual escolha anterior faz esta pergunta aparecer
-    depende_de_alternativa = models.ForeignKey(
-        'Alternativa', 
-        on_delete=models.SET_NULL, 
-        null=True, blank=True,
+    depende_de_alternativa = models.ManyToManyField(
+        'Alternativa',  
+        blank=True,
         related_name='perguntas_dependentes',
-        help_text="Esta pergunta só aparece se esta alternativa for marcada."
+        help_text="A pergunta aparecerá se QUALQUER uma destas alternativas for marcada."
+    )
+
+    depende_de_texto_de = models.ForeignKey(
+        'self', 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='dependentes_por_texto',
+        help_text="A pergunta aparecerá se a pergunta selecionada tiver qualquer texto preenchido."
     )
     
     # Agora a pergunta pertence a uma Seção, não mais direto ao Questionário
@@ -73,6 +97,10 @@ class RespostaQuestionario(models.Model):
     class Meta:
         verbose_name = 'Resposta de Questionário'
         verbose_name_plural = 'Respostas dos Questionários'
+        unique_together = ('usuario', 'questionario')
+
+    def __str__(self):
+        return f"{self.usuario.username} - {self.questionario.titulo}"
 
 class RespostaPergunta(models.Model):
     resposta_questionario = models.ForeignKey(RespostaQuestionario, related_name='respostas', on_delete=models.CASCADE)

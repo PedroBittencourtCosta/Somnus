@@ -22,8 +22,16 @@
         {% for pergunta in secao.perguntas.all %}
             <div class="card border-0 shadow-sm mb-4 rounded-4 pergunta-card" 
                  id="card_pergunta_{{ pergunta.id }}"
-                 {% if pergunta.depende_de_alternativa %}
-                    data-depende-id="{{ pergunta.depende_de_alternativa.id }}"
+                 data-pergunta-id="{{ pergunta.id }}"
+                 data-tipo="{{ pergunta.tipo }}"
+                 data-obrigatoria="{{ pergunta.obrigatoria|yesno:'true,false' }}"
+                 data-config-mista="{{ pergunta.config_mista }}"
+                 
+                 data-depende-alts="{% for alt in pergunta.depende_de_alternativa.all %}{{ alt.id }}{% if not forloop.last %},{% endif %}{% endfor %}" 
+                 
+                 data-depende-texto-id="{{ pergunta.depende_de_texto_de.id|default:'' }}"
+                 
+                 {% if pergunta.depende_de_alternativa.exists or pergunta.depende_de_texto_de %}
                     style="display: none;" 
                  {% endif %}>
                 
@@ -40,9 +48,8 @@
                             <label class="small text-muted mb-1">Especifique ou complete se necessário:</label>
                             <input type="text" 
                                    name="pergunta_{{ pergunta.id }}_texto" 
-                                   class="form-control bg-light border-0 rounded-3 p-3 input-pergunta"
-                                   value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}"
-                                   {% if pergunta.obrigatoria and not pergunta.depende_de_alternativa %}required{% endif %}>
+                                   class="form-control bg-light border-0 rounded-3 p-3 input-pergunta input-texto-mista"
+                                   value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}">
                         </div>
                     {% endif %}
 
@@ -55,9 +62,7 @@
                                            name="pergunta_{{ pergunta.id }}" 
                                            id="alt_{{ alternativa.id }}"
                                            value="{{ alternativa.id }}"
-                                           data-alt-id="{{ alternativa.id }}"
-                                           {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:"s" %}checked{% endif %}
-                                           {% if pergunta.obrigatoria and not pergunta.depende_de_alternativa %}required{% endif %}>
+                                           {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:"s" %}checked{% endif %}>
                                     <label class="form-check-label" for="alt_{{ alternativa.id }}">
                                         {{ alternativa.conteudo }}
                                     </label>
@@ -89,39 +94,118 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('form-questionario');
     const radios = document.querySelectorAll('.alternativa-radio');
+    const inputsTexto = document.querySelectorAll('.input-pergunta');
 
+    // --- LÓGICA DE VISIBILIDADE AVANÇADA ---
     function atualizarVisibilidade() {
         const selecionados = Array.from(document.querySelectorAll('.alternativa-radio:checked'))
-                                  .map(r => r.getAttribute('data-alt-id'));
+                                  .map(r => r.value);
 
-        document.querySelectorAll('.pergunta-card[data-depende-id]').forEach(card => {
-            const dependeDeId = card.getAttribute('data-depende-id');
-            const inputsInternos = card.querySelectorAll('input');
-            
-            if (selecionados.includes(dependeDeId)) {
-                card.style.display = 'block';
-                // Ativa a obrigatoriedade se a pergunta for marcada como obrigatória no banco
-                inputsInternos.forEach(input => {
-                    if (!input.name.includes('_texto')) input.required = true;
-                });
-            } else {
-                card.style.display = 'none';
-                inputsInternos.forEach(input => {
-                    input.required = false;
-                    // Opcional: limpa o valor se for escondido
-                    // if (input.type === 'text') input.value = '';
-                    // if (input.type === 'radio') input.checked = false;
-                });
+        const textosPreenchidos = {};
+        document.querySelectorAll('.pergunta-card').forEach(card => {
+            const pId = card.dataset.perguntaId;
+            const input = card.querySelector('input[type="text"]');
+            textosPreenchidos[pId] = input ? input.value.trim().length > 0 : false;
+        });
+
+        document.querySelectorAll('.pergunta-card').forEach(card => {
+            const altsRaw = card.dataset.dependeAlts;
+            const depsAlts = altsRaw ? altsRaw.split(',') : [];
+            const depTextoId = card.dataset.dependeTextoId;
+
+            // Condição 1: Alternativas (Lógica OU)
+            let atendeAlt = true;
+            if (depsAlts.length > 0 && depsAlts[0] !== "") {
+                atendeAlt = depsAlts.some(id => selecionados.includes(id));
+            }
+
+            // Condição 2: Texto
+            let atendeTexto = true;
+            if (depTextoId) {
+                atendeTexto = textosPreenchidos[depTextoId] || false;
+            }
+
+            // Decisão de Exibição
+            const temDependencia = (depsAlts.length > 0 && depsAlts[0] !== "") || depTextoId;
+
+            if (temDependencia) {
+                if (atendeAlt && atendeTexto) {
+                    card.style.display = 'block';
+                    configurarObrigatoriedade(card, true);
+                } else {
+                    card.style.display = 'none';
+                    configurarObrigatoriedade(card, false);
+                }
             }
         });
     }
 
-    radios.forEach(radio => {
-        radio.addEventListener('change', atualizarVisibilidade);
+    
+
+    function configurarObrigatoriedade(card, status) {
+        const inputs = card.querySelectorAll('input');
+        const obrigatoria = card.dataset.obrigatoria === 'true';
+        const tipo = card.dataset.tipo;
+
+        inputs.forEach(input => {
+            if (status && obrigatoria) {
+                if (tipo !== 'MX') input.required = true;
+            } else {
+                input.required = false;
+            }
+        });
+    }
+
+    // --- VALIDAÇÃO DE SUBMIT ---
+    form.addEventListener('submit', function(e) {
+        if (e.submitter && e.submitter.value === 'anterior') return;
+
+        let valido = true;
+        let primeiraMensagem = "";
+
+        document.querySelectorAll('.pergunta-card').forEach(card => {
+            if (card.style.display === 'none') return;
+
+            const tipo = card.dataset.tipo;
+            const obrigatoria = card.dataset.obrigatoria === 'true';
+            const config = card.dataset.configMista;
+            const perguntaTexto = card.querySelector('h5').innerText.replace('*', '').trim();
+            
+            if (tipo === 'MX' && obrigatoria) {
+                const radioMarcado = card.querySelector('input[type="radio"]:checked');
+                const textoInput = card.querySelector('.input-texto-mista');
+                const textoPreenchido = textoInput && textoInput.value.trim() !== "";
+
+                let erro = false;
+                if (config === 'QUALQUER' && !radioMarcado && !textoPreenchido) erro = true;
+                else if (config === 'AMBOS' && (!radioMarcado || !textoPreenchido)) erro = true;
+                else if (config === 'APENAS_OPCAO' && !radioMarcado) erro = true;
+                else if (config === 'APENAS_TEXTO' && !textoPreenchido) erro = true;
+
+                if (erro) {
+                    valido = false;
+                    if (!primeiraMensagem) {
+                        primeiraMensagem = `Verifique a pergunta: "${perguntaTexto}"`;
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    card.classList.add('border', 'border-danger');
+                } else {
+                    card.classList.remove('border', 'border-danger');
+                }
+            }
+        });
+
+        if (!valido) {
+            e.preventDefault();
+            alert(primeiraMensagem);
+        }
     });
 
-    // Executa ao carregar a página para manter estado em caso de "Voltar"
+    radios.forEach(r => r.addEventListener('change', atualizarVisibilidade));
+    inputsTexto.forEach(i => i.addEventListener('input', atualizarVisibilidade));
+
     atualizarVisibilidade();
 });
 </script>

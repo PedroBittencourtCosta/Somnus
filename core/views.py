@@ -40,6 +40,16 @@ def responder_questionario(request, pk):
         }
         # Renderiza a mesma página, mas o JS abrirá o modal
         return render(request, 'responder_questionario.html', context)
+    
+    # TRAVA DE RESPOSTA ÚNICA
+    ja_respondeu = RespostaQuestionario.objects.filter(
+        usuario=request.user, 
+        questionario=questionario
+    ).exists()
+
+    if ja_respondeu:
+        messages.info(request, "Você já completou esta avaliação. Obrigado pela participação!")
+        return redirect('home')
 
     secoes_list = questionario.secoes.all().order_by('ordem')
     
@@ -101,9 +111,19 @@ def responder_questionario(request, pk):
     return render(request, 'responder_questionario.html', context)
 
 def lista_questionarios(request):
-    # Busca todos os questionários cadastrados
     questionarios = Questionario.objects.all().order_by('-data_criacao')
-    return render(request, 'lista_questionarios.html', {'questionarios': questionarios})
+    
+    # Se o usuário estiver logado, buscamos os IDs dos questionários que ele já respondeu
+    respondidos = []
+    if request.user.is_authenticated:
+        respondidos = RespostaQuestionario.objects.filter(
+            usuario=request.user
+        ).values_list('questionario_id', flat=True)
+        
+    return render(request, 'lista_questionarios.html', {
+        'questionarios': questionarios,
+        'respondidos': respondidos
+    })
 
 
 
