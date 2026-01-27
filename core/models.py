@@ -38,6 +38,7 @@ class Pergunta(models.Model):
         ('ALTURA', 'Altura (0,00 m)'),
         ('PESO', 'Peso (000,0 kg)'),
         ('DATA', 'Data (00/00/0000)'),
+        ('OUTRO', 'Outro'),
     ]
 
     mascara = models.CharField(max_length=10, choices=MASCARA_CHOICES, default='NENHUMA') # Novo campo
