@@ -7,33 +7,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Somnus{% endblock %}</title>
     
-    {# Inserindo o CSS do Bootstrap 5 automaticamente #}
     {% bootstrap_css %}
-
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body class="d-flex flex-column min-vh-100">
 
     {% include 'partials/_navbar.html' %}
-
     {% include 'modal_login.html' %}
 
     <main class="flex-grow-1 p-0"> 
-        <div class="container mt-3">
-            {% if messages %}
-                {% for message in messages %}
-                    {# Caso 1: Gatilho para abrir o modal #}
+        {% if messages %}
+            <div class="container mt-3"> {% for message in messages %}
                     {% if message.message == 'abrir_modal' %}
                         <script>window.abrirLoginModal = true;</script>
-                    
-                    {# Caso 2: Erro real de login (identificado pela tag 'login_modal') #}
                     {% elif 'login_modal' in message.tags %}
                         <script>
                             window.abrirLoginModal = true;
                             window.loginErrorMessage = "{{ message }}";
                         </script>
-                    
-                    {# Caso 3: Mensagens gerais do sistema (sucesso, alertas da home, etc) #}
                     {% else %}
                         <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
                             {{ message }}
@@ -41,15 +32,14 @@
                         </div>
                     {% endif %}
                 {% endfor %}
-            {% endif %}
+            </div>
+        {% endif %}
 
-            {% block content %}{% endblock %}
-        </div>
+        {% block content %}{% endblock %}
     </main>
 
     {% include 'partials/_footer.html' %}
 
-    {# Inserindo o JS do Bootstrap 5 (necessário para modais e alertas) #}
     {% bootstrap_javascript %}
     <script>
         document.addEventListener("DOMContentLoaded", function() {
@@ -57,8 +47,6 @@
                 var loginModalEl = document.getElementById('loginModal');
                 if (loginModalEl) {
                     var myModal = new bootstrap.Modal(loginModalEl);
-                    
-                    // Se houver uma mensagem de erro, injetamos o HTML no container do modal
                     if (window.loginErrorMessage) {
                         var errorContainer = document.getElementById('login-error-container');
                         errorContainer.innerHTML = `
@@ -68,7 +56,6 @@
                             </div>
                         `;
                     }
-                    
                     myModal.show();
                 }
             }

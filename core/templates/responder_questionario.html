@@ -17,7 +17,7 @@
         <h2 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">{{ secao.titulo }}</h2>
         
         {% if secao.instrucao %}
-            <div class="card border-0 shadow-sm mb-4 rounded-4" style="background-color: #fcfcfc;">
+            <div class="card border-0 shadow-sm mb-4 rounded-4 border-light-subtle" style="background-color: #fcfcfc;">
                 <div class="card-body p-4">
                     <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep); line-height: 1.5;">
                         {{ secao.instrucao|linebreaksbr }} 
@@ -27,7 +27,7 @@
         {% endif %}
 
         {% for pergunta in secao.perguntas.all %}
-            <div class="card border-0 shadow-sm mb-4 rounded-4 pergunta-card" 
+            <div class="card border-0 shadow-sm mb-4 rounded-4 pergunta-card border-light-subtle" 
                  id="card_pergunta_{{ pergunta.id }}"
                  data-pergunta-id="{{ pergunta.id }}"
                  data-tipo="{{ pergunta.tipo }}"
