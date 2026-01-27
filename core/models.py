@@ -31,6 +31,17 @@ class Secao(models.Model):
 class Pergunta(models.Model):
     TIPO_CHOICES = [('MC', 'Múltipla Escolha'), ('TX', 'Texto Livre'), ('MX', 'Mista (Opções + Texto)')]
 
+    # Opções de máscaras disponíveis
+    MASCARA_CHOICES = [
+        ('NENHUMA', 'Nenhuma'),
+        ('HORA', 'Hora (00:00)'),
+        ('ALTURA', 'Altura (0,00 m)'),
+        ('PESO', 'Peso (000,0 kg)'),
+        ('DATA', 'Data (00/00/0000)'),
+    ]
+
+    mascara = models.CharField(max_length=10, choices=MASCARA_CHOICES, default='NENHUMA') # Novo campo
+    
     # Novas opções de validação para tipo MX
     VALIDACAO_MX_CHOICES = [
         ('QUALQUER', 'Pelo menos um (Opção OU Texto)'),

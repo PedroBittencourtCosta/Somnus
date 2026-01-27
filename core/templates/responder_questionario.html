@@ -2,6 +2,8 @@
 {% load custom_filters %}
 
 {% block content %}
+<script src="https://unpkg.com/imask"></script>
+
 <div class="container py-5">
     <div class="mb-5">
         <div class="progress" style="height: 10px; border-radius: 10px;">
@@ -9,13 +11,18 @@
         </div>
     </div>
 
-    <form method="post" id="form-questionario">
+    <form method="post" id="form-questionario" novalidate>
         {% csrf_token %}
         
         <h2 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">{{ secao.titulo }}</h2>
+        
         {% if secao.instrucao %}
-            <div class="alert alert-light border-start border-4 border-primary mb-4 shadow-sm">
-                {{ secao.instrucao|linebreaks }}
+            <div class="card border-0 shadow-sm mb-4 rounded-4" style="background-color: #fcfcfc;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep); line-height: 1.5;">
+                        {{ secao.instrucao|linebreaksbr }} 
+                    </h5>
+                </div>
             </div>
         {% endif %}
 
@@ -49,6 +56,7 @@
                             <input type="text" 
                                    name="pergunta_{{ pergunta.id }}_texto" 
                                    class="form-control bg-light border-0 rounded-3 p-3 input-pergunta input-texto-mista"
+                                   data-mascara="{{ pergunta.mascara|default:'NENHUMA' }}"
                                    value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}">
                         </div>
                     {% endif %}
@@ -98,11 +106,57 @@ document.addEventListener('DOMContentLoaded', function() {
     const radios = document.querySelectorAll('.alternativa-radio');
     const inputsTexto = document.querySelectorAll('.input-pergunta');
 
+    // --- LÓGICA DE MÁSCARAS DE INPUT (IMask) ---
+    function aplicarMascaras() {
+        document.querySelectorAll('input[data-mascara]').forEach(input => {
+            const tipo = input.dataset.mascara;
+            if (tipo === 'HORA') {
+                IMask(input, {
+                    mask: 'HH:mm',
+                    blocks: {
+                        HH: { mask: IMask.MaskedRange, from: 0, to: 23 },
+                        mm: { mask: IMask.MaskedRange, from: 0, to: 59 }
+                    }
+                });
+            } else if (tipo === 'ALTURA') {
+                IMask(input, {
+                    mask: 'num m',
+                    lazy: false,
+                    blocks: {
+                        num: { mask: Number, scale: 2, signed: false, radix: ',', mapToRadix: ['.'], from: 0, to: 3 }
+                    }
+                });
+            } else if (tipo === 'PESO') {
+                IMask(input, {
+                    mask: 'num kg',
+                    lazy: false,
+                    blocks: {
+                        num: { mask: Number, scale: 1, signed: false, radix: ',', mapToRadix: ['.'], from: 0, to: 500 }
+                    }
+                });
+            } else if (tipo === 'DATA') {
+                IMask(input, { mask: Date, pattern: 'd/`m/`Y' });
+            }
+        });
+    }
+
+    // --- LÓGICA PARA DESMARCAR RÁDIO (TOGGLE) ---
+    radios.forEach(radio => {
+        radio.addEventListener('mousedown', function() {
+            this.wasChecked = this.checked;
+        });
+        radio.addEventListener('click', function() {
+            if (this.wasChecked) {
+                this.checked = false;
+                this.wasChecked = false;
+                atualizarVisibilidade();
+            }
+        });
+    });
+
     // --- LÓGICA DE VISIBILIDADE AVANÇADA ---
     function atualizarVisibilidade() {
-        const selecionados = Array.from(document.querySelectorAll('.alternativa-radio:checked'))
-                                  .map(r => r.value);
-
+        const selecionados = Array.from(document.querySelectorAll('.alternativa-radio:checked')).map(r => r.value);
         const textosPreenchidos = {};
         document.querySelectorAll('.pergunta-card').forEach(card => {
             const pId = card.dataset.perguntaId;
@@ -111,86 +165,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         document.querySelectorAll('.pergunta-card').forEach(card => {
-            const altsRaw = card.dataset.dependeAlts;
-            const depsAlts = altsRaw ? altsRaw.split(',') : [];
+            const depsAlts = card.dataset.dependeAlts ? card.dataset.dependeAlts.split(',') : [];
             const depTextoId = card.dataset.dependeTextoId;
+            let atendeAlt = depsAlts.length === 0 || depsAlts[0] === "" || depsAlts.some(id => selecionados.includes(id));
+            let atendeTexto = !depTextoId || textosPreenchidos[depTextoId];
 
-            // Condição 1: Alternativas (Lógica OU)
-            let atendeAlt = true;
-            if (depsAlts.length > 0 && depsAlts[0] !== "") {
-                atendeAlt = depsAlts.some(id => selecionados.includes(id));
-            }
-
-            // Condição 2: Texto
-            let atendeTexto = true;
-            if (depTextoId) {
-                atendeTexto = textosPreenchidos[depTextoId] || false;
-            }
-
-            // Decisão de Exibição
-            const temDependencia = (depsAlts.length > 0 && depsAlts[0] !== "") || depTextoId;
-
-            if (temDependencia) {
-                if (atendeAlt && atendeTexto) {
-                    card.style.display = 'block';
-                    configurarObrigatoriedade(card, true);
-                } else {
-                    card.style.display = 'none';
-                    configurarObrigatoriedade(card, false);
-                }
-            }
-        });
-    }
-
-    
-
-    function configurarObrigatoriedade(card, status) {
-        const inputs = card.querySelectorAll('input');
-        const obrigatoria = card.dataset.obrigatoria === 'true';
-        const tipo = card.dataset.tipo;
-
-        inputs.forEach(input => {
-            if (status && obrigatoria) {
-                if (tipo !== 'MX') input.required = true;
+            if (atendeAlt && atendeTexto) {
+                card.style.display = 'block';
             } else {
-                input.required = false;
+                if (depsAlts.length > 0 || depTextoId) card.style.display = 'none';
             }
         });
     }
 
-    // --- VALIDAÇÃO DE SUBMIT ---
+    // --- VALIDAÇÃO DE SUBMIT COM SCROLL ---
     form.addEventListener('submit', function(e) {
         if (e.submitter && e.submitter.value === 'anterior') return;
-
         let valido = true;
-        let primeiraMensagem = "";
+        let primeiraPerguntaErro = null;
 
         document.querySelectorAll('.pergunta-card').forEach(card => {
             if (card.style.display === 'none') return;
-
             const tipo = card.dataset.tipo;
             const obrigatoria = card.dataset.obrigatoria === 'true';
             const config = card.dataset.configMista;
-            const perguntaTexto = card.querySelector('h5').innerText.replace('*', '').trim();
             
-            if (tipo === 'MX' && obrigatoria) {
+            if (obrigatoria) {
                 const radioMarcado = card.querySelector('input[type="radio"]:checked');
-                const textoInput = card.querySelector('.input-texto-mista');
+                const textoInput = card.querySelector('input[type="text"]');
                 const textoPreenchido = textoInput && textoInput.value.trim() !== "";
-
                 let erro = false;
-                if (config === 'QUALQUER' && !radioMarcado && !textoPreenchido) erro = true;
-                else if (config === 'AMBOS' && (!radioMarcado || !textoPreenchido)) erro = true;
-                else if (config === 'APENAS_OPCAO' && !radioMarcado) erro = true;
-                else if (config === 'APENAS_TEXTO' && !textoPreenchido) erro = true;
+
+                if (tipo === 'TX' && !textoPreenchido) erro = true;
+                else if (tipo === 'MX') {
+                    if (config === 'QUALQUER' && !radioMarcado && !textoPreenchido) erro = true;
+                    else if (config === 'AMBOS' && (!radioMarcado || !textoPreenchido)) erro = true;
+                    else if (config === 'APENAS_OPCAO' && !radioMarcado) erro = true;
+                    else if (config === 'APENAS_TEXTO' && !textoPreenchido) erro = true;
+                } else if (tipo === 'MC' && !radioMarcado) erro = true;
 
                 if (erro) {
                     valido = false;
-                    if (!primeiraMensagem) {
-                        primeiraMensagem = `Verifique a pergunta: "${perguntaTexto}"`;
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
                     card.classList.add('border', 'border-danger');
+                    if (!primeiraPerguntaErro) primeiraPerguntaErro = card;
                 } else {
                     card.classList.remove('border', 'border-danger');
                 }
@@ -199,13 +216,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (!valido) {
             e.preventDefault();
-            alert(primeiraMensagem);
+            primeiraPerguntaErro.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 
     radios.forEach(r => r.addEventListener('change', atualizarVisibilidade));
     inputsTexto.forEach(i => i.addEventListener('input', atualizarVisibilidade));
 
+    // Inicialização
+    aplicarMascaras();
     atualizarVisibilidade();
 });
 </script>
