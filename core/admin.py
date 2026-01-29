@@ -19,7 +19,8 @@ class PerguntaInline(SortableInlineAdminMixin, admin.TabularInline):
 @admin.register(Pergunta)
 class PerguntaAdmin(SortableAdminMixin, admin.ModelAdmin):
     # Alterado: agora referenciamos 'secao' em vez de 'questionario'
-    list_display = ('conteudo', 'secao', 'ordem', 'tipo')
+    list_display = ('conteudo', 'identificador', 'secao', 'ordem', 'tipo')
+    list_editable = ('identificador',)
     # Para filtrar pelo questionário, usamos a relação secao__questionario
     list_filter = ('secao__questionario', 'tipo')
     inlines = [AlternativaInline]

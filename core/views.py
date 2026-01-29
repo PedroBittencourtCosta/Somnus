@@ -1,3 +1,4 @@
+from datetime import date
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
@@ -140,27 +141,58 @@ def dashboard_respostas(request):
     
     return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
 
+
 @login_required
 @medico_ou_admin_required
 def exportar_respostas_csv(request, pk):
-    # Busca a resposta específica do questionário
+    # 1. Busca os dados base
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
+    user = res_quest.usuario
+    hoje = date.today()
     
+    # 2. Cálculo da Idade (Lógica de Engenharia de Software)
+    # $Idade = Ano_{Atual} - Ano_{Nasc} - 1$ (se o aniversário não ocorreu ainda)
+    idade = hoje.year - user.data_nascimento.year - (
+        (hoje.month, hoje.day) < (user.data_nascimento.month, user.data_nascimento.day)
+    ) if user.data_nascimento else "N/A"
+
+    # 3. Configuração da Resposta HTTP
     response = HttpResponse(content_type='text/csv')
-    filename = f"somnus_{res_quest.usuario.username}_{res_quest.id}.csv"
+    filename = f"somnus_{user.username}_{res_quest.id}.csv"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8')) 
+    response.write(u'\ufeff'.encode('utf8')) # Garante acentuação correta no Excel (BOM)
 
     writer = csv.writer(response, delimiter=';')
     
-    # Cabeçalho do arquivo
-    writer.writerow(['Pergunta', 'Resposta Selecionada', 'Texto Adicional/Livre', 'Valor/Score'])
+    # --- BLOCO 1: IDENTIFICAÇÃO E DADOS SOCIODEMOGRÁFICOS ---
+    writer.writerow(['METADADOS DO USUÁRIO'])
+    writer.writerow(['Variável', 'Valor'])
+    writer.writerow(['nome', user.get_full_name() or user.username])
+    writer.writerow(['data_nascimento', user.data_nascimento.strftime('%d/%m/%Y') if user.data_nascimento else ""])
+    writer.writerow(['idade', idade])
+    
+    # Variáveis solicitadas para o CSV técnico
+    writer.writerow(['sexo', user.get_sexo_display() if hasattr(user, 'get_sexo_display') else user.sexo])
+    writer.writerow(['cor', user.get_cor_raca_display() if hasattr(user, 'get_cor_raca_display') else user.cor_raca])
+    writer.writerow(['ecivil', user.get_estado_civil_display() if hasattr(user, 'get_estado_civil_display') else user.estado_civil])
+    writer.writerow(['data', res_quest.data_submissao.strftime('%d/%m/%Y %H:%M')])
+    
+    writer.writerow([]) # Linha em branco para separar
+    
+    # --- BLOCO 2: RESPOSTAS DO QUESTIONÁRIO ---
+    writer.writerow(['DADOS DO QUESTIONÁRIO'])
+    writer.writerow(['ID_Variavel', 'Pergunta', 'Resposta Selecionada', 'Texto Adicional', 'Valor/Score'])
 
-    # Busca todas as respostas das perguntas deste questionário específico
-    respostas_perguntas = RespostaPergunta.objects.filter(resposta_questionario=res_quest).select_related('pergunta', 'alternativa')
+    respostas_perguntas = RespostaPergunta.objects.filter(
+        resposta_questionario=res_quest
+    ).select_related('pergunta', 'alternativa').order_by('pergunta__ordem')
 
     for rp in respostas_perguntas:
+        # Usa o identificador técnico (ex: sexo__) se existir, senão usa o ID
+        var_id = rp.pergunta.identificador if rp.pergunta.identificador else f"ID_{rp.pergunta.id}"
+        
         writer.writerow([
+            var_id,
             rp.pergunta.conteudo,
             rp.alternativa.conteudo if rp.alternativa else "N/A",
             rp.resposta_texto if rp.resposta_texto else "",

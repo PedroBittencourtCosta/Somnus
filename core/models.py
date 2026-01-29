@@ -84,12 +84,21 @@ class Pergunta(models.Model):
     ordem = models.PositiveIntegerField(default=1)
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default='MC')
 
+    identificador = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        help_text="Nome da variável para o Excel (ex: sexo__, idade__). Se vazio, usará o ID da pergunta."
+    )
+
     class Meta:
         ordering = ['ordem']
         verbose_name = 'Pergunta'
         verbose_name_plural = 'Perguntas'
 
     def __str__(self):
+        if self.identificador:
+            return f"[{self.identificador}] {self.conteudo[:50]}..."
         return self.conteudo
 
 

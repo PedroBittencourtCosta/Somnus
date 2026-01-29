@@ -39,7 +39,7 @@ def cadastro_view(request):
         if form.is_valid():
             form.save()
             messages.success(request, 'Cadastro realizado com sucesso! Faça login para continuar.')
-            messages.info(request, 'abrir_modal') 
+            # messages.info(request, 'abrir_modal') 
             return redirect('home')
     else:
         form = UsuarioCreationForm()

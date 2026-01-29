@@ -1,6 +1,7 @@
 
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+# from django.contrib.auth.validators import UnicodeUsernameValidator
 
 class Usuario(AbstractUser):
     # Opções para Cor/Raça [cite: 639]
@@ -23,6 +24,16 @@ class Usuario(AbstractUser):
 
     SEXO_CHOICES = [('F', 'Feminino'), ('M', 'Masculino')]
 
+    username = models.CharField(
+        'Nome de Usuário',
+        max_length=150,
+        unique=False,  
+        help_text='Obrigatório. 150 caracteres ou menos. Letras, números e @/./+/-/_ apenas.',
+        # validators=[UnicodeUsernameValidator()],
+        # error_messages={
+        #     'unique': "Um usuário com este nome de usuário já existe.",
+        # },
+    )
     email = models.EmailField('E-mail', unique=True)
 
     sexo = models.CharField(max_length=1, choices=SEXO_CHOICES)
@@ -35,4 +46,4 @@ class Usuario(AbstractUser):
     REQUIRED_FIELDS = ['username']
 
     def __str__(self):
-        return self.username
+        return self.get_full_name() or self.username or self.email

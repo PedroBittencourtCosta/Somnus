@@ -4,6 +4,13 @@ from .models import Usuario
 from datetime import date # Import necessário para a máscara de segurança
 
 class UsuarioCreationForm(UserCreationForm):
+
+    username = forms.CharField(
+        label="Usuário",
+        required=True,
+        help_text="150 caracteres ou menos. Letras, números e @/./+/-/_ apenas."
+    )
+
     class Meta(UserCreationForm.Meta):
         model = Usuario
         fields = UserCreationForm.Meta.fields + (
@@ -21,6 +28,9 @@ class UsuarioCreationForm(UserCreationForm):
         }
 
 class PerfilForm(forms.ModelForm):
+
+    username = forms.CharField(label="Usuário", required=True)
+    
     class Meta:
         model = Usuario
         fields = ['username', 'email', 'data_nascimento', 'sexo', 'cor_raca', 'estado_civil']
