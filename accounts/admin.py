@@ -3,8 +3,8 @@ from django.contrib.auth.admin import UserAdmin
 from .models import Usuario
 
 class UsuarioAdmin(UserAdmin):
-    list_display = ('username', 'email', 'sexo', 'cor_raca', 'data_nascimento', 'is_staff')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
+    list_display = ('first_name', 'last_name','email', 'sexo', 'cor_raca', 'data_nascimento', 'is_staff')
+    search_fields = ('first_name', 'last_name', 'email', 'first_name', 'last_name')
     list_filter = ('sexo', 'cor_raca', 'is_staff', 'is_superuser')
     ordering = ('-date_joined',)
 

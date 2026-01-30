@@ -20,11 +20,14 @@
                             {% csrf_token %}
                             
                             <div class="row g-3">
-                                <div class="col-12">
-                                    {% bootstrap_field form.email placeholder="E-mail principal" %}
+                                <div class="col-md-6">
+                                    {% bootstrap_field form.first_name placeholder="Nome" %}
                                 </div>
                                 <div class="col-md-6">
-                                    {% bootstrap_field form.username placeholder="Nome de usuário" %}
+                                    {% bootstrap_field form.last_name placeholder="Sobrenome" %}
+                                </div>
+                                <div class="col-12">
+                                    {% bootstrap_field form.email placeholder="E-mail principal" %}
                                 </div>
                                 <div class="col-md-6">
                                     {% bootstrap_field form.data_nascimento %}

@@ -18,7 +18,10 @@
                         <div class="row g-3">
                             <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Informações de Conta</h5>
                             <div class="col-md-6">
-                                {% bootstrap_field form.username placeholder="Nome de usuário" %}
+                                {% bootstrap_field form.first_name placeholder="Seu nome" %}
+                            </div>
+                            <div class="col-md-6">
+                                {% bootstrap_field form.last_name placeholder="Seu sobrenome" %}
                             </div>
                             <div class="col-md-6">
                                 {% bootstrap_field form.email placeholder="E-mail" %}

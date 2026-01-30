@@ -1,46 +1,41 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario
-from datetime import date # Import necessário para a máscara de segurança
+from datetime import date
 
 class UsuarioCreationForm(UserCreationForm):
-
-    username = forms.CharField(
-        label="Usuário",
-        required=True,
-        help_text="150 caracteres ou menos. Letras, números e @/./+/-/_ apenas."
-    )
+    # Definimos email como obrigatório no formulário
+    email = forms.EmailField(label="E-mail", required=True)
 
     class Meta(UserCreationForm.Meta):
         model = Usuario
-        fields = UserCreationForm.Meta.fields + (
+        # Removido 'username' da lista de campos visíveis
+        fields = (
             'email', 'first_name', 'last_name', 
             'sexo', 'cor_raca', 'estado_civil', 'data_nascimento'
         )
         widgets = {
             'data_nascimento': forms.DateInput(
-                format='%Y-%m-%d', # Formato ISO necessário para o navegador exibir o valor
+                format='%Y-%m-%d',
                 attrs={
                     'type': 'date',
-                    'max': date.today().isoformat() # Impede seleção de datas futuras no calendário
+                    'max': date.today().isoformat()
                 }
             ),
         }
 
 class PerfilForm(forms.ModelForm):
-
-    username = forms.CharField(label="Usuário", required=True)
-    
     class Meta:
         model = Usuario
-        fields = ['username', 'email', 'data_nascimento', 'sexo', 'cor_raca', 'estado_civil']
+        # Removido 'username' para evitar conflitos na edição
+        fields = ['first_name', 'last_name', 'email', 'data_nascimento', 'sexo', 'cor_raca', 'estado_civil']
         widgets = {
             'data_nascimento': forms.DateInput(
-                format='%Y-%m-%d', # FIX: Faz o navegador reconhecer a data salva no banco
+                format='%Y-%m-%d',
                 attrs={
                     'type': 'date', 
                     'class': 'form-control',
-                    'max': date.today().isoformat() # Máscara de segurança: trava o calendário na data de hoje
+                    'max': date.today().isoformat()
                 }
             ),
         }
@@ -48,7 +43,6 @@ class PerfilForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    # Validação de segurança no Backend (além da trava visual do HTML)
     def clean_data_nascimento(self):
         data_nasc = self.cleaned_data.get('data_nascimento')
         if data_nasc and data_nasc > date.today():
