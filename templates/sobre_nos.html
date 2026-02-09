@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Sobre o Projeto Somnus</h1>
+        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5">
+                <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-inst);">Ciência e Tecnologia</h3>
+                <p class="text-muted leading-relaxed">
+                    O <strong>Somnus</strong> é uma plataforma digital de triagem e coleta de dados epidemiológicos, desenvolvida para dar suporte à pesquisa 
+                    <em>"Associação entre sono e transtorno mental comum: impactos na saúde e bem-estar"</em>. 
+                    O projeto une o rigor da metodologia científica com a eficiência do desenvolvimento de software para mapear a saúde mental e a qualidade do sono da população.
+                </p>
+                <p class="text-muted leading-relaxed">
+                    Nosso objetivo principal é identificar como aspectos relacionados ao sono impactam o desenvolvimento de Transtornos Mentais Comuns (TMC). 
+                    Os dados coletados auxiliam profissionais da saúde no desenvolvimento de intervenções precoces e políticas públicas mais eficazes.
+                </p>
+            </div>
+
+            <div class="row g-4 mb-5">
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+                        <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">A Instituição</h4>
+                        <p class="small text-muted mb-0">
+                            Pesquisa vinculada à <strong>Faculdade de Medicina da Universidade de Rio Verde (UniRV)</strong>, 
+                            no estado de Goiás. O estudo é realizado no Centro de Especialidades em Saúde Mental (CESM) de Rio Verde.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+                        <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">Equipe de Pesquisa</h4>
+                        <ul class="list-unstyled small text-muted mb-0">
+                            <li class="mb-2"><strong>Acadêmicas:</strong> Mariana Galhardo Carneiro e Noemi Queireza Leite.</li>
+                            <li><strong>Orientador:</strong> Prof. Dr. Renato Canevari Dutra da Silva.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 border-start border-4" style="border-color: var(--somnus-green-dark) !important;">
+                <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">Compromisso Ético</h4>
+                <p class="text-muted small mb-0">
+                    O estudo respeita integralmente as resoluções do Conselho Nacional de Saúde (CNS 466/12 e 510/16), garantindo o total sigilo e anonimato dos participantes. 
+                    A participação é voluntária e todos os dados são tratados exclusivamente para fins acadêmicos.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .leading-relaxed {
+        line-height: 1.8;
+    }
+</style>
+{% endblock %}

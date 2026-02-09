@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Entendendo o Sono</h1>
+        <p class="text-muted mx-auto" style="max-width: 700px;">
+            O sono é um estado reversível de menor interação com o ambiente, essencial para a manutenção da homeostase corporal e regulação emocional.
+        </p>
+        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 border-top border-4" style="border-color: var(--somnus-blue-inst) !important;">
+                <h3 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Sono Não-REM</h3>
+                <p class="small text-muted">
+                    É a fase de ondas lentas, onde o indivíduo transita entre o estágio mais leve até o mais profundo.
+                </p>
+                <ul class="small text-muted ps-3">
+                    <li class="mb-2"><strong>Reparo Físico:</strong> Período em que o corpo prioriza o crescimento e reparo de tecidos.</li>
+                    <li class="mb-2"><strong>Hormônio do Crescimento:</strong> O GH é secretado em níveis consideráveis durante as primeiras horas de sono profundo.</li>
+                    <li><strong>Conservação de Energia:</strong> Redução da atividade encefálica para descanso sistêmico.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 border-top border-4" style="border-color: var(--somnus-green-dark) !important;">
+                <h3 class="fw-bold mb-3" style="color: var(--somnus-green-dark);">Sono REM</h3>
+                <p class="small text-muted">
+                    Fase de movimentos oculares rápidos, com grande atividade encefálica e ocorrência de sonhos.
+                </p>
+                <ul class="small text-muted ps-3">
+                    <li class="mb-2"><strong>Memória e Aprendizado:</strong> Processo de consolidação, transformando memórias de curto prazo em longo prazo.</li>
+                    <li class="mb-2"><strong>Poda Sináptica:</strong> Remoção de conexões neurais desnecessárias para otimizar o cérebro.</li>
+                    <li><strong>Regulação Emocional:</strong> Modulação de aspectos emocionais ligados à carga de memória.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-5">
+        <div class="card-body p-4 p-md-5">
+            <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">Por que a qualidade importa?</h3>
+            <div class="row g-4">
+                <div class="col-md-4 text-center">
+                    <div class="fs-1 mb-3">🧠</div>
+                    <h5 class="fw-bold">Cognição</h5>
+                    <p class="small text-muted">O sono adequado inibe a perda de volume no tecido nervoso e o acúmulo de proteínas neurodegenerativas.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="fs-1 mb-3">🫀</div>
+                    <h5 class="fw-bold">Saúde Cardiovascular</h5>
+                    <p class="small text-muted">A má qualidade do sono está ligada a maior incidência de doenças coronarianas e hipertensão.</p>
+                </div>
+                <div class="col-md-4 text-center">
+                    <div class="fs-1 mb-3">🛡️</div>
+                    <h5 class="fw-bold">Sistema Imune</h5>
+                    <p class="small text-muted">Noites inadequadas reduzem a circulação de células de defesa e prejudicam a resposta anti-tumoral.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert border-0 rounded-4 p-4 d-flex align-items-center" style="background-color: rgba(0, 103, 177, 0.05);">
+        <span class="fs-3 me-3">⚠️</span>
+        <div>
+            <h6 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">Atenção à Sonolência Diurna</h6>
+            <p class="small text-muted mb-0">
+                A sonolência excessiva diurna (SED) é a incapacidade de se manter alerta durante o dia, podendo indicar distúrbios crônicos e prejudicar atividades cotidianas.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

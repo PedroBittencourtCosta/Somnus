@@ -3,16 +3,17 @@
 {% load django_bootstrap5 %}
 
 {% block content %}
-<section class="d-flex align-items-center justify-content-center py-5 bg-light min-vh-100">
-    <div class="container">
-        <div class="row justify-content-center">
+<section class="d-flex align-items-md-center justify-content-center py-0 py-md-5 bg-md-light min-vh-100">
+    <div class="container p-0 p-md-3"> <div class="row justify-content-center g-0">
             <div class="col-12 col-md-10 col-lg-7">
-                <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card border-0 shadow-lg rounded-4 overflow-hidden card-mobile-full">
                     <div class="card-body p-4 p-md-5 bg-white">
                         
                         <div class="text-center mb-5">
-                            <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" class="h-10 w-auto mb-4" style="max-height: 40px;">
-                            <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Criar Conta</h2>
+                            {% comment %} <img src="{% static 'images/Marca - Sonmus.png' %}" alt="Logo Somnus" 
+                                 class="h-10 w-auto mb-4 d-md-none" style="max-height: 40px;"> {% endcomment %}
+                            
+                            <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Criar Conta</h1>
                             <p class="text-muted small">Preencha os campos abaixo para iniciar sua avaliação.</p>
                         </div>
 
@@ -72,6 +73,18 @@
 </section>
 
 <style>
+    /* Estilos para o efeito Full Screen no Mobile */
+    @media (max-width: 767.98px) {
+        .card-mobile-full {
+            border-radius: 0 !important;
+            min-height: 100vh;
+            box-shadow: none !important;
+        }
+        body {
+            background-color: #fff !important; /* Garante que o fundo fora do card seja branco no mobile */
+        }
+    }
+
     /* Mantendo a identidade visual do Somnus */
     .form-control, .form-select {
         border-radius: 0.75rem;

@@ -150,30 +150,42 @@ STATICFILES_DIRS = [
 ]
 
 JAZZMIN_SETTINGS = {
-    # Título da aba no navegador
     "site_title": "Somnus Admin",
-    
-    # Título no painel (Header)
     "site_header": "Somnus",
-    
-    # Logo que aparece no login e no canto superior esquerdo (deve estar em static)
     "site_brand": "Somnus",
-    "site_logo": "images/Marca - Sonmus.png", # Ajuste o caminho conforme seu static
-    
-    # Logo para a tela de login (opcional)
-    "login_logo": "images/Marca - Sonmus.png",
-
-    # Mensagem de boas-vindas na tela de login
+    "site_logo": "images/icone - Somnus.png",
+    "login_logo": "images/icone - Somnus.png",
+    "site_icon": "images/icone - Somnus.png",
     "welcome_sign": "Bem-vindo ao Gerenciador Somnus",
+    "copyright": "Somnus Project",
+    "user_avatar": None,
 
-    # Copyright no rodapé
-    "copyright": "Somnus",
+    # Ícones para as Models (FontAwesome 5 Free)
+    "icons": {
+        "auth": "fas fa-users-cog",
+        "accounts.Usuario": "fas fa-user-md",           # Médico/Usuário
+        "core.Questionario": "fas fa-poll-h",           # Pesquisa/Questionário
+        "core.Secao": "fas fa-th-list",                 # Lista de seções
+        "core.Pergunta": "fas fa-question-circle",       # Pergunta
+        "core.Alternativa": "fas fa-check-square",      # Opções de escolha
+        "core.RespostaQuestionario": "fas fa-clipboard-check", # Respostas completas
+        "core.RespostaPergunta": "fas fa-comment-dots", # Respostas individuais
+        "core.RegraEquacao": "fas fa-calculator",       # Lógica de cálculo
+        "ethics.TCLE": "fas fa-file-contract",          # Termo de Ética
+        "ethics.AceiteTCLE": "fas fa-user-shield",      # Aceite do Termo
+    },
 
-    # --- Customização Visual ---
-    # Injetar o CSS customizado que criaremos abaixo
-    "custom_css": "css/admin_custom.css",
-    
-    # UI Builder (deixe True enquanto estiver testando para ver as mudanças ao vivo)
+    # Ordem do menu lateral
+    "order_with_respect_to": [
+        "accounts", 
+        "core.Questionario", 
+        "core.Secao", 
+        "core.Pergunta", 
+        "core.RegraEquacao",
+        "core.RespostaQuestionario",
+        "ethics"
+    ],
+
     "show_ui_builder": True,
 }
 
@@ -182,23 +194,21 @@ JAZZMIN_UI_TWEAKS = {
     "footer_small_text": False,
     "body_small_text": False,
     "brand_small_text": False,
-    "brand_colour": "navbar-white", # Cor do texto da marca
-    "accent": "accent-primary",
-    "navbar": "navbar-white navbar-light", # Deixa o topo limpo para destacar a borda verde
+    "brand_colour": "navbar-white",
+    "accent": "accent-success",           # Verde institucional do Somnus
+    "navbar": "navbar-white navbar-light",
     "no_navbar_border": True,
     "navbar_fixed": True,
     "layout_boxed": False,
     "footer_fixed": False,
     "sidebar_fixed": True,
-    "sidebar": "sidebar-dark-primary", # Base escura para aplicarmos o blue-deep
+    "sidebar": "sidebar-dark-primary",    # Azul escuro institucional
     "sidebar_nav_small_text": False,
     "sidebar_disable_expand": False,
-    "sidebar_nav_child_indent": False,
+    "sidebar_nav_child_indent": True,     # Melhora a visualização de subitens
     "sidebar_nav_compact_style": False,
     "sidebar_nav_legacy_style": False,
     "sidebar_nav_flat_style": False,
-    "theme": "default",
+    "theme": "flatly",                    # Tema limpo e profissional (médico)
     "dark_mode_theme": None,
 }
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Saúde Mental e Bem-Estar</h1>
+        <p class="text-muted mx-auto" style="max-width: 800px;">
+            O bem-estar psíquico é fundamental para a qualidade de vida, influenciando diretamente a memória, a cognição e o desempenho nas atividades diárias.
+        </p>
+        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-inst);">Transtornos Mentais Comuns (TMC)</h3>
+                <p class="text-muted leading-relaxed">
+                    Os TMC abrangem manifestações clínicas não psicóticas, compreendidas principalmente por sintomas de <strong>ansiedade e depressão</strong>. 
+                    Embora muitas vezes subdiagnosticados, eles impactam negativamente o bem-estar pessoal, as relações sociais e o ambiente de trabalho.
+                </p>
+                <div class="d-flex flex-wrap gap-2 mt-3">
+                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Fadiga</span>
+                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Irritabilidade</span>
+                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Insônia</span>
+                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Dificuldade de Concentração</span>
+                </div>
+            </div>
+            <div class="col-md-4 text-center d-none d-md-block">
+                <div style="font-size: 5rem; color: rgba(0, 103, 177, 0.1);">🧠</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">O Impacto da Mente no Sono</h4>
+                <p class="small text-muted mb-3">
+                    Transtornos mentais podem desregular o ciclo vigília-sono de diversas formas:
+                </p>
+                <ul class="small text-muted ps-3">
+                    <li class="mb-2"><strong>Ansiedade:</strong> Causa hiperatividade do sistema nervoso, dificultando o início do sono e gerando despertares noturnos.</li>
+                    <li><strong>Depressão:</strong> Frequentemente associada a episódios de insônia ou hipersonia, afetando a regulação emocional.</li>
+                </ul>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
+                <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">O Impacto do Sono na Mente</h4>
+                <p class="small text-muted mb-3">
+                    A privação crônica de sono atua como um fator de risco para problemas psíquicos:
+                </p>
+                <ul class="small text-muted ps-3">
+                    <li class="mb-2"><strong>Resposta ao Estresse:</strong> Noites mal dormidas reduzem a capacidade do cérebro de modular o estresse e o medo.</li>
+                    <li><strong>Neurotransmissores:</strong> Distúrbios do sono podem reduzir níveis de serotonina, contribuindo para sentimentos de tristeza profunda.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5" style="background-color: var(--somnus-blue-deep); color: white;">
+        <div class="text-center">
+            <h3 class="fw-bold mb-3">A Importância do Suporte Social</h3>
+            <p class="mx-auto opacity-75 small" style="max-width: 700px;">
+                O apoio recebido de familiares, amigos e pessoas próximas é um fator protetor fundamental para a saúde mental. 
+                O suporte emocional adequado auxilia na tomada de decisões e no enfrentamento de desafios cotidianos.
+            </p>
+        </div>
+    </div>
+
+    <div class="alert border-0 rounded-4 p-4 text-center" style="background-color: rgba(40, 167, 69, 0.05);">
+        <p class="small text-muted mb-0">
+            <strong>Nota Importante:</strong> Este sistema utiliza escalas validadas academicamente para triagem e pesquisa. 
+            A avaliação automática não substitui a consulta médica ou psicológica. Se você estiver sentindo desconforto intenso, procure um profissional de saúde mental.
+        </p>
+    </div>
+</div>
+
+<style>
+    .leading-relaxed {
+        line-height: 1.8;
+    }
+</style>
+{% endblock %}

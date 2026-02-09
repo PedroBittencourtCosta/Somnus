@@ -1,9 +1,10 @@
 
 from django.contrib import admin
 from django.urls import include, path
-from django.conf import settings
+# from django.conf import settings
 
 from core import views
+from somnus.views import sobre_nos, sono, bem_estar, dicas
 
 admin.site.site_header = "Administração - Pesquisa TMC e Sono"
 admin.site.site_title = "Portal de Dados CESM"
@@ -12,6 +13,10 @@ admin.site.index_title = "Bem-vindo ao Gerenciador da Pesquisa"
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.index_view, name="home"),
+    path('sobre', sobre_nos, name='sobre'),
+    path('sono', sono, name='sono'),
+    path('bem_estar', bem_estar, name='bem_estar'),
+    path('dicas', dicas, name='dicas'),
     path("accounts/", include("accounts.urls")),
     path("questionario/", include("core.urls")),
     path("tcle/", include("ethics.urls")),

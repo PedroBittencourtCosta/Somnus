@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Privacidade e Segurança</h1>
+        <p class="text-muted mx-auto" style="max-width: 800px;">
+            A sua segurança e o sigilo das suas informações são prioridades absolutas no projeto Somnus. 
+            Seguimos rigorosos protocolos éticos e técnicos para proteger os seus dados.
+        </p>
+        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4">
+                <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-inst);">Compromisso com o Participante</h3>
+                
+                <div class="mb-4">
+                    <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Sigilo e Anonimato</h5>
+                    <p class="small text-muted"> 
+                        A sua identidade nunca será divulgada em publicações de resultados.
+                    </p>
+                </div>
+
+                <div class="mb-4">
+                    <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Ética Profissional</h5>
+                    <p class="small text-muted">
+                        Este estudo respeita as resoluções CNS 466/12 e CNS/MS 510/16 do Conselho Nacional de Saúde. 
+                        O projeto é aprovado pelo Comitê de Ética em Pesquisa (CEP) da UniRV.
+                    </p>
+                </div>
+
+                <div class="mb-0">
+                    <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Direito de Desistência</h5>
+                    <p class="small text-muted">
+                        A sua participação é totalmente voluntária. Você tem o direito de retirar o seu consentimento em qualquer fase do estudo, sem qualquer tipo de penalização ou prejuízo no seu atendimento.
+                    </p>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-4 p-4 border-start border-4" style="border-color: var(--somnus-green-dark) !important;">
+                <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Armazenamento de Dados</h5>
+                <p class="small text-muted mb-0">
+                    As informações coletadas são armazenadas com segurança e serão guardadas pelo período de 5 anos, sendo posteriormente destruídas conforme os protocolos de pesquisa.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-light h-100">
+                <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">Dicas de Segurança Digital</h3>
+                
+                <div class="d-flex mb-4">
+                    <div class="me-3 fs-3 text-primary">🔑</div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Senhas Fortes</h6>
+                        <p class="x-small text-muted mb-0">Utilize combinações de letras, números e símbolos. Não compartilhe a sua senha com ninguém.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-4">
+                    <div class="me-3 fs-3 text-primary">📱</div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Acesso em Dispositivos</h6>
+                        <p class="x-small text-muted mb-0">Evite aceder à sua conta em computadores públicos. Se o fizer, lembre-se sempre de fazer "Sair" (Logout) ao terminar.</p>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-4">
+                    <div class="me-3 fs-3 text-primary">🔒</div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Conexão Segura</h6>
+                        <p class="x-small text-muted mb-0">Certifique-se de que está a aceder ao site através de uma ligação segura (HTTPS).</p>
+                    </div>
+                </div>
+
+                <div class="mt-4 p-3 rounded-3 bg-white border">
+                    <h6 class="fw-bold small mb-2">Contacto dos Responsáveis:</h6>
+                    <p class="x-small text-muted mb-1"><strong>Orientador:</strong> Prof. Dr. Renato Canevari Dutra da Silva</p>
+                    <p class="x-small text-muted mb-0"><strong>Telefone:</strong> (64) 3620-2297 </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .x-small {
+        font-size: 0.85rem;
+    }
+</style>
+{% endblock %}
