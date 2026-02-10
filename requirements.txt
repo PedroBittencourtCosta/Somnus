@@ -14,12 +14,14 @@ django-browser-reload==1.21.0
 django-environ==0.12.0
 django-jazzmin==3.0.1
 django-tailwind==4.4.2
+gunicorn==25.0.3
 honcho==2.0.0
 idna==3.11
 Jinja2==3.1.6
 markdown-it-py==4.0.0
 MarkupSafe==3.0.3
 mdurl==0.1.2
+packaging==26.0
 psycopg2-binary==2.9.11
 Pygments==2.19.2
 pytailwindcss==0.3.0
