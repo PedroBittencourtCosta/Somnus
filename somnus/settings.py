@@ -22,7 +22,7 @@ import os
 env = environ.Env(
     DEBUG=(bool, False)
 )
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # Quick-start development settings - unsuitable for production
@@ -218,3 +218,5 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "flatly",                    # Tema limpo e profissional (médico)
     "dark_mode_theme": None,
 }
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
