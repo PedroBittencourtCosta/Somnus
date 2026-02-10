@@ -226,5 +226,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Pasta onde o Railway vai coletar os arquivos (não precisa criar manualmente)
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# Opcional: Melhora a performance compactando arquivos e criando hashes (cache)
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 # Autoriza o domínio do Railway para envio de formulários (CSRF)
 CSRF_TRUSTED_ORIGINS = ['https://somnus-production-0b31.up.railway.app']
