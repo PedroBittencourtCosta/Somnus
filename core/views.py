@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
 import csv
+
+from core.Scaleprocessor import DASS21Calculator
 from .decorators import medico_ou_admin_required
 
 from ethics.models import TCLE, AceiteTCLE
@@ -142,60 +144,76 @@ def dashboard_respostas(request):
     return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
 
 
+
+def get_answers_by_section(respostas_queryset, section_id):
+    """Filtra respostas de uma seção e mapeia pela posição relativa."""
+    respostas_secao = respostas_queryset.filter(
+        pergunta__secao_id=section_id
+    ).order_by('pergunta__ordem')
+    
+    return {i+1: rp.alternativa.valor for i, rp in enumerate(respostas_secao) if rp.alternativa}
+
+
 @login_required
 @medico_ou_admin_required
 def exportar_respostas_csv(request, pk):
-    # 1. Busca os dados base
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
     user = res_quest.usuario
     hoje = date.today()
     
-    # 2. Cálculo da Idade (Lógica de Engenharia de Software)
-    # $Idade = Ano_{Atual} - Ano_{Nasc} - 1$ (se o aniversário não ocorreu ainda)
+    # Lógica de Idade: Ano_Atual - Ano_Nasc - 1 (se aniversário não ocorreu)
     idade = hoje.year - user.data_nascimento.year - (
         (hoje.month, hoje.day) < (user.data_nascimento.month, user.data_nascimento.day)
     ) if user.data_nascimento else "N/A"
 
-    # 3. Configuração da Resposta HTTP
+    # 1. Carrega todas as respostas do banco
+    respostas_qs = RespostaPergunta.objects.filter(
+        resposta_questionario=res_quest
+    ).select_related('pergunta', 'alternativa')
+
+    # 2. Cria o mapa de identificadores técnicos (ex: {'dassa': 0, 'dassb': 2})
+    # Isso resolve o problema de desalinhamento de ordem
+    answers_map = {
+        rp.pergunta.identificador: rp.alternativa.valor 
+        for rp in respostas_qs 
+        if rp.pergunta.identificador and rp.alternativa
+    }
+
+    # 3. Calcula os scores
+    scores_dass = DASS21Calculator.calculate(answers_map)
+
+    # --- CONFIGURAÇÃO CSV ---
     response = HttpResponse(content_type='text/csv')
-    filename = f"somnus_{user.username}_{res_quest.id}.csv"
+    filename = f"somnus_dass21_{user.username}.csv"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8')) # Garante acentuação correta no Excel (BOM)
+    response.write(u'\ufeff'.encode('utf8')) 
 
     writer = csv.writer(response, delimiter=';')
     
-    # --- BLOCO 1: IDENTIFICAÇÃO E DADOS SOCIODEMOGRÁFICOS ---
-    writer.writerow(['METADADOS DO USUÁRIO'])
+    # BLOCO 1: IDENTIFICAÇÃO
+    writer.writerow(['IDENTIFICAÇÃO'])
     writer.writerow(['Variável', 'Valor'])
     writer.writerow(['nome', user.get_full_name() or user.username])
-    writer.writerow(['data_nascimento', user.data_nascimento.strftime('%d/%m/%Y') if user.data_nascimento else ""])
     writer.writerow(['idade', idade])
-    
-    # Variáveis solicitadas para o CSV técnico
-    writer.writerow(['sexo', user.get_sexo_display() if hasattr(user, 'get_sexo_display') else user.sexo])
-    writer.writerow(['cor', user.get_cor_raca_display() if hasattr(user, 'get_cor_raca_display') else user.cor_raca])
-    writer.writerow(['ecivil', user.get_estado_civil_display() if hasattr(user, 'get_estado_civil_display') else user.estado_civil])
-    writer.writerow(['data', res_quest.data_submissao.strftime('%d/%m/%Y %H:%M')])
-    
-    writer.writerow([]) # Linha em branco para separar
-    
-    # --- BLOCO 2: RESPOSTAS DO QUESTIONÁRIO ---
-    writer.writerow(['DADOS DO QUESTIONÁRIO'])
-    writer.writerow(['ID_Variavel', 'Pergunta', 'Resposta Selecionada', 'Texto Adicional', 'Valor/Score'])
+    writer.writerow(['data_coleta', res_quest.data_submissao.strftime('%d/%m/%Y')])
+    writer.writerow([]) 
 
-    respostas_perguntas = RespostaPergunta.objects.filter(
-        resposta_questionario=res_quest
-    ).select_related('pergunta', 'alternativa').order_by('pergunta__ordem')
+    # BLOCO 2: RESULTADOS DASS-21 (Cálculo preciso por ID)
+    writer.writerow(['RESULTADOS DASS-21 (SCORES BRUTOS)'])
+    writer.writerow(['Subescala', 'Pontuação (0-21) [cite: 260]'])
+    for sub, valor in scores_dass.items():
+        writer.writerow([sub, valor])
+    writer.writerow([]) 
 
-    for rp in respostas_perguntas:
-        # Usa o identificador técnico (ex: sexo__) se existir, senão usa o ID
-        var_id = rp.pergunta.identificador if rp.pergunta.identificador else f"ID_{rp.pergunta.id}"
-        
+    # BLOCO 3: DETALHAMENTO
+    writer.writerow(['RESPOSTAS DETALHADAS'])
+    writer.writerow(['ID_Variavel', 'Pergunta', 'Resposta Selecionada', 'Valor'])
+
+    for rp in respostas_qs.order_by('pergunta__ordem'):
         writer.writerow([
-            var_id,
+            rp.pergunta.identificador or f"ID_{rp.pergunta.id}",
             rp.pergunta.conteudo,
             rp.alternativa.conteudo if rp.alternativa else "N/A",
-            rp.resposta_texto if rp.resposta_texto else "",
             rp.alternativa.valor if rp.alternativa else ""
         ])
 
