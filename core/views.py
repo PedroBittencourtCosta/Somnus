@@ -7,7 +7,7 @@ from django.contrib import messages
 
 import csv
 
-from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, SRQ20Calculator
+from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
 from .decorators import medico_ou_admin_required
 
 from ethics.models import TCLE, AceiteTCLE
@@ -165,11 +165,17 @@ def exportar_respostas_csv(request, pk):
         resposta_questionario=res_quest
     ).select_related('pergunta', 'alternativa')
 
-    answers_map = {
-        rp.pergunta.identificador: rp.alternativa.valor 
-        for rp in respostas_qs 
-        if rp.pergunta.identificador and rp.alternativa
-    }
+    # --- NOVO MAPEAMENTO HÍBRIDO ---
+    answers_map = {}
+    for rp in respostas_qs:
+        identificador = rp.pergunta.identificador
+        if identificador:
+            # Se tiver alternativa (DASS, K10), pega o valor numérico
+            if rp.alternativa:
+                answers_map[identificador] = rp.alternativa.valor
+            # Se for texto (Peso, Altura, Horários), pega o texto bruto
+            elif rp.resposta_texto:
+                answers_map[identificador] = rp.resposta_texto
 
     # PROCESSAMENTO MODULAR [cite: 256, 276]
     scores_dass  = DASS21Calculator.calculate(answers_map)
@@ -178,6 +184,13 @@ def exportar_respostas_csv(request, pk):
     scores_ese   = ESECalculator.calculate(answers_map)   # Novo
     scores_audit = AUDITCalculator.calculate(answers_map) # Novo
     scores_emssp = EMSSPCalculator.calculate(answers_map)
+    scores_psqi = PSQICalculator.calculate(answers_map)
+    
+    # Cálculo Extra: IMC (Seção 7.2) 
+    peso = SafeParser.to_float(answers_map.get('peso', 0))
+    altura = SafeParser.to_float(answers_map.get('altura', 0))
+    
+    imc = round(peso / (altura ** 2), 2) if altura > 0 else 0
 
     # GERAÇÃO DO CSV
     response = HttpResponse(content_type='text/csv')
@@ -206,13 +219,27 @@ def exportar_respostas_csv(request, pk):
     writer.writerow(['SUPORTE_AMIGOS',  scores_emssp['suporte_amigos'],  "Máx 28"])
     writer.writerow(['SUPORTE_OUTROS',  scores_emssp['suporte_outros'],  "Máx 28"])
     writer.writerow(['SUPORTE_TOTAL',   scores_emssp['suporte_total'],   "Máx 84"])
+
+    writer.writerow(['RESUMO DOS SCORES (PITTSBURGH E SAÚDE)'])
+    writer.writerow(['Indicador', 'Score', 'Classificação'])
+    writer.writerow(['PSQI_GLOBAL', scores_psqi['psqi_global'], scores_psqi['psqi_status']])
+    writer.writerow(['IMC_ATUAL', imc, "kg/m²"])
+
+    # Detalhamento dos componentes do PSQI para o seu artigo
+    for i, comp in enumerate(scores_psqi['psqi_componentes'], 1):
+        writer.writerow([f'PSQI_COMPONENTE_{i}', comp, "0 a 3"])
     
     writer.writerow([]) # Separador
 
     # BLOCO: DETALHAMENTO DAS RESPOSTAS (Corrigido para evitar crash)
     writer.writerow(['DETALHAMENTO'])
+    writer.writerow(['DETALHAMENTO COMPLETO'])
     for rp in respostas_qs.order_by('pergunta__ordem'):
-        valor = rp.alternativa.valor if rp.alternativa else ""
-        writer.writerow([rp.pergunta.identificador, rp.pergunta.conteudo[:60], valor])
-
+        # Aqui garantimos que o CSV mostre o texto se não houver alternativa
+        valor_exibicao = rp.alternativa.valor if rp.alternativa else rp.resposta_texto
+        writer.writerow([
+            rp.pergunta.identificador or f"ID_{rp.pergunta.id}",
+            rp.pergunta.conteudo[:80],
+            valor_exibicao
+        ])
     return response

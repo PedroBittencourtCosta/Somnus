@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+import re
+
+
 class Scaleprocessor:
 
     @staticmethod
@@ -187,3 +191,119 @@ class EMSSPCalculator:
             "suporte_outros": out,
             "suporte_total": fam + ami + out
         }
+    
+class PSQICalculator:
+    @staticmethod
+    def calculate(answers_map):
+        # C1: Qualidade (Valor da alternativa ou texto convertido)
+        c1 = SafeParser.to_int(answers_map.get('qualsono', 0))
+
+        # C2: Latência (AQUI DAVA O ERRO: convertemos '75' para 75)
+        dormin = SafeParser.to_int(answers_map.get('dormin', 0))
+        ponto_item2 = 0
+        if dormin > 60: ponto_item2 = 3
+        elif dormin > 30: ponto_item2 = 2
+        elif dormin > 15: ponto_item2 = 1
+        
+        soma_c2 = ponto_item2 + SafeParser.to_int(answers_map.get('ndorm', 0))
+        c2 = 3 if soma_c2 >= 5 else 2 if soma_c2 >= 3 else 1 if soma_c2 >= 1 else 0
+
+        # C3: Duração
+        sonoh = SafeParser.to_float(answers_map.get('sonoh', 0))
+        c3 = 0 if sonoh > 7 else 1 if sonoh >= 6 else 2 if sonoh >= 5 else 3
+
+        # C4: Eficiência (Usa o novo parse de tempo)
+        horas_na_cama = PSQICalculator._get_hours_in_bed(answers_map)
+        if horas_na_cama > 0:
+            eficiencia = (sonoh / horas_na_cama) * 100
+            c4 = 0 if eficiencia >= 85 else 1 if eficiencia >= 75 else 2 if eficiencia >= 65 else 3
+        else:
+            c4 = 0
+
+        # C5: Distúrbios (Soma segura de todos os itens)
+        dist_ids = ['acordm', 'levaban', 'nrespir', 'roncof', 'frio', 'calor', 'sonhor', 'dor', 'frpson']
+        soma_c5 = sum(SafeParser.to_int(answers_map.get(vid, 0)) for vid in dist_ids)
+        c5 = 3 if soma_c5 >= 19 else 2 if soma_c5 >= 10 else 1 if soma_c5 >= 1 else 0
+
+        # C6 e C7
+        c6 = SafeParser.to_int(answers_map.get('frmson', 0))
+        soma_c7 = SafeParser.to_int(answers_map.get('difacor', 0)) + SafeParser.to_int(answers_map.get('probativ', 0))
+        c7 = 3 if soma_c7 >= 5 else 2 if soma_c7 >= 3 else 1 if soma_c7 >= 1 else 0
+
+        total = c1 + c2 + c3 + c4 + c5 + c6 + c7
+        return {
+            "psqi_global": total,
+            "psqi_status": "Qualidade Ruim" if total > 5 else "Qualidade Boa",
+            "psqi_componentes": [c1, c2, c3, c4, c5, c6, c7]
+        }
+
+    @staticmethod
+    def _get_hours_in_bed(answers_map):
+        # Trata o identificador combinado que vimos no seu log: 'deith, deitm'
+        t_deitar = SafeParser.parse_time(answers_map.get('deith, deitm', ''))
+        t_levan = SafeParser.parse_time(answers_map.get('levanh, levanm', ''))
+        
+        if t_deitar and t_levan:
+            d = datetime(2026, 1, 1, t_deitar[0], t_deitar[1])
+            l = datetime(2026, 1, 1, t_levan[0], t_levan[1])
+            if l <= d: l += timedelta(days=1)
+            return (l - d).total_seconds() / 3600
+        return 0
+
+class IMCCalculator:
+    """Calcula o IMC tratando entradas de texto (Peso e Altura)."""
+
+    @staticmethod
+    def parse_value(value):
+        """Converte string '1,75' ou '80.5' para float."""
+        if not value: return 0.0
+        try:
+            # Substitui vírgula por ponto e tenta converter
+            return float(str(value).replace(',', '.'))
+        except ValueError:
+            return 0.0
+
+    @staticmethod
+    def calculate(answers_map):
+        # Buscamos o texto bruto nos identificadores técnicos
+        peso = IMCCalculator.parse_value(answers_map.get('peso'))
+        altura = IMCCalculator.parse_value(answers_map.get('altura'))
+
+        if altura > 0:
+            imc = round(peso / (altura ** 2), 2)
+            if imc < 18.5: status = "Abaixo do peso"
+            elif imc < 25: status = "Peso normal"
+            elif imc < 30: status = "Sobrepeso"
+            else: status = "Obesidade"
+            return {"imc_valor": imc, "imc_status": status, "peso": peso, "altura": altura}
+        
+        return {"imc_valor": 0, "imc_status": "Dados incompletos", "peso": peso, "altura": altura}
+    
+
+class SafeParser:
+    """Helper para converter textos sujos do usuário em números e tempos."""
+    
+    @staticmethod
+    def to_float(value):
+        if value is None: return 0.0
+        if isinstance(value, (int, float)): return float(value)
+        # Remove tudo que não é número, ponto ou vírgula (ex: remove "kg", "m")
+        sanitized = re.sub(r'[^\d.,-]', '', str(value))
+        if not sanitized: return 0.0
+        try:
+            return float(sanitized.replace(',', '.'))
+        except ValueError:
+            return 0.0
+
+    @staticmethod
+    def to_int(value):
+        return int(SafeParser.to_float(value))
+
+    @staticmethod
+    def parse_time(time_str):
+        """Extrai hora e minuto de formatos como '01:30', '1h30' ou '0130'."""
+        if not time_str or not isinstance(time_str, str): return None
+        match = re.search(r'(\d{1,2})[h:]?(\d{2})', time_str.lower())
+        if match:
+            return int(match.group(1)), int(match.group(2))
+        return None
