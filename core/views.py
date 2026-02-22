@@ -7,7 +7,7 @@ from django.contrib import messages
 
 import csv
 
-from core.Scaleprocessor import DASS21Calculator
+from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, SRQ20Calculator
 from .decorators import medico_ou_admin_required
 
 from ethics.models import TCLE, AceiteTCLE
@@ -159,62 +159,60 @@ def get_answers_by_section(respostas_queryset, section_id):
 def exportar_respostas_csv(request, pk):
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
     user = res_quest.usuario
-    hoje = date.today()
     
-    # Lógica de Idade: Ano_Atual - Ano_Nasc - 1 (se aniversário não ocorreu)
-    idade = hoje.year - user.data_nascimento.year - (
-        (hoje.month, hoje.day) < (user.data_nascimento.month, user.data_nascimento.day)
-    ) if user.data_nascimento else "N/A"
-
-    # 1. Carrega todas as respostas do banco
+    # Carregamento e Mapeamento (Lógica defensiva contra NoneType)
     respostas_qs = RespostaPergunta.objects.filter(
         resposta_questionario=res_quest
     ).select_related('pergunta', 'alternativa')
 
-    # 2. Cria o mapa de identificadores técnicos (ex: {'dassa': 0, 'dassb': 2})
-    # Isso resolve o problema de desalinhamento de ordem
     answers_map = {
         rp.pergunta.identificador: rp.alternativa.valor 
         for rp in respostas_qs 
         if rp.pergunta.identificador and rp.alternativa
     }
 
-    # 3. Calcula os scores
-    scores_dass = DASS21Calculator.calculate(answers_map)
+    # PROCESSAMENTO MODULAR [cite: 256, 276]
+    scores_dass  = DASS21Calculator.calculate(answers_map)
+    scores_k10   = K10Calculator.calculate(answers_map)
+    scores_srq   = SRQ20Calculator.calculate(answers_map)
+    scores_ese   = ESECalculator.calculate(answers_map)   # Novo
+    scores_audit = AUDITCalculator.calculate(answers_map) # Novo
+    scores_emssp = EMSSPCalculator.calculate(answers_map)
 
-    # --- CONFIGURAÇÃO CSV ---
+    # GERAÇÃO DO CSV
     response = HttpResponse(content_type='text/csv')
-    filename = f"somnus_dass21_{user.username}.csv"
+    filename = f"somnus_completo_{user.username}.csv"
     response['Content-Disposition'] = f'attachment; filename="{filename}"'
     response.write(u'\ufeff'.encode('utf8')) 
-
     writer = csv.writer(response, delimiter=';')
     
-    # BLOCO 1: IDENTIFICAÇÃO
-    writer.writerow(['IDENTIFICAÇÃO'])
-    writer.writerow(['Variável', 'Valor'])
-    writer.writerow(['nome', user.get_full_name() or user.username])
-    writer.writerow(['idade', idade])
-    writer.writerow(['data_coleta', res_quest.data_submissao.strftime('%d/%m/%Y')])
-    writer.writerow([]) 
+    # BLOCO: SCORES CALCULADOS
+    writer.writerow(['RESUMO DOS SCORES'])
+    writer.writerow(['Escala', 'Score Total', 'Status/Classificação'])
+    
+    # Saúde Mental
+    writer.writerow(['DASS21_DEPRESSAO', scores_dass['dass_depressao'], "0-21"])
+    writer.writerow(['DASS21_ANSIEDADE', scores_dass['dass_ansiedade'], "0-21"])
+    writer.writerow(['DASS21_ESTRESSE',  scores_dass['dass_estresse'],  "0-21"])
+    writer.writerow(['K10_TOTAL',        scores_k10['k10_total'],       scores_k10['k10_classificacao']])
+    writer.writerow(['SRQ20_TOTAL',      scores_srq['srq_total'],       scores_srq['srq_status']])
+    
+    # Hábitos e Sono (Caminho Rápido)
+    writer.writerow(['ESE_EPWORTH',      scores_ese['ese_total'],       scores_ese['ese_status']])
+    writer.writerow(['AUDIT_ALCOOL',     scores_audit['audit_total'],   scores_audit['audit_status']])
 
-    # BLOCO 2: RESULTADOS DASS-21 (Cálculo preciso por ID)
-    writer.writerow(['RESULTADOS DASS-21 (SCORES BRUTOS)'])
-    writer.writerow(['Subescala', 'Pontuação (0-21) [cite: 260]'])
-    for sub, valor in scores_dass.items():
-        writer.writerow([sub, valor])
-    writer.writerow([]) 
+    # Suporte Social
+    writer.writerow(['SUPORTE_FAMILIA', scores_emssp['suporte_familia'], "Máx 28"])
+    writer.writerow(['SUPORTE_AMIGOS',  scores_emssp['suporte_amigos'],  "Máx 28"])
+    writer.writerow(['SUPORTE_OUTROS',  scores_emssp['suporte_outros'],  "Máx 28"])
+    writer.writerow(['SUPORTE_TOTAL',   scores_emssp['suporte_total'],   "Máx 84"])
+    
+    writer.writerow([]) # Separador
 
-    # BLOCO 3: DETALHAMENTO
-    writer.writerow(['RESPOSTAS DETALHADAS'])
-    writer.writerow(['ID_Variavel', 'Pergunta', 'Resposta Selecionada', 'Valor'])
-
+    # BLOCO: DETALHAMENTO DAS RESPOSTAS (Corrigido para evitar crash)
+    writer.writerow(['DETALHAMENTO'])
     for rp in respostas_qs.order_by('pergunta__ordem'):
-        writer.writerow([
-            rp.pergunta.identificador or f"ID_{rp.pergunta.id}",
-            rp.pergunta.conteudo,
-            rp.alternativa.conteudo if rp.alternativa else "N/A",
-            rp.alternativa.valor if rp.alternativa else ""
-        ])
+        valor = rp.alternativa.valor if rp.alternativa else ""
+        writer.writerow([rp.pergunta.identificador, rp.pergunta.conteudo[:60], valor])
 
     return response
