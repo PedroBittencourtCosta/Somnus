@@ -7,13 +7,9 @@
                 </div>
                 
                 <div class="modal-body px-4">
-                    {% comment %} <div class="alert alert-info border-0 rounded-3 mb-3 py-2" style="background-color: rgba(0, 103, 177, 0.1); color: var(--somnus-blue-deep);">
-                        <small><strong>Participante:</strong> {{ user.first_name|default:user.username }}</small>
-                    </div> {% endcomment %}
-
                     <p class="text-muted small mb-2">Versão do documento: {{ tcle.versao }}</p>
                     
-                    <div class="p-4 bg-light rounded-4" style="max-height: 450px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6; color: #444;">
+                    <div class="p-4 bg-light rounded-4" style="max-height: 400px; overflow-y: auto; font-size: 0.95rem; line-height: 1.6; color: #444;">
                         <div class="tcle-content">
                             {{ tcle.conteudo|linebreaks }}
                         </div>
@@ -22,28 +18,37 @@
                         
                         <p class="fw-bold mb-2">Contatos de Responsabilidade:</p>
                         <ul class="list-unstyled small">
-                            <li><strong>Pesquisador:</strong> Prof. Dr. Renato Canevari Dutra da Silva [cite: 28]</li>
-                            <li><strong>Telefone:</strong> (64) 3620-2297 [cite: 29]</li>
-                            <li><strong>Comitê de Ética (UniRV):</strong> (64) 3622-1446 | cep@unirv.edu.br [cite: 34]</li>
+                            <li><strong>Pesquisador:</strong> Prof. Dr. Renato Canevari Dutra da Silva</li>
+                            <li><strong>Telefone:</strong> (64) 3620-2297</li>
+                            <li><strong>Comitê de Ética (UniRV):</strong> (64) 3622-1446 | cep@unirv.edu.br</li>
                         </ul>
                     </div>
 
                     <div class="form-check mt-3 p-3 rounded-3" style="background-color: #f8f9fa;">
                         <input class="form-check-input ms-0 me-2" type="checkbox" id="checkAceite">
                         <label class="form-check-label small fw-bold" for="checkAceite" style="color: var(--somnus-blue-deep);">
-                            Eu, {{ user.first_name|default:user.username }}, li e concordo voluntariamente em participar desta pesquisa.
+                            Eu li e concordo voluntariamente em participar desta pesquisa.
                         </label>
                     </div>
                 </div>
 
                 <div class="modal-footer border-0 px-4 pb-4">
-                    <form action="{% url 'aceitar_tcle' tcle.id %}" method="POST" class="w-100">
-                        {% csrf_token %}
-                        <button type="submit" id="btnAceitar" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm" 
-                                style="background-color: var(--somnus-blue-deep); border: none;" disabled>
-                            Confirmar Aceite e Iniciar Avaliação
-                        </button>
-                    </form>
+                    <div class="row w-100 g-2">
+                        <div class="col-md-4">
+                            <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 rounded-pill fw-bold py-3">
+                                Não Aceito
+                            </a>
+                        </div>
+                        <div class="col-md-8">
+                            <form action="{% url 'aceitar_tcle' tcle.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" id="btnAceitar" class="btn btn-primary w-100 rounded-pill fw-bold py-3 shadow-sm" 
+                                        style="background-color: var(--somnus-blue-deep); border: none;" disabled>
+                                    Confirmar Aceite e Iniciar
+                                </button>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -51,18 +56,24 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function() {
+            // Abre o modal automaticamente se a flag estiver ativa
             {% if exibir_tcle %}
-                var tcleModal = new bootstrap.Modal(document.getElementById('tcleModal'));
-                tcleModal.show();
+                var tcleElement = document.getElementById('tcleModal');
+                if (tcleElement) {
+                    var tcleModal = new bootstrap.Modal(tcleElement);
+                    tcleModal.show();
+                }
             {% endif %}
 
             const check = document.getElementById('checkAceite');
             const btn = document.getElementById('btnAceitar');
-            if(check) {
+            
+            if(check && btn) {
                 check.addEventListener('change', function() {
                     btn.disabled = !this.checked;
-                    // Efeito visual no botão
+                    // Feedback visual de desabilitado
                     btn.style.opacity = this.checked ? "1" : "0.6";
+                    btn.style.cursor = this.checked ? "pointer" : "not-allowed";
                 });
             }
         });

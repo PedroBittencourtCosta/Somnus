@@ -52,7 +52,7 @@ class QuestionarioAdmin(SortableAdminBase, admin.ModelAdmin):
 # 7. Registros de Respostas e Regras
 @admin.register(RespostaQuestionario)
 class RespostaQuestionarioAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'questionario', 'data_submissao')
+    list_display = ('pesquisadora', 'paciente_nome', 'questionario', 'data_submissao')
     readonly_fields = ('data_submissao',)
 
 admin.site.register(RegraEquacao)

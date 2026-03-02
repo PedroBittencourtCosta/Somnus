@@ -22,8 +22,8 @@
                     {% for resposta in respostas %}
                         <tr>
                             <td class="px-4">
-                                <div class="fw-bold text-dark">{{ resposta.usuario.get_full_name|default:resposta.usuario.username }}</div>
-                                <div class="small text-muted">{{ resposta.usuario.email }}</div>
+                                <div class="fw-bold text-dark">{{ resposta.paciente_nome }}</div>
+                                <div class="small text-muted">{{ resposta.pesquisadora.get_full_name|default:resposta.pesquisadora.username }}</div>
                             </td>
                             <td>
                                 <span class="badge rounded-pill bg-light text-primary border px-3">

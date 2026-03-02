@@ -7,5 +7,5 @@ class TCLEAdmin(admin.ModelAdmin):
 
 @admin.register(AceiteTCLE)
 class AceiteTCLEAdmin(admin.ModelAdmin):
-    list_display = ('usuario', 'tcle', 'data_aceite')
+    list_display = ('resposta_questionario', 'tcle', 'data_aceite')
     readonly_fields = ('data_aceite',) # Evita alteração manual da data de aceite

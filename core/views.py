@@ -19,43 +19,21 @@ def index_view(request: HttpRequest):
 @login_required
 def responder_questionario(request, pk):
     questionario = get_object_or_404(Questionario, pk=pk)
-
-    # 1. Busca a versão mais recente do TCLE
     ultimo_tcle = TCLE.objects.order_by('-versao').first()
-    
-    # 2. Verifica se o usuário já aceitou esta versão específica
-    # Se NÃO houver TCLE cadastrado no banco, não podemos exibir o modal
-    if not ultimo_tcle:
-        # Você pode decidir se permite responder sem TCLE ou se mostra um erro
-        messages.warning(request, "Atenção: Nenhum Termo de Consentimento (TCLE) foi encontrado no sistema.")
-        # Segue a lógica normal se não houver termo
-        ja_aceitou = True 
-    else:
-        ja_aceitou = AceiteTCLE.objects.filter(usuario=request.user, tcle=ultimo_tcle).exists()
 
-    # 3. Se não aceitou, enviamos o conteúdo do TCLE para o modal
-    if not ja_aceitou and ultimo_tcle:
-        # Reutilizamos a lógica de seções mas enviamos a flag do modal
+    # --- LÓGICA TCLE: POR ATENDIMENTO (SESSÃO) ---
+    tcle_aceito_na_sessao = request.session.get('tcle_aceito', False)
+
+    if not tcle_aceito_na_sessao and ultimo_tcle:
         context = {
             'questionario': questionario,
             'exibir_tcle': True,
             'tcle': ultimo_tcle,
         }
-        # Renderiza a mesma página, mas o JS abrirá o modal
         return render(request, 'responder_questionario.html', context)
     
-    # TRAVA DE RESPOSTA ÚNICA
-    ja_respondeu = RespostaQuestionario.objects.filter(
-        usuario=request.user, 
-        questionario=questionario
-    ).exists()
-
-    if ja_respondeu:
-        messages.info(request, "Você já completou esta avaliação. Obrigado pela participação!")
-        return redirect('home')
-
+    # Configuração da paginação e sessões
     secoes_list = questionario.secoes.all().order_by('ordem')
-    
     paginator = Paginator(secoes_list, 1)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -65,33 +43,65 @@ def responder_questionario(request, pk):
         request.session['respostas_temp'] = {}
 
     if request.method == 'POST':
-        for pergunta in secao_atual.perguntas.all():
-            # Capturamos tanto o valor da múltipla escolha quanto o texto
-            valor_id = request.POST.get(f'pergunta_{pergunta.id}')
-            valor_texto = request.POST.get(f'pergunta_{pergunta.id}_texto')
-            
-            # Armazenamos um dicionário para suportar os dois valores na sessão
-            request.session['respostas_temp'][str(pergunta.id)] = {
-                'alternativa': valor_id,
-                'texto': valor_texto
-            }
+        acao = request.POST.get('acao')
+
+        # Aceite do TCLE
+        if acao == 'aceitar_tcle':
+            request.session['tcle_aceito'] = True
+            request.session.modified = True
+            return redirect(request.path)
+
+        # Salva respostas da página atual na sessão
+        if secao_atual:
+            for pergunta in secao_atual.perguntas.all():
+                request.session['respostas_temp'][str(pergunta.id)] = {
+                    'alternativa': request.POST.get(f'pergunta_{pergunta.id}'),
+                    'texto': request.POST.get(f'pergunta_{pergunta.id}_texto'),
+                    'identificador': pergunta.identificador 
+                }
         
         request.session.modified = True
-        acao = request.POST.get('acao')
 
         if acao == 'proximo' and page_obj.has_next():
             return redirect(f"{request.path}?page={page_obj.next_page_number()}")
         elif acao == 'anterior' and page_obj.has_previous():
             return redirect(f"{request.path}?page={page_obj.previous_page_number()}")
+        
         elif acao == 'finalizar':
-            res_quest = RespostaQuestionario.objects.create(usuario=request.user, questionario=questionario)
             respostas_cache = request.session.get('respostas_temp', {})
+            ultimo_tcle = TCLE.objects.order_by('-versao').first()
+
+            # 1. Extraímos o nome do paciente do cache (procurando pelo identificador técnico 'nome')
+            nome_extraido = "Não informado"
+            for v in respostas_cache.values():
+                if v.get('identificador') == 'nome':
+                    # Pega o texto preenchido na pergunta de nome
+                    nome_extraido = v.get('texto') or "Não informado"
+                    break
+
+           # 2. Criamos a RespostaQuestionario (Modelo novo)
+            res_quest = RespostaQuestionario.objects.create(
+                pesquisadora=request.user, # Aluna logada
+                questionario=questionario,
+                paciente_nome=nome_extraido
+            )
+
+            # 3. NOVO: Relacionamos a resposta ao TCLE aceito nesta sessão
+            if ultimo_tcle:
+                AceiteTCLE.objects.create(
+                    resposta_questionario=res_quest,
+                    tcle=ultimo_tcle
+                )
             
+            # 4. Salva todas as respostas (incluindo idade, sexo, etc., que agora são perguntas)
             for p_id, valores in respostas_cache.items():
                 pergunta = Pergunta.objects.get(id=p_id)
                 alt = None
                 if valores.get('alternativa'):
-                    alt = Alternativa.objects.get(id=valores['alternativa'])
+                    try:
+                        alt = Alternativa.objects.get(id=valores['alternativa'])
+                    except (Alternativa.DoesNotExist, ValueError):
+                        alt = None
                 
                 RespostaPergunta.objects.create(
                     resposta_questionario=res_quest,
@@ -100,8 +110,12 @@ def responder_questionario(request, pk):
                     resposta_texto=valores.get('texto')
                 )
             
+            # 5. Limpeza da sessão para o próximo atendimento
             del request.session['respostas_temp']
-            messages.success(request, "Avaliação concluída com sucesso!")
+            request.session['tcle_aceito'] = False
+            request.session.modified = True
+
+            messages.success(request, f"Avaliação de {nome_extraido} concluída!")
             return redirect('home')
 
     context = {
@@ -120,7 +134,7 @@ def lista_questionarios(request):
     respondidos = []
     if request.user.is_authenticated:
         respondidos = RespostaQuestionario.objects.filter(
-            usuario=request.user
+            pesquisadora=request.user
         ).values_list('questionario_id', flat=True)
         
     return render(request, 'lista_questionarios.html', {
@@ -134,7 +148,7 @@ def lista_questionarios(request):
 @medico_ou_admin_required
 def dashboard_respostas(request):
     # Ordenação decrescente por data de submissão
-    respostas_list = RespostaQuestionario.objects.select_related('usuario', 'questionario').all().order_by('-data_submissao')
+    respostas_list = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all().order_by('-data_submissao')
     
     # Paginação: 10 itens por página
     paginator = Paginator(respostas_list, 10)
