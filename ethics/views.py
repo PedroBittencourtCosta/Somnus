@@ -1,7 +1,6 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
-from ethics.models import TCLE, AceiteTCLE
 # Create your views here.
 @login_required
 def aceitar_tcle(request, tcle_id):

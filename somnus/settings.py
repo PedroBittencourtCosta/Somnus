@@ -53,10 +53,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_bootstrap5',
+    'adminsortable2',
     'core',
     'accounts',
     'ethics',
-    'adminsortable2',
+    
 ]
 
 MIDDLEWARE = [

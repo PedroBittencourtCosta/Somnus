@@ -2,78 +2,89 @@ from django.contrib import admin
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin, SortableAdminBase 
 from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, RegraEquacao
 
-# 1. Inline para Alternativas (dentro da Pergunta)
+# 1. Inline para Alternativas (Mantido para edição individual da pergunta)
 class AlternativaInline(admin.TabularInline):
     model = Alternativa
     extra = 1
     verbose_name_plural = "Alternativas"
-    classes = ['alternativas-group']
 
-# 2. Inline para Perguntas (dentro da Seção) - Ordenável
+# 2. Inline para Perguntas (Dentro da Seção) - Ajustado conforme solicitado
 class PerguntaInline(SortableInlineAdminMixin, admin.TabularInline):
     model = Pergunta
-    extra = 1
-    exclude = ('ordem',)
+    extra = 0
+    can_delete = False
+    
+    # INDISPENSÁVEL: O campo de ordenação deve estar nos fields
+    # O Mixin cuidará de escondê-lo e mostrar a barra de arraste no lugar.
+    fields = ('ordem', 'conteudo', 'identificador', 'tipo', 'obrigatoria')
+    
+    sortable_field_name = 'ordem'
 
-# 3. Admin de Pergunta: Para edição individual e listagem
+    def get_formset(self, request, obj=None, **kwargs):
+        formset = super().get_formset(request, obj, **kwargs)
+        # Reduzi um pouco a largura para garantir que a barra de arraste apareça à esquerda
+        formset.form.base_fields['conteudo'].widget.attrs['style'] = 'width: 450px; height: 40px;'
+        return formset
+
+# 3. Admin de Pergunta
 @admin.register(Pergunta)
 class PerguntaAdmin(SortableAdminMixin, admin.ModelAdmin):
-    # Alterado: agora referenciamos 'secao' em vez de 'questionario'
-    list_display = ('conteudo', 'identificador', 'secao', 'ordem', 'tipo')
+    list_display = ('conteudo_curto', 'identificador', 'secao', 'ordem', 'tipo')
     list_editable = ('identificador',)
-    # Para filtrar pelo questionário, usamos a relação secao__questionario
-    list_filter = ('secao__questionario', 'tipo')
+    list_filter = ('secao__questionario', 'tipo', 'secao')
     inlines = [AlternativaInline]
     exclude = ('ordem',)
 
-    class Media:
-        js = ('core/js/hide_alternativas.js',)
+    def conteudo_curto(self, obj):
+        return obj.conteudo[:80] + '...' if len(obj.conteudo) > 80 else obj.conteudo
+    conteudo_curto.short_description = 'Conteúdo da Pergunta'
 
-# 4. Inline para Seções (dentro do Questionário) - Ordenável
-class SecaoInline(SortableInlineAdminMixin, admin.TabularInline):
-    model = Secao
-    extra = 1
-    exclude = ('ordem',)
-
-# 5. Admin de Seção: Para gerenciar as Perguntas de uma escala específica
+# 4. Admin de Seção (Onde as perguntas são ordenadas)
 @admin.register(Secao)
 class SecaoAdmin(SortableAdminBase, admin.ModelAdmin):
     list_display = ('titulo', 'questionario', 'ordem',)
     list_filter = ('questionario',)
-    inlines = [PerguntaInline]
+    inlines = [PerguntaInline] # Carrega as perguntas com a barra de ordenação e sem o "remover"
 
-# 6. Admin de Questionário: Agora gerencia as Seções (escalas)
+    class Media:
+        css = {
+            'all': ('core/css/custom_admin.css',)
+        }
+
+# 5. Admin de Questionário
+class SecaoInline(SortableInlineAdminMixin, admin.TabularInline):
+    model = Secao
+    extra = 1
+    sortable_field_name = 'ordem'
+    exclude = ('ordem',)
+
 @admin.register(Questionario)
 class QuestionarioAdmin(SortableAdminBase, admin.ModelAdmin): 
     list_display = ('titulo', 'data_criacao')
-    search_fields = ('titulo',)
     inlines = [SecaoInline]
 
-# 7. Registros de Respostas e Regras
+# 6. Registros de Respostas (Atualizados para o novo fluxo do Somnus)
 @admin.register(RespostaQuestionario)
 class RespostaQuestionarioAdmin(admin.ModelAdmin):
-    list_display = ('pesquisadora', 'paciente_nome', 'questionario', 'data_submissao')
+    list_display = ('paciente_nome', 'pesquisadora', 'questionario', 'data_submissao')
+    search_fields = ('paciente_nome', 'pesquisadora__username')
     readonly_fields = ('data_submissao',)
-
-admin.site.register(RegraEquacao)
-# admin.site.register(RespostaPergunta)
 
 @admin.register(RespostaPergunta)
 class RespostaPerguntaAdmin(admin.ModelAdmin):
-    # Exibe colunas úteis na listagem principal
-    list_display = ('get_usuario', 'pergunta', 'get_resposta', 'get_questionario')
+    list_display = ('get_pesquisadora', 'get_paciente', 'pergunta', 'get_resposta')
     list_filter = ('pergunta__secao__questionario', 'pergunta__secao')
 
-    # Métodos para buscar dados de chaves estrangeiras distantes
-    def get_usuario(self, obj):
-        return obj.resposta_questionario.usuario.email
-    get_usuario.short_description = 'Usuário'
+    def get_pesquisadora(self, obj):
+        return obj.resposta_questionario.pesquisadora.username
+    get_pesquisadora.short_description = 'Pesquisadora'
 
-    def get_questionario(self, obj):
-        return obj.resposta_questionario.questionario.titulo
-    get_questionario.short_description = 'Questionário'
+    def get_paciente(self, obj):
+        return obj.resposta_questionario.paciente_nome
+    get_paciente.short_description = 'Paciente'
 
     def get_resposta(self, obj):
-        # Mostra a alternativa escolhida ou o texto digitado
         return obj.alternativa.conteudo if obj.alternativa else obj.resposta_texto
     get_resposta.short_description = 'Resposta'
+
+admin.site.register(RegraEquacao)
