@@ -45,7 +45,7 @@
                 </li>
 
                 {% if user.is_authenticated %}
-                    {% if user.is_staff or user.groups.all.0.name == 'Medicos' %}
+                    {% if user.is_staff or user.groups.all.0.name == 'Pesquisador' %}
                     <li class="nav-item">
                         <a href="{% url 'dashboard_respostas' %}" class="nav-link text-secondary fw-medium d-flex align-items-center gap-2" style="font-size: 0.9rem;">
                             <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,6 +54,7 @@
                             Dashboard
                         </a>
                     </li>
+
                     {% endif %}
 
                     <li class="nav-item">
