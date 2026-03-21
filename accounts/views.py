@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from .forms import PerfilForm
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.forms import UsuarioCreationForm
+from django.contrib.auth.models import Group
+from .forms import CadastroAssistenteForm
 
 def login_view(request):
     # 1. Se já estiver logado, não precisa ver o login
@@ -58,3 +60,29 @@ def perfil_view(request):
         form = PerfilForm(instance=request.user)
     
     return render(request, 'perfil.html', {'form': form})
+
+
+# Função para verificar se é Pesquisador (Segurança)
+def eh_pesquisador(user):
+    return user.is_staff or user.groups.filter(name='Pesquisador').exists()
+
+@login_required
+@user_passes_test(eh_pesquisador)
+def cadastrar_assistente(request):
+    if request.method == 'POST':
+        form = CadastroAssistenteForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.set_password(form.cleaned_data['senha']) # Criptografa a senha
+            user.save()
+            
+            # Adiciona ao grupo Assistente de Pesquisa automaticamente
+            grupo, created = Group.objects.get_or_create(name='Assistente de Pesquisa')
+            user.groups.add(grupo)
+            
+            messages.success(request, f'Assistente {user.first_name} cadastrado com sucesso!')
+            return redirect('dashboard_respostas')
+    else:
+        form = CadastroAssistenteForm()
+    
+    return render(request, 'cadastrar_assistente.html', {'form': form})
