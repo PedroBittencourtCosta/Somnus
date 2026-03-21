@@ -1,14 +1,14 @@
-from datetime import date
+
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-
-import csv
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 
 from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
-from .decorators import medico_ou_admin_required
 
 from ethics.models import TCLE, AceiteTCLE
 from .models import Questionario, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
@@ -145,7 +145,6 @@ def lista_questionarios(request):
 
 
 @login_required
-@medico_ou_admin_required
 def dashboard_respostas(request):
     # Ordenação decrescente por data de submissão
     respostas_list = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all().order_by('-data_submissao')
@@ -169,91 +168,126 @@ def get_answers_by_section(respostas_queryset, section_id):
 
 
 @login_required
-@medico_ou_admin_required
-def exportar_respostas_csv(request, pk):
+def exportar_respostas_excel(request, pk):
+    # 1. BUSCA DE DADOS
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
-    user = res_quest.usuario
+    pesquisadora = res_quest.pesquisadora 
     
-    # Carregamento e Mapeamento (Lógica defensiva contra NoneType)
     respostas_qs = RespostaPergunta.objects.filter(
         resposta_questionario=res_quest
     ).select_related('pergunta', 'alternativa')
 
-    # --- NOVO MAPEAMENTO HÍBRIDO ---
+    # 2. MAPEAMENTO HÍBRIDO
     answers_map = {}
     for rp in respostas_qs:
         identificador = rp.pergunta.identificador
         if identificador:
-            # Se tiver alternativa (DASS, K10), pega o valor numérico
             if rp.alternativa:
                 answers_map[identificador] = rp.alternativa.valor
-            # Se for texto (Peso, Altura, Horários), pega o texto bruto
             elif rp.resposta_texto:
                 answers_map[identificador] = rp.resposta_texto
 
-    # PROCESSAMENTO MODULAR [cite: 256, 276]
+    # 3. PROCESSAMENTO DAS ESCALAS (Certifique-se que estas classes existem no seu utils.py)
     scores_dass  = DASS21Calculator.calculate(answers_map)
     scores_k10   = K10Calculator.calculate(answers_map)
     scores_srq   = SRQ20Calculator.calculate(answers_map)
-    scores_ese   = ESECalculator.calculate(answers_map)   # Novo
-    scores_audit = AUDITCalculator.calculate(answers_map) # Novo
+    scores_ese   = ESECalculator.calculate(answers_map)
+    scores_audit = AUDITCalculator.calculate(answers_map)
     scores_emssp = EMSSPCalculator.calculate(answers_map)
-    scores_psqi = PSQICalculator.calculate(answers_map)
+    scores_psqi  = PSQICalculator.calculate(answers_map)
     
-    # Cálculo Extra: IMC (Seção 7.2) 
     peso = SafeParser.to_float(answers_map.get('peso', 0))
     altura = SafeParser.to_float(answers_map.get('altura', 0))
-    
     imc = round(peso / (altura ** 2), 2) if altura > 0 else 0
 
-    # GERAÇÃO DO CSV
-    response = HttpResponse(content_type='text/csv')
-    filename = f"somnus_completo_{user.username}.csv"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8')) 
-    writer = csv.writer(response, delimiter=';')
-    
-    # BLOCO: SCORES CALCULADOS
-    writer.writerow(['RESUMO DOS SCORES'])
-    writer.writerow(['Escala', 'Score Total', 'Status/Classificação'])
-    
-    # Saúde Mental
-    writer.writerow(['DASS21_DEPRESSAO', scores_dass['dass_depressao'], "0-21"])
-    writer.writerow(['DASS21_ANSIEDADE', scores_dass['dass_ansiedade'], "0-21"])
-    writer.writerow(['DASS21_ESTRESSE',  scores_dass['dass_estresse'],  "0-21"])
-    writer.writerow(['K10_TOTAL',        scores_k10['k10_total'],       scores_k10['k10_classificacao']])
-    writer.writerow(['SRQ20_TOTAL',      scores_srq['srq_total'],       scores_srq['srq_status']])
-    
-    # Hábitos e Sono (Caminho Rápido)
-    writer.writerow(['ESE_EPWORTH',      scores_ese['ese_total'],       scores_ese['ese_status']])
-    writer.writerow(['AUDIT_ALCOOL',     scores_audit['audit_total'],   scores_audit['audit_status']])
+    # 4. CRIAÇÃO DO EXCEL
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Relatório de Avaliação"
 
-    # Suporte Social
-    writer.writerow(['SUPORTE_FAMILIA', scores_emssp['suporte_familia'], "Máx 28"])
-    writer.writerow(['SUPORTE_AMIGOS',  scores_emssp['suporte_amigos'],  "Máx 28"])
-    writer.writerow(['SUPORTE_OUTROS',  scores_emssp['suporte_outros'],  "Máx 28"])
-    writer.writerow(['SUPORTE_TOTAL',   scores_emssp['suporte_total'],   "Máx 84"])
+    # Estilos
+    azul_somnus = PatternFill(start_color='1A365D', end_color='1A365D', fill_type='solid')
+    cinza_claro = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')
+    fonte_branca = Font(color='FFFFFF', bold=True)
+    center_align = Alignment(horizontal='center', vertical='center')
 
-    writer.writerow(['RESUMO DOS SCORES (PITTSBURGH E SAÚDE)'])
-    writer.writerow(['Indicador', 'Score', 'Classificação'])
-    writer.writerow(['PSQI_GLOBAL', scores_psqi['psqi_global'], scores_psqi['psqi_status']])
-    writer.writerow(['IMC_ATUAL', imc, "kg/m²"])
+    # Cabeçalho
+    ws.merge_cells('A1:C1')
+    ws['A1'] = "SOMNUS - RELATÓRIO TÉCNICO"
+    ws['A1'].font = Font(size=14, bold=True, color='1A365D')
+    ws['A1'].alignment = center_align
 
-    # Detalhamento dos componentes do PSQI para o seu artigo
-    for i, comp in enumerate(scores_psqi['psqi_componentes'], 1):
-        writer.writerow([f'PSQI_COMPONENTE_{i}', comp, "0 a 3"])
-    
-    writer.writerow([]) # Separador
+    ws.append(['Paciente:', res_quest.paciente_nome])
+    ws.append(['Pesquisadora:', pesquisadora.username])
+    ws.append(['Data:', res_quest.data_submissao.strftime('%d/%m/%Y %H:%M')])
+    ws.append([])
 
-    # BLOCO: DETALHAMENTO DAS RESPOSTAS (Corrigido para evitar crash)
-    writer.writerow(['DETALHAMENTO'])
-    writer.writerow(['DETALHAMENTO COMPLETO'])
+    def adicionar_secao(titulo, dados):
+        ws.append([titulo])
+        ws.merge_cells(f'A{ws.max_row}:C{ws.max_row}')
+        ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=1).fill = cinza_claro
+        
+        ws.append(['Escala/Item', 'Resultado', 'Referência'])
+        for cell in ws[ws.max_row]:
+            cell.fill = azul_somnus
+            cell.font = fonte_branca
+
+        for linha in dados:
+            ws.append(linha)
+        ws.append([])
+
+    # Adicionando os Scores
+    adicionar_secao("I. SAÚDE MENTAL", [
+        ['DASS-21 Depressão', scores_dass['dass_depressao'], "0-21"],
+        ['DASS-21 Ansiedade', scores_dass['dass_ansiedade'], "0-21"],
+        ['DASS-21 Estresse',  scores_dass['dass_estresse'],  "0-21"],
+        ['K10 Kessler',       scores_k10['k10_total'],       scores_k10['k10_classificacao']],
+        ['SRQ-20 TMC',        scores_srq['srq_total'],       scores_srq['srq_status']],
+    ])
+
+    adicionar_secao("II. HÁBITOS E SONO", [
+        ['ESE Epworth',       scores_ese['ese_total'],       scores_ese['ese_status']],
+        ['AUDIT Álcool',      scores_audit['audit_total'],    scores_audit['audit_status']],
+        ['PSQI Pittsburgh',   scores_psqi['psqi_global'],    scores_psqi['psqi_status']],
+        ['IMC Atual',         imc,                           "kg/m²"],
+    ])
+
+    adicionar_secao("III. SUPORTE SOCIAL", [
+        ['Família',           scores_emssp['suporte_familia'], "Máx: 28"],
+        ['Amigos',            scores_emssp['suporte_amigos'],  "Máx: 28"],
+        ['Outros',            scores_emssp['suporte_outros'],  "Máx: 28"],
+        ['TOTAL',             scores_emssp['suporte_total'],   "Máx: 84"],
+    ])
+
+    # IV. Detalhamento
+    ws.append(['IV. DETALHAMENTO DAS RESPOSTAS'])
+    ws.append(['ID', 'Pergunta', 'Valor'])
+    for cell in ws[ws.max_row]:
+        cell.fill = azul_somnus
+        cell.font = fonte_branca
+
     for rp in respostas_qs.order_by('pergunta__ordem'):
-        # Aqui garantimos que o CSV mostre o texto se não houver alternativa
-        valor_exibicao = rp.alternativa.valor if rp.alternativa else rp.resposta_texto
-        writer.writerow([
-            rp.pergunta.identificador or f"ID_{rp.pergunta.id}",
-            rp.pergunta.conteudo[:80],
-            valor_exibicao
-        ])
+        valor = rp.alternativa.valor if rp.alternativa else rp.resposta_texto
+        ws.append([rp.pergunta.identificador or f"ID_{rp.pergunta.id}", rp.pergunta.conteudo[:100], valor])
+
+    # --- CORREÇÃO DO ERRO: AJUSTE DE LARGURA SEGURO ---
+    for i, column_cells in enumerate(ws.columns, 1):
+        max_length = 0
+        column_letter = get_column_letter(i) # Pega a letra da coluna pelo índice (1=A, 2=B...)
+        
+        for cell in column_cells:
+            try:
+                if cell.value:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+            except:
+                pass
+        
+        ws.column_dimensions[column_letter].width = min(max_length + 2, 60)
+
+    # 5. RETORNO
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="Somnus_Relatorio_{res_quest.id}.xlsx"'
+    wb.save(response)
     return response

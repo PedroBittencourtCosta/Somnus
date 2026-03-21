@@ -120,11 +120,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else if (tipo === 'ALTURA') {
                 IMask(input, {
-                    mask: 'num m',
-                    lazy: false,
-                    blocks: {
-                        num: { mask: Number, scale: 2, signed: false, radix: ',', mapToRadix: ['.'], from: 0, to: 3 }
-                    }
+                    mask: '0,00 m',   // Define o formato fixo: Digito,VírgulaDigitoDigito m
+                    lazy: false,      // Mostra a estrutura (_,__ m) imediatamente
+                    placeholderChar: '_', // Caractere de preenchimento
+                    // Validação opcional para garantir que o primeiro dígito não seja absurdo (ex: 0, 1, 2 ou 3)
+                    // blocks: {
+                    //    '0': { mask: IMask.MaskedRange, from: 0, to: 3 } // Limita o primeiro número de 0 a 3
+                    // }
                 });
             } else if (tipo === 'PESO') {
                 IMask(input, {
@@ -135,7 +137,14 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 });
             } else if (tipo === 'DATA') {
-                IMask(input, { mask: Date, pattern: 'd/`m/`Y' });
+                IMask(input, {
+                    mask: 'DD/MM/YYYY',
+                    blocks: {
+                        DD: { mask: IMask.MaskedRange, from: 1, to: 31 },
+                        MM: { mask: IMask.MaskedRange, from: 1, to: 12 },
+                        YYYY: { mask: IMask.MaskedRange, from: 1900, to: 2100 }
+                    }
+                });
             }
         });
     }

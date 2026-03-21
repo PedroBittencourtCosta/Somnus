@@ -21,11 +21,11 @@
                 <tbody>
                     {% for resposta in respostas %}
                         <tr>
-                            <td class="px-4">
+                            <td class="px-4 py-4">
                                 <div class="fw-bold text-dark">{{ resposta.paciente_nome }}</div>
-                                <div class="small text-muted">{{ resposta.pesquisadora.get_full_name|default:resposta.pesquisadora.username }}</div>
+                                {% comment %} <div class="small text-muted">{{ resposta.pesquisadora.get_full_name|default:resposta.pesquisadora.username }}</div> {% endcomment %}
                             </td>
-                            <td>
+                            <td class="px-4 py-4">
                                 <span class="badge rounded-pill bg-light text-primary border px-3">
                                     {{ resposta.questionario.titulo }}
                                 </span>
@@ -33,9 +33,9 @@
                             <td class="text-muted">
                                 {{ resposta.data_submissao|date:"d/m/Y H:i" }}
                             </td>
-                            <td class="text-center">
-                                <a href="{% url 'exportar_respostas_csv' resposta.pk %}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
-                                    <i class="bi bi-download me-1"></i> Exportar CSV
+                            <td class="text-center px-4 py-4">
+                                <a href="{% url 'exportar_respostas_excel' resposta.pk %}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                                    <i class="bi bi-download me-1"></i> Exportar excel
                                 </a>
                             </td>
                         </tr>
