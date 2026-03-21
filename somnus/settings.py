@@ -236,3 +236,5 @@ STORAGES = {
 
 # Autoriza o domínio do Railway para envio de formulários (CSRF)
 CSRF_TRUSTED_ORIGINS = ['https://somnus-production-0b31.up.railway.app']
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

@@ -31,10 +31,17 @@
                                placeholder="E-mail *" style="font-size: 0.9rem;">
                     </div>
 
-                    <div class="mb-4">
+                    <div class="mb-2">
                         <input type="password" name="password" id="modal_password" required
                                class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4"
                                placeholder="Senha *" style="font-size: 0.9rem;">
+                    </div>
+
+                    <div class="mb-4 d-flex justify-content-end px-1">
+                        <a href="{% url 'password_reset' %}" class="small text-decoration-none fw-medium" 
+                           style="color: var(--somnus-blue-inst); font-size: 0.8rem;">
+                            Esqueceu a senha?
+                        </a>
                     </div>
 
                     <button type="submit" class="btn btn-lg w-100 rounded-pill fw-bold text-white shadow-sm btn-login-submit py-3"
@@ -43,12 +50,14 @@
                     </button>
                 </form>
 
-                {% comment %} <div class="mt-5 text-center">
+                {% comment %} 
+                <div class="mt-5 text-center">
                     <p class="small text-muted mb-0">
                         Primeira vez no Somnus? 
                         <a href="{% url 'cadastro'%}" class="fw-bold text-decoration-none" style="color: var(--somnus-blue-inst);">Cadastre-se</a>
                     </p>
-                </div> {% endcomment %}
+                </div> 
+                {% endcomment %}
             </div>
         </div>
     </div>
