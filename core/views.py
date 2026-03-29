@@ -11,7 +11,11 @@ from openpyxl.utils import get_column_letter
 from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
 
 from ethics.models import TCLE, AceiteTCLE
-from .models import Questionario, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.db import transaction
 
 def index_view(request: HttpRequest):
     return render(request, 'home.html')
@@ -291,3 +295,149 @@ def exportar_respostas_excel(request, pk):
     response['Content-Disposition'] = f'attachment; filename="Somnus_Relatorio_{res_quest.id}.xlsx"'
     wb.save(response)
     return response
+
+@login_required
+def editar_questionario_view(request, pk=None):
+    questionario_json = "{}"
+    questionario = None
+    
+    if pk:
+        questionario = get_object_or_404(Questionario, pk=pk)
+        dados = {
+            "id": questionario.id,
+            "titulo": questionario.titulo,
+            "descricao": questionario.descricao,
+            "secoes": []
+        }
+        for secao in questionario.secoes.all().order_by('ordem'):
+            sec_data = {
+                "id": secao.id,
+                "titulo": secao.titulo,
+                "instrucao": secao.instrucao,
+                "layout": secao.layout,
+                "ordem": secao.ordem,
+                "perguntas": []
+            }
+            for perg in secao.perguntas.all().order_by('ordem'):
+                perg_data = {
+                    "id": perg.id,
+                    "conteudo": perg.conteudo,
+                    "tipo": perg.tipo,
+                    "mascara": perg.mascara,
+                    "config_mista": perg.config_mista,
+                    "obrigatoria": perg.obrigatoria,
+                    "identificador": perg.identificador,
+                    "ordem": perg.ordem,
+                    "alternativas": []
+                }
+                for alt in perg.alternativas.all():
+                    perg_data["alternativas"].append({
+                        "id": alt.id,
+                        "conteudo": alt.conteudo,
+                        "valor": alt.valor
+                    })
+                sec_data["perguntas"].append(perg_data)
+            dados["secoes"].append(sec_data)
+        questionario_json = json.dumps(dados)
+
+    return render(request, 'criar_questionario.html', {
+        'questionario': questionario,
+        'questionario_json': questionario_json
+    })
+
+@login_required
+@require_POST
+def salvar_questionario_api(request):
+    try:
+        data = json.loads(request.body)
+        questionario_id = data.get('id')
+        
+        with transaction.atomic():
+            if questionario_id:
+                quest = Questionario.objects.get(pk=questionario_id)
+                quest.titulo = data.get('titulo', '')
+                quest.descricao = data.get('descricao', '')
+                quest.save()
+            else:
+                quest = Questionario.objects.create(
+                    titulo=data.get('titulo', ''),
+                    descricao=data.get('descricao', '')
+                )
+            
+            secoes_ids = []
+            perguntas_ids = []
+            alternativas_ids = []
+            
+            for index_secao, sec_data in enumerate(data.get('secoes', [])):
+                sec_id = sec_data.get('id')
+                if sec_id and str(sec_id).isdigit():
+                    secao = Secao.objects.get(pk=sec_id, questionario=quest)
+                    secao.titulo = sec_data.get('titulo', '')
+                    secao.instrucao = sec_data.get('instrucao', '')
+                    secao.layout = sec_data.get('layout', 'LISTA')
+                    secao.ordem = index_secao + 1
+                    secao.save()
+                else:
+                    secao = Secao.objects.create(
+                        questionario=quest,
+                        titulo=sec_data.get('titulo', ''),
+                        instrucao=sec_data.get('instrucao', ''),
+                        layout=sec_data.get('layout', 'LISTA'),
+                        ordem=index_secao + 1
+                    )
+                secoes_ids.append(secao.id)
+                
+                for index_perg, perg_data in enumerate(sec_data.get('perguntas', [])):
+                    perg_id = perg_data.get('id')
+                    if perg_id and str(perg_id).isdigit():
+                        perg = Pergunta.objects.get(pk=perg_id, secao=secao)
+                        perg.conteudo = perg_data.get('conteudo', '')
+                        perg.tipo = perg_data.get('tipo', 'MC')
+                        perg.mascara = perg_data.get('mascara', 'NENHUMA')
+                        perg.config_mista = perg_data.get('config_mista', 'QUALQUER')
+                        perg.obrigatoria = perg_data.get('obrigatoria', True)
+                        perg.identificador = perg_data.get('identificador', '')
+                        perg.ordem = index_perg + 1
+                        perg.save()
+                    else:
+                        perg = Pergunta.objects.create(
+                            secao=secao,
+                            conteudo=perg_data.get('conteudo', ''),
+                            tipo=perg_data.get('tipo', 'MC'),
+                            mascara=perg_data.get('mascara', 'NENHUMA'),
+                            config_mista=perg_data.get('config_mista', 'QUALQUER'),
+                            obrigatoria=perg_data.get('obrigatoria', True),
+                            identificador=perg_data.get('identificador', ''),
+                            ordem=index_perg + 1
+                        )
+                    perguntas_ids.append(perg.id)
+                    
+                    for index_alt, alt_data in enumerate(perg_data.get('alternativas', [])):
+                        alt_id = alt_data.get('id')
+                        try:
+                            valor_int = int(alt_data.get('valor', 0))
+                        except ValueError:
+                            valor_int = 0
+                            
+                        if alt_id and str(alt_id).isdigit():
+                            alt = Alternativa.objects.get(pk=alt_id, pergunta=perg)
+                            alt.conteudo = alt_data.get('conteudo', '')
+                            alt.valor = valor_int
+                            alt.save()
+                        else:
+                            alt = Alternativa.objects.create(
+                                pergunta=perg,
+                                conteudo=alt_data.get('conteudo', ''),
+                                valor=valor_int
+                            )
+                        alternativas_ids.append(alt.id)
+            
+            Alternativa.objects.filter(pergunta__secao__questionario=quest).exclude(id__in=alternativas_ids).delete()
+            Pergunta.objects.filter(secao__questionario=quest).exclude(id__in=perguntas_ids).delete()
+            Secao.objects.filter(questionario=quest).exclude(id__in=secoes_ids).delete()
+            
+        return JsonResponse({'status': 'success', 'questionario_id': quest.id})
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)

@@ -1,0 +1,395 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Construtor de Questionário - Somnus{% endblock %}
+
+{% block content %}
+<style>
+    .sort-btn:hover { background-color: #f8f9fa; border-radius: 4px; }
+    .secao-block { border-left: 4px solid var(--somnus-blue-deep); }
+    .pergunta-block { border-left: 3px solid #6c757d; background-color: #fdfdfd; }
+    .alternativa-block { border-left: 2px solid #adb5bd; }
+</style>
+
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="fw-bold mb-0 text-primary" style="color: var(--somnus-blue-deep) !important;">
+            <svg width="32" height="32" fill="none" class="me-2" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span id="modo-texto">Novo Questionário</span>
+        </h2>
+        <div class="d-flex gap-2">
+            <a href="{% url 'lista_questionarios' %}" class="btn btn-outline-secondary">Cancelar</a>
+            <button id="btn-save" class="btn btn-primary px-4 fw-semibold" style="background-color: var(--somnus-blue-deep); border: none;">
+                Salvar Questionário
+            </button>
+        </div>
+    </div>
+
+    <!-- Meta Info -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+            <h5 class="card-title fw-bold text-secondary mb-3">Informações Gerais</h5>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Título do Questionário <span class="text-danger">*</span></label>
+                <input type="text" id="q_titulo" class="form-control form-control-lg" placeholder="Ex: Avaliação Inicial de Saúde Mental" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Descrição / Introdução</label>
+                <textarea id="q_descricao" class="form-control" rows="3" placeholder="Instruções visíveis para o paciente sobre como o questionário deve ser preenchido..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div id="secoes-container" class="d-flex flex-column gap-4">
+        <!-- JS injetará as seções aqui -->
+    </div>
+
+    <div class="text-center mt-5 mb-5">
+        <button id="btn-add-secao" class="btn btn-outline-primary rounded-pill px-4 py-2 border-2 fw-bold" style="color: var(--somnus-blue-deep); border-color: var(--somnus-blue-deep);">
+            + Adicionar Nova Seção
+        </button>
+    </div>
+</div>
+
+<!-- ================= TEMPLATES ================= -->
+
+<template id="tpl-secao">
+    <div class="card shadow-sm border-0 secao-block position-relative">
+        <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center pt-3 pb-0">
+            <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
+                <div class="d-flex flex-column gap-1 me-2">
+                    <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-up" title="Mover para cima">▲</button>
+                    <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-down" title="Mover para baixo">▼</button>
+                </div>
+                Seção
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-secao border-0" title="Remover Seção">
+                Remover Seção
+            </button>
+        </div>
+        <div class="card-body">
+            <input type="hidden" class="s-id" value="">
+            <div class="row g-3 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label small fw-bold text-secondary">Título da Seção</label>
+                    <input type="text" class="form-control s-titulo" placeholder="Ex: Dados Demográficos">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-secondary">Layout</label>
+                    <select class="form-select s-layout">
+                        <option value="LISTA">Lista Vertical</option>
+                        <option value="TABELA">Tabela (Matriz)</option>
+                    </select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label small fw-bold text-secondary">Instruções da Seção</label>
+                    <textarea class="form-control form-control-sm s-instrucao" rows="1" placeholder="Ex: Responda as perguntas circulando..."></textarea>
+                </div>
+            </div>
+
+            <div class="perguntas-container d-flex flex-column gap-3 mt-4 ps-2 pe-1">
+                <!-- Perguntas da seção -->
+            </div>
+
+            <div class="mt-3 ps-2">
+                <button type="button" class="btn btn-sm btn-light text-primary fw-semibold btn-add-pergunta border">
+                    + Adicionar Pergunta
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="tpl-pergunta">
+    <div class="card pergunta-block shadow-sm">
+        <div class="card-body p-3">
+            <input type="hidden" class="p-id" value="">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <div class="d-flex align-items-center gap-2 w-100 me-3">
+                    <div class="d-flex flex-column gap-1">
+                        <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-up-p" title="Subir">▲</button>
+                        <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-down-p" title="Descer">▼</button>
+                    </div>
+                    <div class="flex-grow-1">
+                        <input type="text" class="form-control p-conteudo fw-medium" placeholder="Digite a pergunta..." required>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1 btn-remove-pergunta" title="Remover Pergunta">✕</button>
+            </div>
+
+            <div class="row g-2 mt-2 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted mb-1">Tipo de Pergunta</label>
+                    <select class="form-select form-select-sm p-tipo">
+                        <option value="MC">Múltipla Escolha</option>
+                        <option value="TX">Texto Livre</option>
+                        <option value="MX">Mista (Opções + Texto)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 p-config-container d-none">
+                    <label class="form-label small text-muted mb-1">Logica Mista</label>
+                    <select class="form-select form-select-sm p-config">
+                        <option value="QUALQUER">Um ou Outro</option>
+                        <option value="AMBOS">Ambos Obrigatórios</option>
+                        <option value="APENAS_OPCAO">Opção Obrigatória</option>
+                        <option value="APENAS_TEXTO">Texto Obrigatório</option>
+                    </select>
+                </div>
+                <div class="col-md-2 p-mascara-container d-none">
+                    <label class="form-label small text-muted mb-1">Máscara</label>
+                    <select class="form-select form-select-sm p-mascara">
+                        <option value="NENHUMA">Nenhuma</option>
+                        <option value="HORA">Hora</option>
+                        <option value="ALTURA">Altura</option>
+                        <option value="PESO">Peso</option>
+                        <option value="DATA">Data</option>
+                        <option value="OUTRO">Outro</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small text-muted mb-1">Cód. / Identificador</label>
+                    <input type="text" class="form-control form-control-sm p-identificador" placeholder="ex: p1_idade">
+                </div>
+                <div class="col-md-2 text-md-end pt-2">
+                    <div class="form-check form-switch d-inline-block">
+                        <input class="form-check-input p-obrigatoria" type="checkbox" checked>
+                        <label class="form-check-label small text-muted">Obrigatória</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alternativas-wrapper mt-3 ms-4 ps-2 border-start d-none">
+                <div class="alternativas-container d-flex flex-column gap-2 mb-2">
+                    <!-- Alternativas -->
+                </div>
+                <button type="button" class="btn btn-sm btn-link text-decoration-none p-0 mt-1 btn-add-alternativa fw-semibold" style="font-size: 0.85rem;">
+                    + Adicionar Alternativa
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="tpl-alternativa">
+    <div class="d-flex align-items-center gap-2 alternativa-block">
+        <input type="hidden" class="a-id" value="">
+        <div class="text-muted">⋮⋮</div>
+        <input type="text" class="form-control form-control-sm a-conteudo" placeholder="Texto da alternativa">
+        <input type="number" class="form-control form-control-sm a-valor" placeholder="Valor numérico (peso)" style="width: 150px;">
+        <button type="button" class="btn btn-sm text-danger p-1 btn-remove-alternativa border-0">✕</button>
+    </div>
+</template>
+
+{% csrf_token %}
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Carregar JSON Inicial (Edição) ou vazio (Criação)
+    const jsonStr = `{{ questionario_json|escapejs }}`;
+    let questionarioData = {};
+    if(jsonStr && jsonStr !== "{}" && jsonStr.trim() !== "") {
+        try {
+            questionarioData = JSON.parse(jsonStr);
+        } catch(e) { console.error("Erro no parse", e); }
+    }
+
+    const containerSecoes = document.getElementById('secoes-container');
+    const tplSecao = document.getElementById('tpl-secao');
+    const tplPergunta = document.getElementById('tpl-pergunta');
+    const tplAlternativa = document.getElementById('tpl-alternativa');
+
+    // Inicialização da interface
+    if(questionarioData.id) {
+        document.getElementById('modo-texto').textContent = 'Editar Questionário';
+        document.getElementById('q_titulo').value = questionarioData.titulo || '';
+        document.getElementById('q_descricao').value = questionarioData.descricao || '';
+        if(questionarioData.secoes) {
+            questionarioData.secoes.forEach(s => renderSecao(s));
+        }
+    } else {
+        // Criar uma seção em branco logo ao abrir
+        renderSecao();
+    }
+
+    // Handlers Globais de Adicionar
+    document.getElementById('btn-add-secao').addEventListener('click', () => renderSecao());
+
+    // Funcões de Renderização
+    function renderSecao(dados = {}) {
+        const node = tplSecao.content.cloneNode(true);
+        const secEl = node.querySelector('.secao-block');
+        
+        secEl.querySelector('.s-id').value = dados.id || '';
+        secEl.querySelector('.s-titulo').value = dados.titulo || '';
+        secEl.querySelector('.s-instrucao').value = dados.instrucao || '';
+        if(dados.layout) secEl.querySelector('.s-layout').value = dados.layout;
+
+        const containerPerg = secEl.querySelector('.perguntas-container');
+        
+        if(dados.perguntas) {
+            dados.perguntas.forEach(p => renderPergunta(p, containerPerg));
+        }
+
+        // Eventos Secao
+        secEl.querySelector('.btn-remove-secao').addEventListener('click', () => {
+            if(confirm('Tem certeza que deseja remover esta seção e todas as suas perguntas?')) secEl.remove();
+        });
+        secEl.querySelector('.btn-add-pergunta').addEventListener('click', () => renderPergunta({}, containerPerg));
+        secEl.querySelector('.move-up').addEventListener('click', () => moveElement(secEl, -1));
+        secEl.querySelector('.move-down').addEventListener('click', () => moveElement(secEl, 1));
+
+        containerSecoes.appendChild(secEl);
+    }
+
+    function renderPergunta(dados, container) {
+        const node = tplPergunta.content.cloneNode(true);
+        const pEl = node.querySelector('.pergunta-block');
+        const altWrapper = pEl.querySelector('.alternativas-wrapper');
+        const containerAlt = pEl.querySelector('.alternativas-container');
+        const tipoSelect = pEl.querySelector('.p-tipo');
+        const configContainer = pEl.querySelector('.p-config-container');
+        const mascContainer = pEl.querySelector('.p-mascara-container');
+
+        pEl.querySelector('.p-id').value = dados.id || '';
+        pEl.querySelector('.p-conteudo').value = dados.conteudo || '';
+        tipoSelect.value = dados.tipo || 'MC';
+        pEl.querySelector('.p-identificador').value = dados.identificador || '';
+        pEl.querySelector('.p-obrigatoria').checked = dados.obrigatoria !== undefined ? dados.obrigatoria : true;
+        
+        if(dados.config_mista) pEl.querySelector('.p-config').value = dados.config_mista;
+        if(dados.mascara) pEl.querySelector('.p-mascara').value = dados.mascara;
+
+        function updateTipos() {
+            const v = tipoSelect.value;
+            altWrapper.classList.toggle('d-none', v === 'TX');
+            configContainer.classList.toggle('d-none', v !== 'MX');
+            mascContainer.classList.toggle('d-none', v !== 'TX');
+        }
+        tipoSelect.addEventListener('change', updateTipos);
+        updateTipos();
+
+        if(dados.alternativas) {
+            dados.alternativas.forEach(a => renderAlternativa(a, containerAlt));
+        }
+
+        // Eventos Pergunta
+        pEl.querySelector('.btn-remove-pergunta').addEventListener('click', () => pEl.remove());
+        pEl.querySelector('.btn-add-alternativa').addEventListener('click', () => renderAlternativa({}, containerAlt));
+        pEl.querySelector('.move-up-p').addEventListener('click', () => moveElement(pEl, -1));
+        pEl.querySelector('.move-down-p').addEventListener('click', () => moveElement(pEl, 1));
+
+        container.appendChild(pEl);
+    }
+
+    function renderAlternativa(dados, container) {
+        const node = tplAlternativa.content.cloneNode(true);
+        const aEl = node.querySelector('.alternativa-block');
+
+        aEl.querySelector('.a-id').value = dados.id || '';
+        aEl.querySelector('.a-conteudo').value = dados.conteudo || '';
+        aEl.querySelector('.a-valor').value = dados.valor !== undefined ? dados.valor : '';
+
+        aEl.querySelector('.btn-remove-alternativa').addEventListener('click', () => aEl.remove());
+
+        container.appendChild(aEl);
+    }
+
+    function moveElement(el, dir) {
+        if(dir === -1 && el.previousElementSibling) {
+            el.parentNode.insertBefore(el, el.previousElementSibling);
+        } else if (dir === 1 && el.nextElementSibling) {
+            el.parentNode.insertBefore(el.nextElementSibling, el);
+        }
+    }
+
+    // Salvar Questionário (Extrair JSON da UI e Enviar)
+    document.getElementById('btn-save').addEventListener('click', async (e) => {
+        const btn = e.target;
+        const oText = btn.innerHTML;
+        
+        const qTitulo = document.getElementById('q_titulo').value.trim();
+        if(!qTitulo) return alert("O título é obrigatório!");
+
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...`;
+        btn.disabled = true;
+
+        const payload = {
+            id: questionarioData.id || null,
+            titulo: qTitulo,
+            descricao: document.getElementById('q_descricao').value.trim(),
+            secoes: []
+        };
+
+        const secoesDOM = containerSecoes.querySelectorAll('.secao-block');
+        secoesDOM.forEach((secEl) => {
+            const sec = {
+                id: secEl.querySelector('.s-id').value || null,
+                titulo: secEl.querySelector('.s-titulo').value.trim(),
+                instrucao: secEl.querySelector('.s-instrucao').value.trim(),
+                layout: secEl.querySelector('.s-layout').value,
+                perguntas: []
+            };
+
+            const perguntasDOM = secEl.querySelectorAll('.pergunta-block');
+            perguntasDOM.forEach((pEl) => {
+                const tipo = pEl.querySelector('.p-tipo').value;
+                const p = {
+                    id: pEl.querySelector('.p-id').value || null,
+                    conteudo: pEl.querySelector('.p-conteudo').value.trim(),
+                    tipo: tipo,
+                    mascara: pEl.querySelector('.p-mascara').value,
+                    config_mista: pEl.querySelector('.p-config').value,
+                    obrigatoria: pEl.querySelector('.p-obrigatoria').checked,
+                    identificador: pEl.querySelector('.p-identificador').value.trim(),
+                    alternativas: []
+                };
+
+                if(['MC', 'MX'].includes(tipo)) {
+                    const altsDOM = pEl.querySelectorAll('.alternativa-block');
+                    altsDOM.forEach((aEl) => {
+                        const conteudo = aEl.querySelector('.a-conteudo').value.trim();
+                        p.alternativas.push({
+                            id: aEl.querySelector('.a-id').value || null,
+                            conteudo: conteudo,
+                            valor: aEl.querySelector('.a-valor').value
+                        });
+                    });
+                }
+                sec.perguntas.push(p);
+            });
+            payload.secoes.push(sec);
+        });
+
+        try {
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            
+            const response = await fetch("{% url 'salvar_avaliacao_api' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if(response.ok) {
+                // Redirecionar para a listagem (Avaliações) após o sucesso
+                window.location.href = "{% url 'lista_questionarios' %}";
+            } else {
+                alert("Erro ao salvar: " + result.message);
+                btn.innerHTML = oText;
+                btn.disabled = false;
+            }
+        } catch(err) {
+            console.error(err);
+            alert("Erro de conexão ao salvar.");
+            btn.innerHTML = oText;
+            btn.disabled = false;
+        }
+    });
+});
+</script>
+{% endblock %}
