@@ -5,10 +5,14 @@
 
 {% block content %}
 <style>
-    .sort-btn:hover { background-color: #f8f9fa; border-radius: 4px; }
     .secao-block { border-left: 4px solid var(--somnus-blue-deep); }
     .pergunta-block { border-left: 3px solid #6c757d; background-color: #fdfdfd; }
     .alternativa-block { border-left: 2px solid #adb5bd; }
+    .drag-handle, .drag-handle-p, .drag-handle-a { cursor: grab; }
+    .drag-handle:active, .drag-handle-p:active, .drag-handle-a:active { cursor: grabbing; }
+    .dragging { opacity: 0.5; background-color: #f8f9fa !important; border: 2px dashed #adb5bd !important; }
+    .secao-header { cursor: pointer; user-select: none; }
+    .secao-header:hover { background-color: #f8f9fa !important; }
 </style>
 
 <div class="container py-4">
@@ -41,6 +45,7 @@
         </div>
     </div>
 
+    <!-- Container de Seções -->
     <div id="secoes-container" class="d-flex flex-column gap-4">
         <!-- JS injetará as seções aqui -->
     </div>
@@ -56,19 +61,21 @@
 
 <template id="tpl-secao">
     <div class="card shadow-sm border-0 secao-block position-relative">
-        <div class="card-header bg-white border-bottom-0 d-flex justify-content-between align-items-center pt-3 pb-0">
+        <div class="card-header secao-header bg-white border-bottom-0 d-flex justify-content-between align-items-center pt-3 pb-3">
             <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                <div class="d-flex flex-column gap-1 me-2">
-                    <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-up" title="Mover para cima">▲</button>
-                    <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-down" title="Mover para baixo">▼</button>
-                </div>
-                Seção
+                <span class="drag-handle text-muted me-1 px-1" title="Arrastar Seção">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                </span>
+                <span class="chevron-icon d-inline-block transition text-primary me-2" style="transition: transform 0.3s; transform: rotate(0deg);">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </span>
+                <span class="secao-titulo-header">Nova Seção</span>
             </h5>
             <button type="button" class="btn btn-sm btn-outline-danger btn-remove-secao border-0" title="Remover Seção">
                 Remover Seção
             </button>
         </div>
-        <div class="card-body">
+        <div class="card-body secao-body">
             <input type="hidden" class="s-id" value="">
             <div class="row g-3 mb-3">
                 <div class="col-md-8">
@@ -107,10 +114,9 @@
             <input type="hidden" class="p-id" value="">
             <div class="d-flex justify-content-between align-items-start mb-2">
                 <div class="d-flex align-items-center gap-2 w-100 me-3">
-                    <div class="d-flex flex-column gap-1">
-                        <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-up-p" title="Subir">▲</button>
-                        <button type="button" class="btn btn-sm text-muted p-0 sort-btn move-down-p" title="Descer">▼</button>
-                    </div>
+                    <span class="drag-handle-p text-muted px-1" title="Arrastar Pergunta">
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+                    </span>
                     <div class="flex-grow-1">
                         <input type="text" class="form-control p-conteudo fw-medium" placeholder="Digite a pergunta..." required>
                     </div>
@@ -174,7 +180,9 @@
 <template id="tpl-alternativa">
     <div class="d-flex align-items-center gap-2 alternativa-block">
         <input type="hidden" class="a-id" value="">
-        <div class="text-muted">⋮⋮</div>
+        <span class="drag-handle-a text-muted px-1" title="Arrastar Alternativa" style="cursor: grab;">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z"/></svg>
+        </span>
         <input type="text" class="form-control form-control-sm a-conteudo" placeholder="Texto da alternativa">
         <input type="number" class="form-control form-control-sm a-valor" placeholder="Valor numérico (peso)" style="width: 150px;">
         <button type="button" class="btn btn-sm text-danger p-1 btn-remove-alternativa border-0">✕</button>
@@ -185,7 +193,7 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Carregar JSON Inicial (Edição) ou vazio (Criação)
+    // Carregar JSON Inicial
     const jsonStr = `{{ questionario_json|escapejs }}`;
     let questionarioData = {};
     if(jsonStr && jsonStr !== "{}" && jsonStr.trim() !== "") {
@@ -199,7 +207,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const tplPergunta = document.getElementById('tpl-pergunta');
     const tplAlternativa = document.getElementById('tpl-alternativa');
 
-    // Inicialização da interface
+    // Setup DnD container de Seções
+    initContainerDnD(containerSecoes, 'secao-block');
+
     if(questionarioData.id) {
         document.getElementById('modo-texto').textContent = 'Editar Questionário';
         document.getElementById('q_titulo').value = questionarioData.titulo || '';
@@ -208,12 +218,89 @@ document.addEventListener("DOMContentLoaded", () => {
             questionarioData.secoes.forEach(s => renderSecao(s));
         }
     } else {
-        // Criar uma seção em branco logo ao abrir
         renderSecao();
     }
 
-    // Handlers Globais de Adicionar
     document.getElementById('btn-add-secao').addEventListener('click', () => renderSecao());
+
+    // Funções DnD Core Nativo
+    function bindDraggable(block, handleSelector) {
+        const handle = block.querySelector(handleSelector);
+        if (!handle) return;
+
+        let handleActive = false;
+
+        handle.addEventListener('mousedown', (e) => {
+            e.stopPropagation();
+            handleActive = true;
+            block.setAttribute('draggable', 'true');
+        });
+
+        handle.addEventListener('mouseup', () => {
+            handleActive = false;
+            if (!block.classList.contains('dragging')) {
+                block.removeAttribute('draggable');
+            }
+        });
+
+        // Fallback global: limpa se o mouseup acontecer fora do handle
+        document.addEventListener('mouseup', () => {
+            if (handleActive) {
+                handleActive = false;
+                if (!block.classList.contains('dragging')) {
+                    block.removeAttribute('draggable');
+                }
+            }
+        });
+
+        block.addEventListener('dragstart', (e) => {
+            e.stopPropagation(); // Isola perguntas de seções
+            block.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            setTimeout(() => { block.style.opacity = '0.5'; }, 0);
+        });
+
+        block.addEventListener('dragend', (e) => {
+            e.stopPropagation();
+            block.classList.remove('dragging');
+            block.style.opacity = '1';
+            block.removeAttribute('draggable');
+            handleActive = false;
+        });
+    }
+
+    function initContainerDnD(container, itemClass) {
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const dragging = document.querySelector('.dragging');
+            if (!dragging || !dragging.classList.contains(itemClass)) return;
+
+            e.stopPropagation(); // Evita que o container pai interfira
+
+            const afterElement = getDragAfterElement(container, e.clientY, itemClass);
+            if (afterElement == null) {
+                container.appendChild(dragging);
+            } else {
+                container.insertBefore(dragging, afterElement);
+            }
+        });
+    }
+
+    function getDragAfterElement(container, y, itemClass) {
+        // Usa apenas filhos diretos para não pegar elementos de containers aninhados
+        const draggableElements = [...container.children].filter(
+            el => el.classList.contains(itemClass) && !el.classList.contains('dragging')
+        );
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    }
 
     // Funcões de Renderização
     function renderSecao(dados = {}) {
@@ -221,23 +308,60 @@ document.addEventListener("DOMContentLoaded", () => {
         const secEl = node.querySelector('.secao-block');
         
         secEl.querySelector('.s-id').value = dados.id || '';
-        secEl.querySelector('.s-titulo').value = dados.titulo || '';
+        const tituloInput = secEl.querySelector('.s-titulo');
+        tituloInput.value = dados.titulo || '';
         secEl.querySelector('.s-instrucao').value = dados.instrucao || '';
         if(dados.layout) secEl.querySelector('.s-layout').value = dados.layout;
 
+        // Atualiza Titulo no Header em tempo real
+        const tituloVisor = secEl.querySelector('.secao-titulo-header');
+        tituloVisor.textContent = dados.titulo || 'Nova Seção';
+        tituloInput.addEventListener('input', (e) => {
+            tituloVisor.textContent = e.target.value.trim() || 'Nova Seção';
+        });
+
         const containerPerg = secEl.querySelector('.perguntas-container');
+        initContainerDnD(containerPerg, 'pergunta-block');
         
         if(dados.perguntas) {
             dados.perguntas.forEach(p => renderPergunta(p, containerPerg));
         }
 
-        // Eventos Secao
-        secEl.querySelector('.btn-remove-secao').addEventListener('click', () => {
+        // --- Eventos Seção ---
+        
+        // Remover
+        secEl.querySelector('.btn-remove-secao').addEventListener('click', (e) => {
+            e.stopPropagation();
             if(confirm('Tem certeza que deseja remover esta seção e todas as suas perguntas?')) secEl.remove();
         });
-        secEl.querySelector('.btn-add-pergunta').addEventListener('click', () => renderPergunta({}, containerPerg));
-        secEl.querySelector('.move-up').addEventListener('click', () => moveElement(secEl, -1));
-        secEl.querySelector('.move-down').addEventListener('click', () => moveElement(secEl, 1));
+        
+        // Adicionar pergunta
+        secEl.querySelector('.btn-add-pergunta').addEventListener('click', (e) => {
+            e.stopPropagation();
+            renderPergunta({}, containerPerg);
+        });
+
+        // Accordion (Expandir/Recolher)
+        const header = secEl.querySelector('.secao-header');
+        const body = secEl.querySelector('.secao-body');
+        const chevron = secEl.querySelector('.chevron-icon');
+        
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.drag-handle') || e.target.closest('.btn-remove-secao')) return;
+            
+            body.classList.toggle('d-none');
+            // Animar sutilmente o chevron
+            if (body.classList.contains('d-none')) {
+                chevron.style.transform = 'rotate(-90deg)';
+                header.classList.add('border-bottom');
+            } else {
+                chevron.style.transform = 'rotate(0deg)';
+                header.classList.remove('border-bottom');
+            }
+        });
+
+        // Habilitar DnD da Seção
+        bindDraggable(secEl, '.drag-handle');
 
         containerSecoes.appendChild(secEl);
     }
@@ -273,11 +397,15 @@ document.addEventListener("DOMContentLoaded", () => {
             dados.alternativas.forEach(a => renderAlternativa(a, containerAlt));
         }
 
+        // Habilitar DnD da Pergunta Inter-Seções
+        bindDraggable(pEl, '.drag-handle-p');
+
+        // Habilitar DnD das Alternativas
+        initContainerDnD(containerAlt, 'alternativa-block');
+
         // Eventos Pergunta
         pEl.querySelector('.btn-remove-pergunta').addEventListener('click', () => pEl.remove());
         pEl.querySelector('.btn-add-alternativa').addEventListener('click', () => renderAlternativa({}, containerAlt));
-        pEl.querySelector('.move-up-p').addEventListener('click', () => moveElement(pEl, -1));
-        pEl.querySelector('.move-down-p').addEventListener('click', () => moveElement(pEl, 1));
 
         container.appendChild(pEl);
     }
@@ -292,15 +420,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         aEl.querySelector('.btn-remove-alternativa').addEventListener('click', () => aEl.remove());
 
-        container.appendChild(aEl);
-    }
+        // Habilitar DnD da Alternativa
+        bindDraggable(aEl, '.drag-handle-a');
 
-    function moveElement(el, dir) {
-        if(dir === -1 && el.previousElementSibling) {
-            el.parentNode.insertBefore(el, el.previousElementSibling);
-        } else if (dir === 1 && el.nextElementSibling) {
-            el.parentNode.insertBefore(el.nextElementSibling, el);
-        }
+        container.appendChild(aEl);
     }
 
     // Salvar Questionário (Extrair JSON da UI e Enviar)
@@ -376,7 +499,6 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await response.json();
             
             if(response.ok) {
-                // Redirecionar para a listagem (Avaliações) após o sucesso
                 window.location.href = "{% url 'lista_questionarios' %}";
             } else {
                 alert("Erro ao salvar: " + result.message);
