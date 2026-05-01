@@ -4,10 +4,10 @@
 {% block content %}
 <div class="container py-5">
     <div class="row justify-content-center">
-        <div class="col-12 col-lg-8">
-            <div class="mb-4">
+        <div class="col-12 col-lg-7">
+            <div class="mb-4 text-center">
                 <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Meu Perfil</h2>
-                <p class="text-muted">Gerencie suas informações pessoais e dados de contato.</p>
+                <p class="text-muted">Mantenha seus dados de acesso e identificação atualizados.</p>
             </div>
 
             <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
@@ -16,45 +16,41 @@
                         {% csrf_token %}
                         
                         <div class="row g-3">
-                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Informações de Conta</h5>
+                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Informações de Pesquisadora</h5>
+                            
                             <div class="col-md-6">
                                 {% bootstrap_field form.first_name placeholder="Seu nome" %}
                             </div>
                             <div class="col-md-6">
                                 {% bootstrap_field form.last_name placeholder="Seu sobrenome" %}
                             </div>
-                            <div class="col-md-6">
-                                {% bootstrap_field form.email placeholder="E-mail" %}
-                            </div>
-
-                            <hr class="my-4 opacity-0">
-                            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Dados Sociodemográficos</h5>
-                            
-                            <div class="col-md-6">
-                                {% bootstrap_field form.data_nascimento %}
-                            </div>
-                            <div class="col-md-6">
-                                {% bootstrap_field form.sexo %}
-                            </div>
-
-                            <div class="col-md-6">
-                                {% bootstrap_field form.cor_raca %}
-                            </div>
-                            <div class="col-md-6">
-                                {% bootstrap_field form.estado_civil %}
+                            <div class="col-12">
+                                {% bootstrap_field form.email placeholder="E-mail institucional" %}
+                                <div class="form-text text-muted mt-1">
+                                    Este e-mail é utilizado para o seu login e notificações do sistema.
+                                </div>
                             </div>
                         </div>
 
                         <div class="d-grid gap-2 mt-5">
                             <button type="submit" class="btn btn-lg rounded-pill fw-bold text-white shadow-sm py-3"
                                     style="background-color: var(--somnus-blue-deep);">
-                                Salvar Alterações
+                                Atualizar Informações
                             </button>
-                            <a href="{% url 'home' %}" class="btn btn-link btn-sm text-decoration-none text-muted">Voltar para o início</a>
+                            <div class="text-center mt-2">
+                                <a href="{% url 'home' %}" class="btn btn-link btn-sm text-decoration-none text-muted">Voltar para o Início</a>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
+
+            {% comment %} <div class="mt-4 p-3 bg-light rounded-4 border-start border-4" style="border-color: var(--somnus-blue-inst) !important;">
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Os dados dos pacientes (idade, sexo, raça) agora são coletados individualmente em cada aplicação de questionário.
+                </small>
+            </div> {% endcomment %}
         </div>
     </div>
 </div>

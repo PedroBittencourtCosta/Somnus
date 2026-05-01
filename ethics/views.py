@@ -1,11 +1,16 @@
-from django.shortcuts import get_object_or_404, redirect, render
+from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
-from ethics.models import TCLE, AceiteTCLE
 # Create your views here.
 @login_required
 def aceitar_tcle(request, tcle_id):
     if request.method == 'POST':
-        tcle = get_object_or_404(TCLE, id=tcle_id)
-        AceiteTCLE.objects.get_or_create(usuario=request.user, tcle=tcle)
+        # 1. Apenas marcamos na sessão que o TCLE foi aceito para este atendimento
+        request.session['tcle_aceito'] = True
+        request.session.modified = True
+        
+        # 2. Redirecionamos de volta para o questionário
+        # request.META.get('HTTP_REFERER') volta para a página anterior (o form)
         return redirect(request.META.get('HTTP_REFERER', 'home'))
+    
+    return redirect('home')

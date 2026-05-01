@@ -1,15 +1,21 @@
-from datetime import date
+
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+import openpyxl
+from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.utils import get_column_letter
 
-import csv
-from .decorators import medico_ou_admin_required
+from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
 
 from ethics.models import TCLE, AceiteTCLE
-from .models import Questionario, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.db import transaction
 
 def index_view(request: HttpRequest):
     return render(request, 'home.html')
@@ -17,43 +23,21 @@ def index_view(request: HttpRequest):
 @login_required
 def responder_questionario(request, pk):
     questionario = get_object_or_404(Questionario, pk=pk)
-
-    # 1. Busca a versão mais recente do TCLE
     ultimo_tcle = TCLE.objects.order_by('-versao').first()
-    
-    # 2. Verifica se o usuário já aceitou esta versão específica
-    # Se NÃO houver TCLE cadastrado no banco, não podemos exibir o modal
-    if not ultimo_tcle:
-        # Você pode decidir se permite responder sem TCLE ou se mostra um erro
-        messages.warning(request, "Atenção: Nenhum Termo de Consentimento (TCLE) foi encontrado no sistema.")
-        # Segue a lógica normal se não houver termo
-        ja_aceitou = True 
-    else:
-        ja_aceitou = AceiteTCLE.objects.filter(usuario=request.user, tcle=ultimo_tcle).exists()
 
-    # 3. Se não aceitou, enviamos o conteúdo do TCLE para o modal
-    if not ja_aceitou and ultimo_tcle:
-        # Reutilizamos a lógica de seções mas enviamos a flag do modal
+    # --- LÓGICA TCLE: POR ATENDIMENTO (SESSÃO) ---
+    tcle_aceito_na_sessao = request.session.get('tcle_aceito', False)
+
+    if not tcle_aceito_na_sessao and ultimo_tcle:
         context = {
             'questionario': questionario,
             'exibir_tcle': True,
             'tcle': ultimo_tcle,
         }
-        # Renderiza a mesma página, mas o JS abrirá o modal
         return render(request, 'responder_questionario.html', context)
     
-    # TRAVA DE RESPOSTA ÚNICA
-    ja_respondeu = RespostaQuestionario.objects.filter(
-        usuario=request.user, 
-        questionario=questionario
-    ).exists()
-
-    if ja_respondeu:
-        messages.info(request, "Você já completou esta avaliação. Obrigado pela participação!")
-        return redirect('home')
-
+    # Configuração da paginação e sessões
     secoes_list = questionario.secoes.all().order_by('ordem')
-    
     paginator = Paginator(secoes_list, 1)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
@@ -63,33 +47,65 @@ def responder_questionario(request, pk):
         request.session['respostas_temp'] = {}
 
     if request.method == 'POST':
-        for pergunta in secao_atual.perguntas.all():
-            # Capturamos tanto o valor da múltipla escolha quanto o texto
-            valor_id = request.POST.get(f'pergunta_{pergunta.id}')
-            valor_texto = request.POST.get(f'pergunta_{pergunta.id}_texto')
-            
-            # Armazenamos um dicionário para suportar os dois valores na sessão
-            request.session['respostas_temp'][str(pergunta.id)] = {
-                'alternativa': valor_id,
-                'texto': valor_texto
-            }
+        acao = request.POST.get('acao')
+
+        # Aceite do TCLE
+        if acao == 'aceitar_tcle':
+            request.session['tcle_aceito'] = True
+            request.session.modified = True
+            return redirect(request.path)
+
+        # Salva respostas da página atual na sessão
+        if secao_atual:
+            for pergunta in secao_atual.perguntas.all():
+                request.session['respostas_temp'][str(pergunta.id)] = {
+                    'alternativa': request.POST.get(f'pergunta_{pergunta.id}'),
+                    'texto': request.POST.get(f'pergunta_{pergunta.id}_texto'),
+                    'identificador': pergunta.identificador 
+                }
         
         request.session.modified = True
-        acao = request.POST.get('acao')
 
         if acao == 'proximo' and page_obj.has_next():
             return redirect(f"{request.path}?page={page_obj.next_page_number()}")
         elif acao == 'anterior' and page_obj.has_previous():
             return redirect(f"{request.path}?page={page_obj.previous_page_number()}")
+        
         elif acao == 'finalizar':
-            res_quest = RespostaQuestionario.objects.create(usuario=request.user, questionario=questionario)
             respostas_cache = request.session.get('respostas_temp', {})
+            ultimo_tcle = TCLE.objects.order_by('-versao').first()
+
+            # 1. Extraímos o nome do paciente do cache (procurando pelo identificador técnico 'nome')
+            nome_extraido = "Não informado"
+            for v in respostas_cache.values():
+                if v.get('identificador') == 'nome':
+                    # Pega o texto preenchido na pergunta de nome
+                    nome_extraido = v.get('texto') or "Não informado"
+                    break
+
+           # 2. Criamos a RespostaQuestionario (Modelo novo)
+            res_quest = RespostaQuestionario.objects.create(
+                pesquisadora=request.user, # Aluna logada
+                questionario=questionario,
+                paciente_nome=nome_extraido
+            )
+
+            # 3. NOVO: Relacionamos a resposta ao TCLE aceito nesta sessão
+            if ultimo_tcle:
+                AceiteTCLE.objects.create(
+                    resposta_questionario=res_quest,
+                    tcle=ultimo_tcle
+                )
             
+            # 4. Salva todas as respostas (incluindo idade, sexo, etc., que agora são perguntas)
             for p_id, valores in respostas_cache.items():
                 pergunta = Pergunta.objects.get(id=p_id)
                 alt = None
                 if valores.get('alternativa'):
-                    alt = Alternativa.objects.get(id=valores['alternativa'])
+                    try:
+                        alt = Alternativa.objects.get(id=valores['alternativa'])
+                    except (Alternativa.DoesNotExist, ValueError):
+                        alt = None
                 
                 RespostaPergunta.objects.create(
                     resposta_questionario=res_quest,
@@ -98,8 +114,12 @@ def responder_questionario(request, pk):
                     resposta_texto=valores.get('texto')
                 )
             
+            # 5. Limpeza da sessão para o próximo atendimento
             del request.session['respostas_temp']
-            messages.success(request, "Avaliação concluída com sucesso!")
+            request.session['tcle_aceito'] = False
+            request.session.modified = True
+
+            messages.success(request, f"Avaliação de {nome_extraido} concluída!")
             return redirect('home')
 
     context = {
@@ -118,7 +138,7 @@ def lista_questionarios(request):
     respondidos = []
     if request.user.is_authenticated:
         respondidos = RespostaQuestionario.objects.filter(
-            usuario=request.user
+            pesquisadora=request.user
         ).values_list('questionario_id', flat=True)
         
     return render(request, 'lista_questionarios.html', {
@@ -129,10 +149,9 @@ def lista_questionarios(request):
 
 
 @login_required
-@medico_ou_admin_required
 def dashboard_respostas(request):
     # Ordenação decrescente por data de submissão
-    respostas_list = RespostaQuestionario.objects.select_related('usuario', 'questionario').all().order_by('-data_submissao')
+    respostas_list = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all().order_by('-data_submissao')
     
     # Paginação: 10 itens por página
     paginator = Paginator(respostas_list, 10)
@@ -142,61 +161,283 @@ def dashboard_respostas(request):
     return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
 
 
+
+def get_answers_by_section(respostas_queryset, section_id):
+    """Filtra respostas de uma seção e mapeia pela posição relativa."""
+    respostas_secao = respostas_queryset.filter(
+        pergunta__secao_id=section_id
+    ).order_by('pergunta__ordem')
+    
+    return {i+1: rp.alternativa.valor for i, rp in enumerate(respostas_secao) if rp.alternativa}
+
+
 @login_required
-@medico_ou_admin_required
-def exportar_respostas_csv(request, pk):
-    # 1. Busca os dados base
+def exportar_respostas_excel(request, pk):
+    # 1. BUSCA DE DADOS
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
-    user = res_quest.usuario
-    hoje = date.today()
+    pesquisadora = res_quest.pesquisadora 
     
-    # 2. Cálculo da Idade (Lógica de Engenharia de Software)
-    # $Idade = Ano_{Atual} - Ano_{Nasc} - 1$ (se o aniversário não ocorreu ainda)
-    idade = hoje.year - user.data_nascimento.year - (
-        (hoje.month, hoje.day) < (user.data_nascimento.month, user.data_nascimento.day)
-    ) if user.data_nascimento else "N/A"
-
-    # 3. Configuração da Resposta HTTP
-    response = HttpResponse(content_type='text/csv')
-    filename = f"somnus_{user.username}_{res_quest.id}.csv"
-    response['Content-Disposition'] = f'attachment; filename="{filename}"'
-    response.write(u'\ufeff'.encode('utf8')) # Garante acentuação correta no Excel (BOM)
-
-    writer = csv.writer(response, delimiter=';')
-    
-    # --- BLOCO 1: IDENTIFICAÇÃO E DADOS SOCIODEMOGRÁFICOS ---
-    writer.writerow(['METADADOS DO USUÁRIO'])
-    writer.writerow(['Variável', 'Valor'])
-    writer.writerow(['nome', user.get_full_name() or user.username])
-    writer.writerow(['data_nascimento', user.data_nascimento.strftime('%d/%m/%Y') if user.data_nascimento else ""])
-    writer.writerow(['idade', idade])
-    
-    # Variáveis solicitadas para o CSV técnico
-    writer.writerow(['sexo', user.get_sexo_display() if hasattr(user, 'get_sexo_display') else user.sexo])
-    writer.writerow(['cor', user.get_cor_raca_display() if hasattr(user, 'get_cor_raca_display') else user.cor_raca])
-    writer.writerow(['ecivil', user.get_estado_civil_display() if hasattr(user, 'get_estado_civil_display') else user.estado_civil])
-    writer.writerow(['data', res_quest.data_submissao.strftime('%d/%m/%Y %H:%M')])
-    
-    writer.writerow([]) # Linha em branco para separar
-    
-    # --- BLOCO 2: RESPOSTAS DO QUESTIONÁRIO ---
-    writer.writerow(['DADOS DO QUESTIONÁRIO'])
-    writer.writerow(['ID_Variavel', 'Pergunta', 'Resposta Selecionada', 'Texto Adicional', 'Valor/Score'])
-
-    respostas_perguntas = RespostaPergunta.objects.filter(
+    respostas_qs = RespostaPergunta.objects.filter(
         resposta_questionario=res_quest
-    ).select_related('pergunta', 'alternativa').order_by('pergunta__ordem')
+    ).select_related('pergunta', 'alternativa')
 
-    for rp in respostas_perguntas:
-        # Usa o identificador técnico (ex: sexo__) se existir, senão usa o ID
-        var_id = rp.pergunta.identificador if rp.pergunta.identificador else f"ID_{rp.pergunta.id}"
+    # 2. MAPEAMENTO HÍBRIDO
+    answers_map = {}
+    for rp in respostas_qs:
+        identificador = rp.pergunta.identificador
+        if identificador:
+            if rp.alternativa:
+                answers_map[identificador] = rp.alternativa.valor
+            elif rp.resposta_texto:
+                answers_map[identificador] = rp.resposta_texto
+
+    # 3. PROCESSAMENTO DAS ESCALAS (Certifique-se que estas classes existem no seu utils.py)
+    scores_dass  = DASS21Calculator.calculate(answers_map)
+    scores_k10   = K10Calculator.calculate(answers_map)
+    scores_srq   = SRQ20Calculator.calculate(answers_map)
+    scores_ese   = ESECalculator.calculate(answers_map)
+    scores_audit = AUDITCalculator.calculate(answers_map)
+    scores_emssp = EMSSPCalculator.calculate(answers_map)
+    scores_psqi  = PSQICalculator.calculate(answers_map)
+    
+    peso = SafeParser.to_float(answers_map.get('peso', 0))
+    altura = SafeParser.to_float(answers_map.get('altura', 0))
+    imc = round(peso / (altura ** 2), 2) if altura > 0 else 0
+
+    # 4. CRIAÇÃO DO EXCEL
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Relatório de Avaliação"
+
+    # Estilos
+    azul_somnus = PatternFill(start_color='1A365D', end_color='1A365D', fill_type='solid')
+    cinza_claro = PatternFill(start_color='F2F2F2', end_color='F2F2F2', fill_type='solid')
+    fonte_branca = Font(color='FFFFFF', bold=True)
+    center_align = Alignment(horizontal='center', vertical='center')
+
+    # Cabeçalho
+    ws.merge_cells('A1:C1')
+    ws['A1'] = "SOMNUS - RELATÓRIO TÉCNICO"
+    ws['A1'].font = Font(size=14, bold=True, color='1A365D')
+    ws['A1'].alignment = center_align
+
+    ws.append(['Paciente:', res_quest.paciente_nome])
+    ws.append(['Pesquisadora:', pesquisadora.username])
+    ws.append(['Data:', res_quest.data_submissao.strftime('%d/%m/%Y %H:%M')])
+    ws.append([])
+
+    def adicionar_secao(titulo, dados):
+        ws.append([titulo])
+        ws.merge_cells(f'A{ws.max_row}:C{ws.max_row}')
+        ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
+        ws.cell(row=ws.max_row, column=1).fill = cinza_claro
         
-        writer.writerow([
-            var_id,
-            rp.pergunta.conteudo,
-            rp.alternativa.conteudo if rp.alternativa else "N/A",
-            rp.resposta_texto if rp.resposta_texto else "",
-            rp.alternativa.valor if rp.alternativa else ""
-        ])
+        ws.append(['Escala/Item', 'Resultado', 'Referência'])
+        for cell in ws[ws.max_row]:
+            cell.fill = azul_somnus
+            cell.font = fonte_branca
 
+        for linha in dados:
+            ws.append(linha)
+        ws.append([])
+
+    # Adicionando os Scores
+    adicionar_secao("I. SAÚDE MENTAL", [
+        ['DASS-21 Depressão', scores_dass['dass_depressao'], "0-21"],
+        ['DASS-21 Ansiedade', scores_dass['dass_ansiedade'], "0-21"],
+        ['DASS-21 Estresse',  scores_dass['dass_estresse'],  "0-21"],
+        ['K10 Kessler',       scores_k10['k10_total'],       scores_k10['k10_classificacao']],
+        ['SRQ-20 TMC',        scores_srq['srq_total'],       scores_srq['srq_status']],
+    ])
+
+    adicionar_secao("II. HÁBITOS E SONO", [
+        ['ESE Epworth',       scores_ese['ese_total'],       scores_ese['ese_status']],
+        ['AUDIT Álcool',      scores_audit['audit_total'],    scores_audit['audit_status']],
+        ['PSQI Pittsburgh',   scores_psqi['psqi_global'],    scores_psqi['psqi_status']],
+        ['IMC Atual',         imc,                           "kg/m²"],
+    ])
+
+    adicionar_secao("III. SUPORTE SOCIAL", [
+        ['Família',           scores_emssp['suporte_familia'], "Máx: 28"],
+        ['Amigos',            scores_emssp['suporte_amigos'],  "Máx: 28"],
+        ['Outros',            scores_emssp['suporte_outros'],  "Máx: 28"],
+        ['TOTAL',             scores_emssp['suporte_total'],   "Máx: 84"],
+    ])
+
+    # IV. Detalhamento
+    ws.append(['IV. DETALHAMENTO DAS RESPOSTAS'])
+    ws.append(['ID', 'Pergunta', 'Valor'])
+    for cell in ws[ws.max_row]:
+        cell.fill = azul_somnus
+        cell.font = fonte_branca
+
+    for rp in respostas_qs.order_by('pergunta__ordem'):
+        valor = rp.alternativa.valor if rp.alternativa else rp.resposta_texto
+        ws.append([rp.pergunta.identificador or f"ID_{rp.pergunta.id}", rp.pergunta.conteudo[:100], valor])
+
+    # --- CORREÇÃO DO ERRO: AJUSTE DE LARGURA SEGURO ---
+    for i, column_cells in enumerate(ws.columns, 1):
+        max_length = 0
+        column_letter = get_column_letter(i) # Pega a letra da coluna pelo índice (1=A, 2=B...)
+        
+        for cell in column_cells:
+            try:
+                if cell.value:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+            except:
+                pass
+        
+        ws.column_dimensions[column_letter].width = min(max_length + 2, 60)
+
+    # 5. RETORNO
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename="Somnus_Relatorio_{res_quest.id}.xlsx"'
+    wb.save(response)
     return response
+
+@login_required
+def editar_questionario_view(request, pk=None):
+    questionario_json = "{}"
+    questionario = None
+    
+    if pk:
+        questionario = get_object_or_404(Questionario, pk=pk)
+        dados = {
+            "id": questionario.id,
+            "titulo": questionario.titulo,
+            "descricao": questionario.descricao,
+            "secoes": []
+        }
+        for secao in questionario.secoes.all().order_by('ordem'):
+            sec_data = {
+                "id": secao.id,
+                "titulo": secao.titulo,
+                "instrucao": secao.instrucao,
+                "layout": secao.layout,
+                "ordem": secao.ordem,
+                "perguntas": []
+            }
+            for perg in secao.perguntas.all().order_by('ordem'):
+                perg_data = {
+                    "id": perg.id,
+                    "conteudo": perg.conteudo,
+                    "tipo": perg.tipo,
+                    "mascara": perg.mascara,
+                    "config_mista": perg.config_mista,
+                    "obrigatoria": perg.obrigatoria,
+                    "identificador": perg.identificador,
+                    "ordem": perg.ordem,
+                    "alternativas": []
+                }
+                for alt in perg.alternativas.all():
+                    perg_data["alternativas"].append({
+                        "id": alt.id,
+                        "conteudo": alt.conteudo,
+                        "valor": alt.valor
+                    })
+                sec_data["perguntas"].append(perg_data)
+            dados["secoes"].append(sec_data)
+        questionario_json = json.dumps(dados)
+
+    return render(request, 'criar_questionario.html', {
+        'questionario': questionario,
+        'questionario_json': questionario_json
+    })
+
+@login_required
+@require_POST
+def salvar_questionario_api(request):
+    try:
+        data = json.loads(request.body)
+        questionario_id = data.get('id')
+        
+        with transaction.atomic():
+            if questionario_id:
+                quest = Questionario.objects.get(pk=questionario_id)
+                quest.titulo = data.get('titulo', '')
+                quest.descricao = data.get('descricao', '')
+                quest.save()
+            else:
+                quest = Questionario.objects.create(
+                    titulo=data.get('titulo', ''),
+                    descricao=data.get('descricao', '')
+                )
+            
+            secoes_ids = []
+            perguntas_ids = []
+            alternativas_ids = []
+            
+            for index_secao, sec_data in enumerate(data.get('secoes', [])):
+                sec_id = sec_data.get('id')
+                if sec_id and str(sec_id).isdigit():
+                    secao = Secao.objects.get(pk=sec_id, questionario=quest)
+                    secao.titulo = sec_data.get('titulo', '')
+                    secao.instrucao = sec_data.get('instrucao', '')
+                    secao.layout = sec_data.get('layout', 'LISTA')
+                    secao.ordem = index_secao + 1
+                    secao.save()
+                else:
+                    secao = Secao.objects.create(
+                        questionario=quest,
+                        titulo=sec_data.get('titulo', ''),
+                        instrucao=sec_data.get('instrucao', ''),
+                        layout=sec_data.get('layout', 'LISTA'),
+                        ordem=index_secao + 1
+                    )
+                secoes_ids.append(secao.id)
+                
+                for index_perg, perg_data in enumerate(sec_data.get('perguntas', [])):
+                    perg_id = perg_data.get('id')
+                    if perg_id and str(perg_id).isdigit():
+                        perg = Pergunta.objects.get(pk=perg_id, secao=secao)
+                        perg.conteudo = perg_data.get('conteudo', '')
+                        perg.tipo = perg_data.get('tipo', 'MC')
+                        perg.mascara = perg_data.get('mascara', 'NENHUMA')
+                        perg.config_mista = perg_data.get('config_mista', 'QUALQUER')
+                        perg.obrigatoria = perg_data.get('obrigatoria', True)
+                        perg.identificador = perg_data.get('identificador', '')
+                        perg.ordem = index_perg + 1
+                        perg.save()
+                    else:
+                        perg = Pergunta.objects.create(
+                            secao=secao,
+                            conteudo=perg_data.get('conteudo', ''),
+                            tipo=perg_data.get('tipo', 'MC'),
+                            mascara=perg_data.get('mascara', 'NENHUMA'),
+                            config_mista=perg_data.get('config_mista', 'QUALQUER'),
+                            obrigatoria=perg_data.get('obrigatoria', True),
+                            identificador=perg_data.get('identificador', ''),
+                            ordem=index_perg + 1
+                        )
+                    perguntas_ids.append(perg.id)
+                    
+                    for index_alt, alt_data in enumerate(perg_data.get('alternativas', [])):
+                        alt_id = alt_data.get('id')
+                        try:
+                            valor_int = int(alt_data.get('valor', 0))
+                        except ValueError:
+                            valor_int = 0
+                            
+                        if alt_id and str(alt_id).isdigit():
+                            alt = Alternativa.objects.get(pk=alt_id, pergunta=perg)
+                            alt.conteudo = alt_data.get('conteudo', '')
+                            alt.valor = valor_int
+                            alt.save()
+                        else:
+                            alt = Alternativa.objects.create(
+                                pergunta=perg,
+                                conteudo=alt_data.get('conteudo', ''),
+                                valor=valor_int
+                            )
+                        alternativas_ids.append(alt.id)
+            
+            Alternativa.objects.filter(pergunta__secao__questionario=quest).exclude(id__in=alternativas_ids).delete()
+            Pergunta.objects.filter(secao__questionario=quest).exclude(id__in=perguntas_ids).delete()
+            Secao.objects.filter(questionario=quest).exclude(id__in=secoes_ids).delete()
+            
+        return JsonResponse({'status': 'success', 'questionario_id': quest.id})
+        
+    except Exception as e:
+        import traceback
+        return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)

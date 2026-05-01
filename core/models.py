@@ -111,17 +111,20 @@ class Alternativa(models.Model):
         return self.conteudo
 
 class RespostaQuestionario(models.Model):
-    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    pesquisadora = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     questionario = models.ForeignKey(Questionario, on_delete=models.CASCADE)
     data_submissao = models.DateTimeField(auto_now_add=True) 
+
+    paciente_nome = models.CharField(max_length=255, null=True)
 
     class Meta:
         verbose_name = 'Resposta de Questionário'
         verbose_name_plural = 'Respostas dos Questionários'
-        unique_together = ('usuario', 'questionario')
+        # unique_together = ('usuario', 'questionario')
 
     def __str__(self):
-        return f"{self.usuario.username} - {self.questionario.titulo}"
+        # Atualizado para usar pesquisadora em vez de usuario
+        return f"Paciente: {self.paciente_nome} - Pesquisadora: {self.pesquisadora.username}"
 
 class RespostaPergunta(models.Model):
     resposta_questionario = models.ForeignKey(RespostaQuestionario, related_name='respostas', on_delete=models.CASCADE)

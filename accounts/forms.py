@@ -2,49 +2,40 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from .models import Usuario
 from datetime import date
+from django.contrib.auth.models import Group
 
 class UsuarioCreationForm(UserCreationForm):
-    # Definimos email como obrigatório no formulário
     email = forms.EmailField(label="E-mail", required=True)
 
     class Meta(UserCreationForm.Meta):
         model = Usuario
-        # Removido 'username' da lista de campos visíveis
-        fields = (
-            'email', 'first_name', 'last_name', 
-            'sexo', 'cor_raca', 'estado_civil', 'data_nascimento'
-        )
-        widgets = {
-            'data_nascimento': forms.DateInput(
-                format='%Y-%m-%d',
-                attrs={
-                    'type': 'date',
-                    'max': date.today().isoformat()
-                }
-            ),
-        }
+        # Mantemos apenas o que a pesquisadora precisa informar no cadastro
+        fields = ('email', 'first_name', 'last_name')
 
 class PerfilForm(forms.ModelForm):
     class Meta:
         model = Usuario
-        # Removido 'username' para evitar conflitos na edição
-        fields = ['first_name', 'last_name', 'email', 'data_nascimento', 'sexo', 'cor_raca', 'estado_civil']
+        # Perfil agora é apenas para dados de contato/nome da aluna
+        fields = ['first_name', 'last_name', 'email']
+
+class CadastroAssistenteForm(forms.ModelForm):
+    senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}))
+    confirmar_senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}))
+
+    class Meta:
+        model = Usuario
+        fields = ['first_name', 'last_name', 'email']
         widgets = {
-            'data_nascimento': forms.DateInput(
-                format='%Y-%m-%d',
-                attrs={
-                    'type': 'date', 
-                    'class': 'form-control',
-                    'max': date.today().isoformat()
-                }
-            ),
+            'first_name': forms.TextInput(attrs={'class': 'form-control rounded-3', 'placeholder': 'Nome'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control rounded-3', 'placeholder': 'Sobrenome'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control rounded-3', 'placeholder': 'E-mail institucional'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def clean(self):
+        cleaned_data = super().clean()
+        senha = cleaned_data.get("senha")
+        confirmar_senha = cleaned_data.get("confirmar_senha")
 
-    def clean_data_nascimento(self):
-        data_nasc = self.cleaned_data.get('data_nascimento')
-        if data_nasc and data_nasc > date.today():
-            raise forms.ValidationError("A data de nascimento não pode ser uma data futura.")
-        return data_nasc
+        if senha != confirmar_senha:
+            raise forms.ValidationError("As senhas não conferem.")
+        return cleaned_data

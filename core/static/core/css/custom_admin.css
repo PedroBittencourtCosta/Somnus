@@ -1,0 +1,78 @@
+/* Alarga o formulário principal do Admin */
+.change-form .aligned .inline-group .tabular td.field-conteudo textarea {
+    width: 600px !important;
+    height: 50px !important;
+    font-size: 14px;
+}
+
+/* Garante que a tabela inline use todo o espaço disponível */
+.inline-group .tabular table {
+    width: 100% !important;
+}
+
+/* Ajusta o campo identificador para não ocupar espaço demais */
+.field-identificador input {
+    width: 120px !important;
+}
+
+/* Estiliza o cabeçalho das perguntas para melhor leitura */
+.field-conteudo {
+    min-width: 450px;
+}
+
+.tabular.inline-related .module table thead th:first-child {
+    width: 40px !important;
+}
+
+.django-admin-sortable-handle {
+    cursor: move !important;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    background: #eee;
+}
+
+/* Garante que a coluna de arraste (drag handle) seja visível */
+.adminsortable2-draghandle {
+    width: 30px !important;
+    padding-left: 10px !important;
+    cursor: move !important;
+    background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3goXFScY9B1mAAAAF0lEQVQI12NggID/DAwM/8EYS8AEE0A0AB6ECAnAnY9BAAAAAElFTkSuQmCC') !important; /* Ícone de pontinhos */
+}
+
+
+* Alarga a tabela para comportar o drag handle + conteúdo */
+.inline-group .tabular table {
+    width: 100% !important;
+    table-layout: auto !important;
+}
+
+/* Força a visibilidade da coluna de arraste (drag handle) */
+.tabular.inline-related .module table thead th:first-child,
+.tabular.inline-related .module table tbody td.drag {
+    width: 40px !important;
+    min-width: 40px !important;
+    display: table-cell !important;
+    cursor: move !important;
+    background-color: #f8f9fa !important;
+    text-align: center;
+}
+
+/* Ícone visual da barra de arraste (três traços) */
+.tabular.inline-related .module table tbody td.drag:before {
+    content: "≡";
+    font-size: 20px;
+    color: #999;
+    font-weight: bold;
+}
+
+/* Ajuste no textarea para não "expulsar" as outras colunas */
+.tabular td.field-conteudo textarea {
+    width: 450px !important;
+    height: 45px !important;
+}
+
+/* Esconde o input numérico da ordem (o Mixin faria, mas reforçamos) */
+.field-ordem input {
+    display: none !important;
+}
