@@ -1,6 +1,6 @@
 from django.contrib import admin
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin, SortableAdminBase 
-from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, RegraEquacao
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
 
 # 1. Inline para Alternativas (Mantido para edição individual da pergunta)
 class AlternativaInline(admin.TabularInline):
@@ -87,4 +87,7 @@ class RespostaPerguntaAdmin(admin.ModelAdmin):
         return obj.alternativa.conteudo if obj.alternativa else obj.resposta_texto
     get_resposta.short_description = 'Resposta'
 
-admin.site.register(RegraEquacao)
+@admin.register(EscalaConfig)
+class EscalaConfigAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'questionario', 'strategy_class')
+    list_filter = ('strategy_class',)

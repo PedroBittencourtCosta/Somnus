@@ -136,14 +136,32 @@ class RespostaPergunta(models.Model):
         # Retorna o e-mail do usuário e o início da pergunta para fácil identificação
         return f"Resp: {self.resposta_questionario.usuario.email} - Pergunta: {self.pergunta.conteudo[:30]}..."
 
-class RegraEquacao(models.Model):
-    questionario = models.OneToOneField(Questionario, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=100) 
-    logica = models.TextField(help_text="Explicação ou fórmula para o cálculo")
+class EscalaConfig(models.Model):
+    questionario = models.OneToOneField(Questionario, related_name='escala_config', on_delete=models.CASCADE)
+    nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21") 
+    
+    ESTRATEGIA_CHOICES = [
+        ('DYNAMIC', 'Construtor Visual (Somas, Médias e Regras Simples)'),
+        ('PSQI', 'Índice de Qualidade de Sono de Pittsburgh (PSQI)'),
+        ('IMC', 'Índice de Massa Corporal (IMC)'),
+    ]
+    
+    strategy_class = models.CharField(
+        max_length=50, 
+        choices=ESTRATEGIA_CHOICES,
+        default='DYNAMIC', 
+        help_text="Selecione 'Construtor Visual' para criar regras pelo sistema, ou escolha uma escala clínica complexa já nativa do sistema."
+    )
+    
+    config_dinamica = models.JSONField(
+        blank=True, 
+        null=True,
+        help_text="Armazena a lógica gerada pela interface do Pesquisador (não precisa ser preenchido manualmente)."
+    )
 
     class Meta:
-        verbose_name = 'Regra de Cálculo'
-        verbose_name_plural = 'Regras de Cálculos'
+        verbose_name = 'Configuração de Escala'
+        verbose_name_plural = 'Configurações de Escalas'
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} ({self.get_strategy_class_display()})"

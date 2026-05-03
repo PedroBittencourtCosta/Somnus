@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}</h2>
+            <p class="text-muted">Defina como o sistema deve processar os resultados dessa avaliação.</p>
+        </div>
+        <a href="{% url 'lista_questionarios' %}" class="btn btn-outline-secondary rounded-pill">Voltar para Questionários</a>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-body p-4">
+            <h5 class="fw-bold mb-3">1. Tipo de Processamento</h5>
+            <select id="strategySelect" class="form-select form-select-lg mb-4 rounded-3">
+                <option value="DYNAMIC">Construtor Visual Dinâmico (Somas, Médias e Classificações)</option>
+                <option value="PSQI">Escala Clínica: PSQI (Índice de Qualidade de Sono de Pittsburgh)</option>
+                <option value="IMC">Escala Clínica: IMC (Índice de Massa Corporal)</option>
+            </select>
+
+            <div id="dynamicBuilder" class="mt-4">
+                <h5 class="fw-bold mb-3">2. Construtor de Lógica (JSON)</h5>
+                <div class="alert alert-info rounded-3" role="alert">
+                    <h6 class="alert-heading fw-bold">Como construir a regra:</h6>
+                    <p class="mb-0">Para criar um cálculo simples, preencha o editor abaixo no formato JSON. Variáveis disponíveis (buscadas pelo Identificador da Pergunta):</p>
+                    <hr>
+                    <div class="d-flex flex-wrap gap-2">
+                        {% for p in questionario.secoes.all.0.perguntas.all %} <!-- Apenas um placeholder nativo visual -->
+                        {% endfor %}
+                    </div>
+                    <ul class="mt-2 mb-0" id="variablesList">
+                        <!-- Renderizado via JS -->
+                    </ul>
+                </div>
+                
+                <p class="text-muted fw-bold mb-1">Editor de Metadados JSON:</p>
+                <textarea id="jsonEditor" class="form-control text-monospace rounded-3" rows="15" style="font-family: monospace; background-color: #f8f9fa;"></textarea>
+                <div id="jsonError" class="text-danger mt-2 fw-bold" style="display: none;">JSON Inválido!</div>
+                
+                <div class="mt-3">
+                    <button id="btnTemplateSum" class="btn btn-sm btn-outline-primary rounded-pill">Carregar Exemplo: Soma Simples</button>
+                    <button id="btnTemplateSub" class="btn btn-sm btn-outline-primary rounded-pill">Carregar Exemplo: Sub-escalas</button>
+                </div>
+            </div>
+
+            <hr class="my-4">
+            
+            <div class="text-end">
+                <button id="btnSalvar" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">Salvar Configurações</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="configData" type="application/json">
+    {{ config_json|safe }}
+</script>
+<script id="perguntasData" type="application/json">
+    {{ perguntas_json|safe }}
+</script>
+<script>
+    const configAtual = JSON.parse(document.getElementById('configData').textContent);
+    const perguntas = JSON.parse(document.getElementById('perguntasData').textContent);
+    
+    // Renderiza variaveis disponiveis
+    const varList = document.getElementById('variablesList');
+    if(perguntas.length === 0) {
+        varList.innerHTML = "<li><i>Nenhuma pergunta com 'Identificador' configurado. Volte na edição do questionário e adicione Identificadores às perguntas que deseja calcular.</i></li>";
+    } else {
+        perguntas.forEach(p => {
+            const li = document.createElement('li');
+            li.innerHTML = `<code>"${p.identificador}"</code> - ${p.conteudo.substring(0, 50)}...`;
+            varList.appendChild(li);
+        });
+    }
+
+    const select = document.getElementById('strategySelect');
+    const builder = document.getElementById('dynamicBuilder');
+    const editor = document.getElementById('jsonEditor');
+    const btnSalvar = document.getElementById('btnSalvar');
+    const jsonError = document.getElementById('jsonError');
+
+    // Inicializa campos
+    select.value = configAtual.strategy_class || 'DYNAMIC';
+    if(Object.keys(configAtual.config_dinamica).length > 0) {
+        editor.value = JSON.stringify(configAtual.config_dinamica, null, 2);
+    } else {
+        editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
+    }
+
+    // Toggle builder
+    select.addEventListener('change', (e) => {
+        if(e.target.value === 'DYNAMIC') {
+            builder.style.display = 'block';
+        } else {
+            builder.style.display = 'none';
+        }
+    });
+    
+    select.dispatchEvent(new Event('change'));
+
+    // Templates
+    document.getElementById('btnTemplateSum').addEventListener('click', () => {
+        editor.value = JSON.stringify({
+            "operacao": "SUM",
+            "variaveis": ["var1", "var2"],
+            "limiares": [
+                {"max": 10, "status": "Baixo"},
+                {"max": 20, "status": "Alto"}
+            ]
+        }, null, 2);
+    });
+
+    document.getElementById('btnTemplateSub').addEventListener('click', () => {
+        editor.value = JSON.stringify({
+            "operacao": "SUM_BY_SUBSCALE",
+            "subescalas": {
+                "categoria_A": ["var1", "var2"],
+                "categoria_B": ["var3", "var4"]
+            },
+            "limiares": {
+                "categoria_A": [
+                    {"max": 5, "status": "Normal"}
+                ]
+            }
+        }, null, 2);
+    });
+
+    // Save
+    btnSalvar.addEventListener('click', () => {
+        let payload = {
+            strategy_class: select.value
+        };
+
+        if(select.value === 'DYNAMIC') {
+            try {
+                payload.config_dinamica = JSON.parse(editor.value);
+                jsonError.style.display = 'none';
+            } catch(err) {
+                jsonError.style.display = 'block';
+                return;
+            }
+        }
+
+        btnSalvar.disabled = true;
+        btnSalvar.innerText = "Salvando...";
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                alert('Regras de cálculo salvas com sucesso!');
+            } else {
+                alert('Erro ao salvar: ' + data.message);
+            }
+        })
+        .catch(err => {
+            alert('Falha na requisição.');
+        })
+        .finally(() => {
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = "Salvar Configurações";
+        });
+    });
+
+    // Helper CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+{% endblock %}

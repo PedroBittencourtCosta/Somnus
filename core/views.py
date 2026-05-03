@@ -11,7 +11,7 @@ from openpyxl.utils import get_column_letter
 from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
 
 from ethics.models import TCLE, AceiteTCLE
-from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -441,3 +441,43 @@ def salvar_questionario_api(request):
     except Exception as e:
         import traceback
         return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+
+@login_required
+def configurar_escala_view(request, pk):
+    questionario = get_object_or_404(Questionario, pk=pk)
+    
+    nome_padrao = f'Escala para {questionario.titulo}'[:100]
+    config, created = EscalaConfig.objects.get_or_create(
+        questionario=questionario,
+        defaults={'nome': nome_padrao, 'strategy_class': 'DYNAMIC'}
+    )
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            config.strategy_class = data.get('strategy_class', 'DYNAMIC')
+            if config.strategy_class == 'DYNAMIC':
+                config.config_dinamica = data.get('config_dinamica', {})
+            else:
+                config.config_dinamica = None
+            config.save()
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            import traceback
+            return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+            
+    # Coleta todas as perguntas que possuem um identificador (variáveis)
+    perguntas_com_id = Pergunta.objects.filter(
+        secao__questionario=questionario
+    ).exclude(identificador__exact='').exclude(identificador__isnull=True).values('id', 'identificador', 'conteudo')
+    
+    context = {
+        'questionario': questionario,
+        'config': config,
+        'config_json': json.dumps({
+            'strategy_class': config.strategy_class,
+            'config_dinamica': config.config_dinamica or {}
+        }),
+        'perguntas_json': json.dumps(list(perguntas_com_id))
+    }
+    return render(request, 'configurar_escala.html', context)
