@@ -11,6 +11,9 @@
         <a href="{% url 'lista_questionarios' %}" class="btn btn-outline-secondary rounded-pill">Voltar para Questionários</a>
     </div>
 
+    <!-- Container para as mensagens de sucesso/erro estilo Bootstrap -->
+    <div id="alertContainer"></div>
+
     <div class="card shadow-sm border-0 rounded-4">
         <div class="card-body p-4">
             <h5 class="fw-bold mb-3">1. Tipo de Processamento</h5>
@@ -21,28 +24,64 @@
             </select>
 
             <div id="dynamicBuilder" class="mt-4">
-                <h5 class="fw-bold mb-3">2. Construtor de Lógica (JSON)</h5>
-                <div class="alert alert-info rounded-3" role="alert">
-                    <h6 class="alert-heading fw-bold">Como construir a regra:</h6>
-                    <p class="mb-0">Para criar um cálculo simples, preencha o editor abaixo no formato JSON. Variáveis disponíveis (buscadas pelo Identificador da Pergunta):</p>
-                    <hr>
-                    <div class="d-flex flex-wrap gap-2">
-                        {% for p in questionario.secoes.all.0.perguntas.all %} <!-- Apenas um placeholder nativo visual -->
-                        {% endfor %}
+                <h5 class="fw-bold mb-3">2. Construtor de Lógica (Visual e JSON)</h5>
+
+                <div class="card p-3 mb-4 bg-light border-0 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="fw-bold text-primary mb-0">Importar Escala Existente</h6>
                     </div>
-                    <ul class="mt-2 mb-0" id="variablesList">
-                        <!-- Renderizado via JS -->
-                    </ul>
+                    <div class="input-group input-group-sm">
+                        <select id="templateSelect" class="form-select">
+                            <option value="">-- Selecione uma escala já cadastrada --</option>
+                        </select>
+                        <button class="btn btn-outline-primary" type="button" id="btnCarregarTemplate">Copiar Regras</button>
+                    </div>
+                </div>
+                
+                <div class="card p-3 mb-4 bg-light border-0 rounded-3">
+                    <h6 class="fw-bold text-primary mb-3">Assistente de Criação de Regras</h6>
+                    <p class="text-muted small">Use os campos abaixo para gerar o JSON automaticamente, ou edite diretamente no editor de metadados.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small">Operação</label>
+                        <select id="opType" class="form-select form-select-sm">
+                            <option value="SUM">Soma Simples (SUM)</option>
+                            <option value="AVERAGE">Média Simples (AVERAGE)</option>
+                            <option value="SUM_BY_SUBSCALE">Soma por Sub-escalas (SUM_BY_SUBSCALE)</option>
+                        </select>
+                    </div>
+
+                    <!-- Interface para SUM e AVERAGE -->
+                    <div id="uiSimples">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Variáveis (Identificadores separados por vírgula)</label>
+                            <input type="text" id="simplesVars" class="form-control form-control-sm" placeholder="ex: p1, p2, p3">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Limiares de Classificação (Opcional)</label>
+                            <div id="simplesLimiaresContainer"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddLimiarSimples">+ Adicionar Limiar</button>
+                        </div>
+                    </div>
+
+                    <!-- Interface para SUM_BY_SUBSCALE -->
+                    <div id="uiSubescala" style="display: none;">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Sub-escalas</label>
+                            <div id="subescalasContainer"></div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddSubescala">+ Adicionar Sub-escala</button>
+                        </div>
+                    </div>
+
+                    <div class="mt-2 text-end">
+                        <button type="button" id="btnGerarJson" class="btn btn-primary btn-sm rounded-pill fw-bold px-4">Gerar JSON a partir do Assistente</button>
+                    </div>
                 </div>
                 
                 <p class="text-muted fw-bold mb-1">Editor de Metadados JSON:</p>
-                <textarea id="jsonEditor" class="form-control text-monospace rounded-3" rows="15" style="font-family: monospace; background-color: #f8f9fa;"></textarea>
+                <textarea id="jsonEditor" class="form-control text-monospace rounded-3" rows="10" style="font-family: monospace; background-color: #f8f9fa;"></textarea>
                 <div id="jsonError" class="text-danger mt-2 fw-bold" style="display: none;">JSON Inválido!</div>
-                
-                <div class="mt-3">
-                    <button id="btnTemplateSum" class="btn btn-sm btn-outline-primary rounded-pill">Carregar Exemplo: Soma Simples</button>
-                    <button id="btnTemplateSub" class="btn btn-sm btn-outline-primary rounded-pill">Carregar Exemplo: Sub-escalas</button>
-                </div>
             </div>
 
             <hr class="my-4">
@@ -60,35 +99,47 @@
 <script id="perguntasData" type="application/json">
     {{ perguntas_json|safe }}
 </script>
+<script id="escalasTemplatesData" type="application/json">
+    {{ escalas_templates_json|safe }}
+</script>
 <script>
     const configAtual = JSON.parse(document.getElementById('configData').textContent);
     const perguntas = JSON.parse(document.getElementById('perguntasData').textContent);
+    const escalasTemplates = JSON.parse(document.getElementById('escalasTemplatesData').textContent);
     
-    // Renderiza variaveis disponiveis
-    const varList = document.getElementById('variablesList');
-    if(perguntas.length === 0) {
-        varList.innerHTML = "<li><i>Nenhuma pergunta com 'Identificador' configurado. Volte na edição do questionário e adicione Identificadores às perguntas que deseja calcular.</i></li>";
-    } else {
-        perguntas.forEach(p => {
-            const li = document.createElement('li');
-            li.innerHTML = `<code>"${p.identificador}"</code> - ${p.conteudo.substring(0, 50)}...`;
-            varList.appendChild(li);
-        });
-    }
-
     const select = document.getElementById('strategySelect');
     const builder = document.getElementById('dynamicBuilder');
     const editor = document.getElementById('jsonEditor');
     const btnSalvar = document.getElementById('btnSalvar');
     const jsonError = document.getElementById('jsonError');
 
-    // Inicializa campos
+    // Sempre preenche com as configs caso exista; caso contrario, texto vazio padrao
+    // Isso ignora o cache de preenchimento automatico do navegador (que pode puxar o ultimo cadastrado)
     select.value = configAtual.strategy_class || 'DYNAMIC';
     if(Object.keys(configAtual.config_dinamica).length > 0) {
         editor.value = JSON.stringify(configAtual.config_dinamica, null, 2);
     } else {
         editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
     }
+
+    // Preenche o Select de Templates
+    const templateSelect = document.getElementById('templateSelect');
+    escalasTemplates.forEach(t => {
+        const option = document.createElement('option');
+        option.value = t.id;
+        option.textContent = `${t.questionario_titulo} - ${t.nome}`;
+        templateSelect.appendChild(option);
+    });
+
+    document.getElementById('btnCarregarTemplate').addEventListener('click', () => {
+        const id = parseInt(templateSelect.value);
+        if(!id) return;
+        const template = escalasTemplates.find(t => t.id === id);
+        if(template) {
+            editor.value = JSON.stringify(template.config, null, 2);
+            showAlert('Configuração copiada para o editor!', 'info');
+        }
+    });
 
     // Toggle builder
     select.addEventListener('change', (e) => {
@@ -101,31 +152,115 @@
     
     select.dispatchEvent(new Event('change'));
 
-    // Templates
-    document.getElementById('btnTemplateSum').addEventListener('click', () => {
-        editor.value = JSON.stringify({
-            "operacao": "SUM",
-            "variaveis": ["var1", "var2"],
-            "limiares": [
-                {"max": 10, "status": "Baixo"},
-                {"max": 20, "status": "Alto"}
-            ]
-        }, null, 2);
+    // Assistente Visual Lógica
+    const opType = document.getElementById('opType');
+    const uiSimples = document.getElementById('uiSimples');
+    const uiSubescala = document.getElementById('uiSubescala');
+
+    opType.addEventListener('change', () => {
+        if(opType.value === 'SUM_BY_SUBSCALE') {
+            uiSimples.style.display = 'none';
+            uiSubescala.style.display = 'block';
+        } else {
+            uiSimples.style.display = 'block';
+            uiSubescala.style.display = 'none';
+        }
     });
 
-    document.getElementById('btnTemplateSub').addEventListener('click', () => {
-        editor.value = JSON.stringify({
-            "operacao": "SUM_BY_SUBSCALE",
-            "subescalas": {
-                "categoria_A": ["var1", "var2"],
-                "categoria_B": ["var3", "var4"]
-            },
-            "limiares": {
-                "categoria_A": [
-                    {"max": 5, "status": "Normal"}
-                ]
+    // Limiares Simples
+    const simplesLimiaresContainer = document.getElementById('simplesLimiaresContainer');
+    document.getElementById('btnAddLimiarSimples').addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'd-flex gap-2 mb-2 limiar-item';
+        div.innerHTML = `
+            <input type="number" step="0.1" class="form-control form-control-sm" placeholder="Valor Máx (ex: 10)">
+            <input type="text" class="form-control form-control-sm" placeholder="Status (ex: Baixo)">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+        `;
+        simplesLimiaresContainer.appendChild(div);
+    });
+
+    // Sub-escalas
+    const subescalasContainer = document.getElementById('subescalasContainer');
+    document.getElementById('btnAddSubescala').addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'card p-2 mb-2 subescala-item bg-white border';
+        div.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <input type="text" class="form-control form-control-sm w-50 sub-nome fw-bold" placeholder="Nome Sub-escala (ex: ansiedade)">
+                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.parentElement.remove()">Remover</button>
+            </div>
+            <input type="text" class="form-control form-control-sm mb-2 sub-vars" placeholder="Variáveis (ex: v1, v2, v3)">
+            <div class="sub-limiares-container ms-3"></div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-1 ms-3" onclick="addSubLimiar(this)">+ Limiar p/ esta Sub-escala</button>
+        `;
+        subescalasContainer.appendChild(div);
+    });
+
+    window.addSubLimiar = function(btn) {
+        const container = btn.previousElementSibling;
+        const div = document.createElement('div');
+        div.className = 'd-flex gap-2 mt-2 sub-limiar-item';
+        div.innerHTML = `
+            <input type="number" step="0.1" class="form-control form-control-sm" placeholder="Máx">
+            <input type="text" class="form-control form-control-sm" placeholder="Status">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+        `;
+        container.appendChild(div);
+    };
+
+    document.getElementById('btnGerarJson').addEventListener('click', () => {
+        const op = opType.value;
+        let result = { operacao: op };
+
+        if(op === 'SUM' || op === 'AVERAGE') {
+            const varsInput = document.getElementById('simplesVars').value;
+            result.variaveis = varsInput.split(',').map(v => v.trim()).filter(v => v);
+            
+            const limiares = [];
+            document.querySelectorAll('#simplesLimiaresContainer .limiar-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                const maxVal = parseFloat(inputs[0].value);
+                const statusVal = inputs[1].value.trim();
+                if(!isNaN(maxVal) && statusVal) {
+                    limiares.push({ max: maxVal, status: statusVal });
+                }
+            });
+            if(limiares.length > 0) result.limiares = limiares;
+
+        } else if(op === 'SUM_BY_SUBSCALE') {
+            result.subescalas = {};
+            result.limiares = {};
+            
+            document.querySelectorAll('#subescalasContainer .subescala-item').forEach(item => {
+                const nome = item.querySelector('.sub-nome').value.trim();
+                const vars = item.querySelector('.sub-vars').value.split(',').map(v => v.trim()).filter(v => v);
+                
+                if(nome && vars.length > 0) {
+                    result.subescalas[nome] = vars;
+                    
+                    const limiares = [];
+                    item.querySelectorAll('.sub-limiar-item').forEach(limItem => {
+                        const inputs = limItem.querySelectorAll('input');
+                        const maxVal = parseFloat(inputs[0].value);
+                        const statusVal = inputs[1].value.trim();
+                        if(!isNaN(maxVal) && statusVal) {
+                            limiares.push({ max: maxVal, status: statusVal });
+                        }
+                    });
+                    
+                    if(limiares.length > 0) {
+                        result.limiares[nome] = limiares;
+                    }
+                }
+            });
+            
+            if(Object.keys(result.limiares).length === 0) {
+                delete result.limiares;
             }
-        }, null, 2);
+        }
+
+        editor.value = JSON.stringify(result, null, 2);
     });
 
     // Save
@@ -158,17 +293,18 @@
         .then(res => res.json())
         .then(data => {
             if(data.status === 'success') {
-                alert('Regras de cálculo salvas com sucesso!');
+                showAlert('Regras de cálculo salvas com sucesso!', 'success');
             } else {
-                alert('Erro ao salvar: ' + data.message);
+                showAlert('Erro ao salvar: ' + data.message, 'danger');
             }
         })
         .catch(err => {
-            alert('Falha na requisição.');
+            showAlert('Falha na requisição.', 'danger');
         })
         .finally(() => {
             btnSalvar.disabled = false;
             btnSalvar.innerText = "Salvar Configurações";
+            window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe a página para o usuário ver o alerta
         });
     });
 
@@ -186,6 +322,26 @@
             }
         }
         return cookieValue;
+    }
+
+    // Custom Alert
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+        
+        setTimeout(() => {
+            const alertNode = container.querySelector('.alert');
+            if (alertNode) {
+                const bsAlert = new bootstrap.Alert(alertNode);
+                bsAlert.close();
+            }
+        }, 5000);
     }
 </script>
 {% endblock %}

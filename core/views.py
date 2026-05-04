@@ -471,6 +471,17 @@ def configurar_escala_view(request, pk):
         secao__questionario=questionario
     ).exclude(identificador__exact='').exclude(identificador__isnull=True).values('id', 'identificador', 'conteudo')
     
+    # Coleta configurações de outras escalas para servir de template
+    outras_escalas = EscalaConfig.objects.exclude(questionario=questionario).exclude(config_dinamica__isnull=True)
+    escalas_templates = [
+        {
+            'id': e.id,
+            'nome': e.nome,
+            'questionario_titulo': e.questionario.titulo,
+            'config': e.config_dinamica
+        } for e in outras_escalas if e.config_dinamica and isinstance(e.config_dinamica, dict) and e.config_dinamica
+    ]
+    
     context = {
         'questionario': questionario,
         'config': config,
@@ -478,6 +489,7 @@ def configurar_escala_view(request, pk):
             'strategy_class': config.strategy_class,
             'config_dinamica': config.config_dinamica or {}
         }),
-        'perguntas_json': json.dumps(list(perguntas_com_id))
+        'perguntas_json': json.dumps(list(perguntas_com_id)),
+        'escalas_templates_json': json.dumps(escalas_templates)
     }
     return render(request, 'configurar_escala.html', context)
