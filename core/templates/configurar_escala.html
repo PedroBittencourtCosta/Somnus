@@ -14,83 +14,23 @@
     <!-- Container para as mensagens de sucesso/erro estilo Bootstrap -->
     <div id="alertContainer"></div>
 
-    <div class="card shadow-sm border-0 rounded-4">
-        <div class="card-body p-4">
-            <h5 class="fw-bold mb-3">1. Tipo de Processamento</h5>
-            <select id="strategySelect" class="form-select form-select-lg mb-4 rounded-3">
-                <option value="DYNAMIC">Construtor Visual Dinâmico (Somas, Médias e Classificações)</option>
-                <option value="PSQI">Escala Clínica: PSQI (Índice de Qualidade de Sono de Pittsburgh)</option>
-                <option value="IMC">Escala Clínica: IMC (Índice de Massa Corporal)</option>
-            </select>
-
-            <div id="dynamicBuilder" class="mt-4">
-                <h5 class="fw-bold mb-3">2. Construtor de Lógica (Visual e JSON)</h5>
-
-                <div class="card p-3 mb-4 bg-light border-0 rounded-3">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h6 class="fw-bold text-primary mb-0">Importar Escala Existente</h6>
-                    </div>
-                    <div class="input-group input-group-sm">
-                        <select id="templateSelect" class="form-select">
-                            <option value="">-- Selecione uma escala já cadastrada --</option>
-                        </select>
-                        <button class="btn btn-outline-primary" type="button" id="btnCarregarTemplate">Copiar Regras</button>
-                    </div>
-                </div>
-                
-                <div class="card p-3 mb-4 bg-light border-0 rounded-3">
-                    <h6 class="fw-bold text-primary mb-3">Assistente de Criação de Regras</h6>
-                    <p class="text-muted small">Use os campos abaixo para gerar o JSON automaticamente, ou edite diretamente no editor de metadados.</p>
-                    
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small">Operação</label>
-                        <select id="opType" class="form-select form-select-sm">
-                            <option value="SUM">Soma Simples (SUM)</option>
-                            <option value="AVERAGE">Média Simples (AVERAGE)</option>
-                            <option value="SUM_BY_SUBSCALE">Soma por Sub-escalas (SUM_BY_SUBSCALE)</option>
-                        </select>
-                    </div>
-
-                    <!-- Interface para SUM e AVERAGE -->
-                    <div id="uiSimples">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Variáveis (Identificadores separados por vírgula)</label>
-                            <input type="text" id="simplesVars" class="form-control form-control-sm" placeholder="ex: p1, p2, p3">
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Limiares de Classificação (Opcional)</label>
-                            <div id="simplesLimiaresContainer"></div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddLimiarSimples">+ Adicionar Limiar</button>
-                        </div>
-                    </div>
-
-                    <!-- Interface para SUM_BY_SUBSCALE -->
-                    <div id="uiSubescala" style="display: none;">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold small">Sub-escalas</label>
-                            <div id="subescalasContainer"></div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddSubescala">+ Adicionar Sub-escala</button>
-                        </div>
-                    </div>
-
-                    <div class="mt-2 text-end">
-                        <button type="button" id="btnGerarJson" class="btn btn-primary btn-sm rounded-pill fw-bold px-4">Gerar JSON a partir do Assistente</button>
-                    </div>
-                </div>
-                
-                <p class="text-muted fw-bold mb-1">Editor de Metadados JSON:</p>
-                <textarea id="jsonEditor" class="form-control text-monospace rounded-3" rows="10" style="font-family: monospace; background-color: #f8f9fa;"></textarea>
-                <div id="jsonError" class="text-danger mt-2 fw-bold" style="display: none;">JSON Inválido!</div>
+    <div id="viewList" class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4 text-center">
+            <h4 class="fw-bold text-primary mb-4">Escalas Já Cadastradas</h4>
+            <div class="row g-3 justify-content-center mb-4" id="templateCardsContainer">
+                <!-- Preenchido via JS -->
             </div>
-
-            <hr class="my-4">
             
-            <div class="text-end">
-                <button id="btnSalvar" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">Salvar Configurações</button>
-            </div>
+            <hr class="w-50 mx-auto my-4">
+            
+            <h5 class="fw-bold mb-3">Ou crie uma nova escala do zero</h5>
+            <button id="btnNovaEscala" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">
+                <i class="bi bi-plus-circle me-2"></i>Cadastrar Nova Escala
+            </button>
         </div>
     </div>
+
+    {% include 'partials/_escala_builder.html' %}
 </div>
 
 <script id="configData" type="application/json">
@@ -113,33 +53,128 @@
     const btnSalvar = document.getElementById('btnSalvar');
     const jsonError = document.getElementById('jsonError');
 
-    // Sempre preenche com as configs caso exista; caso contrario, texto vazio padrao
-    // Isso ignora o cache de preenchimento automatico do navegador (que pode puxar o ultimo cadastrado)
-    select.value = configAtual.strategy_class || 'DYNAMIC';
-    if(Object.keys(configAtual.config_dinamica).length > 0) {
-        editor.value = JSON.stringify(configAtual.config_dinamica, null, 2);
-    } else {
-        editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
+    const viewList = document.getElementById('viewList');
+    const viewBuilder = document.getElementById('viewBuilder');
+
+    function showBuilder() {
+        viewList.style.display = 'none';
+        viewBuilder.style.display = 'block';
     }
 
-    // Preenche o Select de Templates
-    const templateSelect = document.getElementById('templateSelect');
-    escalasTemplates.forEach(t => {
-        const option = document.createElement('option');
-        option.value = t.id;
-        option.textContent = `${t.questionario_titulo} - ${t.nome}`;
-        templateSelect.appendChild(option);
+    function showList() {
+        viewBuilder.style.display = 'none';
+        viewList.style.display = 'block';
+    }
+
+    document.getElementById('btnNovaEscala').addEventListener('click', () => {
+        loadJsonIntoBuilder({ operacao: 'SUM', variaveis: [], limiares: [] });
+        showBuilder();
     });
 
-    document.getElementById('btnCarregarTemplate').addEventListener('click', () => {
-        const id = parseInt(templateSelect.value);
-        if(!id) return;
+    document.getElementById('btnVoltarLista').addEventListener('click', showList);
+
+    // Carrega templates na lista
+    const container = document.getElementById('templateCardsContainer');
+    if(escalasTemplates.length === 0) {
+        container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada anteriormente.</p>`;
+    } else {
+        escalasTemplates.forEach(t => {
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 text-start';
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm border-light-subtle" style="cursor: pointer; transition: 0.3s;" onmouseover="this.classList.add('shadow')" onmouseout="this.classList.remove('shadow')" onclick="usarTemplate(${t.id})">
+                    <div class="card-body">
+                        <h6 class="fw-bold text-dark mb-1">${t.nome}</h6>
+                        <small class="text-muted d-block mb-3">Original: ${t.questionario_titulo}</small>
+                        <span class="badge bg-primary rounded-pill">Usar esta escala</span>
+                    </div>
+                </div>
+            `;
+            container.appendChild(col);
+        });
+    }
+
+    window.usarTemplate = function(id) {
         const template = escalasTemplates.find(t => t.id === id);
         if(template) {
-            editor.value = JSON.stringify(template.config, null, 2);
-            showAlert('Configuração copiada para o editor!', 'info');
+            loadJsonIntoBuilder(template.config);
+            showBuilder();
+            showAlert('Configuração carregada nos inputs!', 'info');
         }
-    });
+    };
+
+    function loadJsonIntoBuilder(config) {
+        // Reset visual builder
+        document.getElementById('simplesVars').value = '';
+        document.getElementById('simplesLimiaresContainer').innerHTML = '';
+        document.getElementById('subescalasContainer').innerHTML = '';
+        
+        if(!config || !config.operacao) {
+            document.getElementById('opType').value = 'SUM';
+            document.getElementById('opType').dispatchEvent(new Event('change'));
+            editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
+            return;
+        }
+        
+        document.getElementById('opType').value = config.operacao;
+        document.getElementById('opType').dispatchEvent(new Event('change'));
+        
+        if (config.operacao === 'SUM' || config.operacao === 'AVERAGE') {
+            if(config.variaveis) {
+                document.getElementById('simplesVars').value = config.variaveis.join(', ');
+            }
+            if(config.limiares) {
+                config.limiares.forEach(lim => {
+                    document.getElementById('btnAddLimiarSimples').click();
+                    const items = document.querySelectorAll('#simplesLimiaresContainer .limiar-item');
+                    if (items.length > 0) {
+                        const lastItem = items[items.length - 1];
+                        const inputs = lastItem.querySelectorAll('input');
+                        inputs[0].value = lim.max;
+                        inputs[1].value = lim.status;
+                    }
+                });
+            }
+        } else if (config.operacao === 'SUM_BY_SUBSCALE') {
+            if(config.subescalas) {
+                for (const [nome, vars] of Object.entries(config.subescalas)) {
+                    document.getElementById('btnAddSubescala').click();
+                    const items = document.querySelectorAll('#subescalasContainer .subescala-item');
+                    if (items.length > 0) {
+                        const lastItem = items[items.length - 1];
+                        lastItem.querySelector('.sub-nome').value = nome;
+                        lastItem.querySelector('.sub-vars').value = vars.join(', ');
+                        
+                        if (config.limiares && config.limiares[nome]) {
+                            const btnLimiar = lastItem.querySelector('button[onclick="window.addSubLimiar(this)"]');
+                            config.limiares[nome].forEach(lim => {
+                                window.addSubLimiar(btnLimiar);
+                                const limItems = lastItem.querySelectorAll('.sub-limiar-item');
+                                if (limItems.length > 0) {
+                                    const lastLimItem = limItems[limItems.length - 1];
+                                    const inputs = lastLimItem.querySelectorAll('input');
+                                    inputs[0].value = lim.max;
+                                    inputs[1].value = lim.status;
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Atualiza JSON editor
+        editor.value = JSON.stringify(config, null, 2);
+    }
+
+    // Inicializa
+    select.value = configAtual.strategy_class || 'DYNAMIC';
+    if(Object.keys(configAtual.config_dinamica).length > 0) {
+        loadJsonIntoBuilder(configAtual.config_dinamica);
+        showBuilder();
+    } else {
+        showList();
+    }
 
     // Toggle builder
     select.addEventListener('change', (e) => {
