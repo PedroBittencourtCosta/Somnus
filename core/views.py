@@ -459,6 +459,8 @@ def configurar_escala_view(request, pk):
                 # garante que crie uma nova no questionario atual (Copia)
                 if config.questionario.id != questionario.id:
                     config = EscalaConfig(questionario=questionario, nome=nome)
+                else:
+                    config.nome = nome
             else:
                 # Criar nova escala
                 config = EscalaConfig(questionario=questionario, nome=nome)
