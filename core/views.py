@@ -446,22 +446,31 @@ def salvar_questionario_api(request):
 def configurar_escala_view(request, pk):
     questionario = get_object_or_404(Questionario, pk=pk)
     
-    nome_padrao = f'Escala para {questionario.titulo}'[:100]
-    config, created = EscalaConfig.objects.get_or_create(
-        questionario=questionario,
-        defaults={'nome': nome_padrao, 'strategy_class': 'DYNAMIC'}
-    )
-    
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            escala_id = data.get('escala_id')
+            nome = data.get('nome', f'Escala para {questionario.titulo}'[:100])
+            
+            if escala_id:
+                # Editar escala existente
+                config = get_object_or_404(EscalaConfig, id=escala_id)
+                # Se for de outro questionario e o usuario quer editar/salvar,
+                # garante que crie uma nova no questionario atual (Copia)
+                if config.questionario.id != questionario.id:
+                    config = EscalaConfig(questionario=questionario, nome=nome)
+            else:
+                # Criar nova escala
+                config = EscalaConfig(questionario=questionario, nome=nome)
+                
             config.strategy_class = data.get('strategy_class', 'DYNAMIC')
             if config.strategy_class == 'DYNAMIC':
                 config.config_dinamica = data.get('config_dinamica', {})
             else:
                 config.config_dinamica = None
+                
             config.save()
-            return JsonResponse({'status': 'success'})
+            return JsonResponse({'status': 'success', 'escala_id': config.id, 'nome': config.nome})
         except Exception as e:
             import traceback
             return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
@@ -477,6 +486,7 @@ def configurar_escala_view(request, pk):
         {
             'id': e.id,
             'nome': e.nome,
+            'questionario_id': e.questionario.id,
             'questionario_titulo': e.questionario.titulo,
             'config': e.config_dinamica
         } for e in escalas_cadastradas if e.config_dinamica and isinstance(e.config_dinamica, dict) and e.config_dinamica
@@ -484,11 +494,7 @@ def configurar_escala_view(request, pk):
     
     context = {
         'questionario': questionario,
-        'config': config,
-        'config_json': json.dumps({
-            'strategy_class': config.strategy_class,
-            'config_dinamica': config.config_dinamica or {}
-        }),
+        'config_json': '{}',
         'perguntas_json': json.dumps(list(perguntas_com_id)),
         'escalas_templates_json': json.dumps(escalas_templates)
     }

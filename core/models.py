@@ -137,7 +137,7 @@ class RespostaPergunta(models.Model):
         return f"Resp: {self.resposta_questionario.usuario.email} - Pergunta: {self.pergunta.conteudo[:30]}..."
 
 class EscalaConfig(models.Model):
-    questionario = models.OneToOneField(Questionario, related_name='escala_config', on_delete=models.CASCADE)
+    questionario = models.ForeignKey(Questionario, related_name='escalas_config', on_delete=models.CASCADE)
     nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21") 
     
     ESTRATEGIA_CHOICES = [

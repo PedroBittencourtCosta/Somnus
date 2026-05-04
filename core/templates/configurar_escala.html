@@ -55,6 +55,8 @@
 
     const viewList = document.getElementById('viewList');
     const viewBuilder = document.getElementById('viewBuilder');
+    
+    let currentEscalaId = null;
 
     function showBuilder() {
         viewList.style.display = 'none';
@@ -64,9 +66,12 @@
     function showList() {
         viewBuilder.style.display = 'none';
         viewList.style.display = 'block';
+        currentEscalaId = null;
     }
 
     document.getElementById('btnNovaEscala').addEventListener('click', () => {
+        currentEscalaId = null;
+        document.getElementById('nomeEscala').value = 'Nova Escala';
         loadJsonIntoBuilder({ operacao: 'SUM', variaveis: [], limiares: [] });
         showBuilder();
     });
@@ -75,28 +80,44 @@
 
     // Carrega templates na lista
     const container = document.getElementById('templateCardsContainer');
-    if(escalasTemplates.length === 0) {
-        container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada anteriormente.</p>`;
-    } else {
-        escalasTemplates.forEach(t => {
-            const col = document.createElement('div');
-            col.className = 'col-md-6 col-lg-4 text-start';
-            col.innerHTML = `
-                <div class="card h-100 shadow-sm border-light-subtle" style="cursor: pointer; transition: 0.3s;" onmouseover="this.classList.add('shadow')" onmouseout="this.classList.remove('shadow')" onclick="usarTemplate(${t.id})">
-                    <div class="card-body">
-                        <h6 class="fw-bold text-dark mb-1">${t.nome}</h6>
-                        <small class="text-muted d-block mb-3">Original: ${t.questionario_titulo}</small>
-                        <span class="badge bg-primary rounded-pill">Usar esta escala</span>
+    
+    function renderizarLista() {
+        container.innerHTML = '';
+        if(escalasTemplates.length === 0) {
+            container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada anteriormente.</p>`;
+        } else {
+            escalasTemplates.forEach(t => {
+                const isCurrent = t.questionario_id === parseInt('{{ questionario.id }}', 10);
+                const col = document.createElement('div');
+                col.className = 'col-md-6 col-lg-4 text-start';
+                col.innerHTML = `
+                    <div class="card h-100 shadow-sm border-light-subtle" style="cursor: pointer; transition: 0.3s; ${isCurrent ? 'border-color: var(--somnus-green-dark) !important;' : ''}" onmouseover="this.classList.add('shadow')" onmouseout="this.classList.remove('shadow')" onclick="usarTemplate(${t.id})">
+                        <div class="card-body">
+                            <h6 class="fw-bold text-dark mb-1">${t.nome}</h6>
+                            <small class="text-muted d-block mb-3">Questionário: ${t.questionario_titulo}</small>
+                            <span class="badge rounded-pill ${isCurrent ? 'bg-success' : 'bg-primary'}">
+                                ${isCurrent ? 'Editar escala desta pesquisa' : 'Copiar esta escala'}
+                            </span>
+                        </div>
                     </div>
-                </div>
-            `;
-            container.appendChild(col);
-        });
+                `;
+                container.appendChild(col);
+            });
+        }
     }
+    
+    renderizarLista();
 
     window.usarTemplate = function(id) {
         const template = escalasTemplates.find(t => t.id === id);
         if(template) {
+            if (template.questionario_id === parseInt('{{ questionario.id }}', 10)) {
+                currentEscalaId = template.id;
+                document.getElementById('nomeEscala').value = template.nome;
+            } else {
+                currentEscalaId = null; // Copying, so we create a new one!
+                document.getElementById('nomeEscala').value = 'Cópia de ' + template.nome;
+            }
             loadJsonIntoBuilder(template.config);
             showBuilder();
             showAlert('Configuração carregada nos inputs!', 'info');
@@ -168,13 +189,8 @@
     }
 
     // Inicializa
-    select.value = configAtual.strategy_class || 'DYNAMIC';
-    if(Object.keys(configAtual.config_dinamica).length > 0) {
-        loadJsonIntoBuilder(configAtual.config_dinamica);
-        showBuilder();
-    } else {
-        showList();
-    }
+    select.value = 'DYNAMIC';
+    showList();
 
     // Toggle builder
     select.addEventListener('change', (e) => {
@@ -301,7 +317,9 @@
     // Save
     btnSalvar.addEventListener('click', () => {
         let payload = {
-            strategy_class: select.value
+            strategy_class: select.value,
+            escala_id: currentEscalaId,
+            nome: document.getElementById('nomeEscala').value
         };
 
         if(select.value === 'DYNAMIC') {
@@ -329,6 +347,23 @@
         .then(data => {
             if(data.status === 'success') {
                 showAlert('Regras de cálculo salvas com sucesso!', 'success');
+                currentEscalaId = data.escala_id;
+                
+                // Update templates array and re-render
+                let existing = escalasTemplates.find(t => t.id === currentEscalaId);
+                if (existing) {
+                    existing.nome = data.nome;
+                    existing.config = payload.config_dinamica;
+                } else {
+                    escalasTemplates.push({
+                        id: currentEscalaId,
+                        nome: data.nome,
+                        questionario_id: parseInt('{{ questionario.id }}', 10),
+                        questionario_titulo: '{{ questionario.titulo }}',
+                        config: payload.config_dinamica
+                    });
+                }
+                renderizarLista();
             } else {
                 showAlert('Erro ao salvar: ' + data.message, 'danger');
             }
