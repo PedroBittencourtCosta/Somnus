@@ -1,15 +1,105 @@
+<style>
+/* ── Tag Input ───────────────────────────────────────────────── */
+.tag-input-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+    min-height: 42px;
+    padding: 6px 10px;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    cursor: text;
+    transition: border-color .2s, box-shadow .2s;
+}
+.tag-input-wrapper:focus-within {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, .15);
+}
+.tag-input-wrapper .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: #e8f0fe;
+    color: #1a56db;
+    border: 1px solid #c3d3fb;
+    border-radius: 20px;
+    padding: 2px 10px 2px 10px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    white-space: nowrap;
+    animation: tagPop .15s ease;
+}
+@keyframes tagPop {
+    from { transform: scale(0.8); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+}
+.tag .tag-remove {
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #6c757d;
+    line-height: 1;
+    margin-left: 2px;
+    border: none;
+    background: none;
+    padding: 0;
+    transition: color .15s;
+}
+.tag .tag-remove:hover { color: #dc3545; }
+.tag-input-wrapper .tag-text-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    min-width: 120px;
+    font-size: 0.875rem;
+    background: transparent;
+    padding: 2px 0;
+}
+
+/* ── Form width constraints ──────────────────────────────────── */
+.builder-field-lg  { max-width: 625px; }
+.builder-field-md  { max-width: 520px; }
+.builder-field-sm  { max-width: 340px; }
+.builder-field-xs  { max-width: 200px; }
+
+/* ── Sub-escala card ─────────────────────────────────────────── */
+.subescala-item {
+    background: #fff;
+    border: 1px solid #e2e8f0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,.05);
+}
+
+/* ── Limiar row ──────────────────────────────────────────────── */
+.limiar-item, .sub-limiar-item {
+    max-width: 480px;
+}
+
+/* ── Botão de adicionar limiar por sub-escala ─────────────────── */
+.btn-add-sublimiar {
+    width: fit-content;
+    display: block;
+}
+</style>
+
 <div id="viewBuilder" class="card shadow-sm border-0 rounded-4" style="display: none;">
     <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
         <h4 class="fw-bold text-primary mb-0">Construtor de Escala</h4>
         <button id="btnVoltarLista" class="btn btn-outline-secondary btn-sm rounded-pill">Voltar para Lista</button>
     </div>
     <div class="card-body p-4">
+
+        <!-- Nome da Escala -->
         <div class="mb-4">
             <h5 class="fw-bold mb-2">Nome da Escala</h5>
-            <input type="text" id="nomeEscala" class="form-control form-control-lg" placeholder="Ex: Escala de Depressão DASS-21">
+            <input type="text" id="nomeEscala" class="form-control builder-field-md"
+                   placeholder="Ex: Escala de Depressão DASS-21">
         </div>
+
+        <!-- Tipo de Processamento -->
         <h5 class="fw-bold mb-3">1. Tipo de Processamento</h5>
-        <select id="strategySelect" class="form-select form-select-lg mb-4 rounded-3">
+        <select id="strategySelect" class="form-select mb-4 builder-field-md rounded-3">
             <option value="DYNAMIC">Construtor Visual Dinâmico (Somas, Médias e Classificações)</option>
             <option value="PSQI">Escala Clínica: PSQI (Índice de Qualidade de Sono de Pittsburgh)</option>
             <option value="IMC">Escala Clínica: IMC (Índice de Massa Corporal)</option>
@@ -17,57 +107,199 @@
 
         <div id="dynamicBuilder" class="mt-4">
             <h5 class="fw-bold mb-3">2. Construtor de Lógica (Visual e JSON)</h5>
-            
+
             <div class="card p-3 mb-4 bg-light border-0 rounded-3">
                 <h6 class="fw-bold text-primary mb-3">Assistente de Criação de Regras</h6>
                 <p class="text-muted small">Use os campos abaixo para gerar o JSON automaticamente, ou edite diretamente no editor de metadados.</p>
-                
+
+                <!-- Operação -->
                 <div class="mb-3">
                     <label class="form-label fw-bold small">Operação</label>
-                    <select id="opType" class="form-select form-select-sm">
+                    <select id="opType" class="form-select form-select-sm builder-field-sm">
                         <option value="SUM">Soma Simples (SUM)</option>
                         <option value="AVERAGE">Média Simples (AVERAGE)</option>
                         <option value="SUM_BY_SUBSCALE">Soma por Sub-escalas (SUM_BY_SUBSCALE)</option>
                     </select>
                 </div>
 
-                <!-- Interface para SUM e AVERAGE -->
+                <!-- Interface SUM / AVERAGE -->
                 <div id="uiSimples">
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Variáveis (Identificadores separados por vírgula)</label>
-                        <input type="text" id="simplesVars" class="form-control form-control-sm" placeholder="ex: p1, p2, p3">
+                        <label class="form-label fw-bold small">
+                            Variáveis
+                            <span class="text-muted fw-normal">&nbsp;— digite e pressione <kbd>Enter</kbd> ou <kbd>Tab</kbd></span>
+                        </label>
+                        <!-- Tag input wrapper -->
+                        <div class="tag-input-wrapper builder-field-lg" id="simplesVarsWrapper" onclick="this.querySelector('.tag-text-input').focus()">
+                            <input class="tag-text-input" id="simplesVarsInput" placeholder="ex: p1, p2 …" autocomplete="off">
+                        </div>
+                        <!-- hidden field mantém valor legível para retrocompatibilidade -->
+                        <input type="hidden" id="simplesVars">
                     </div>
-                    
+
                     <div class="mb-3">
-                        <label class="form-label fw-bold small">Limiares de Classificação (Opcional)</label>
+                        <label class="form-label fw-bold small">Limiares de Classificação <span class="text-muted fw-normal">(Opcional)</span></label>
                         <div id="simplesLimiaresContainer"></div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddLimiarSimples">+ Adicionar Limiar</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddLimiarSimples">
+                            + Adicionar Limiar
+                        </button>
                     </div>
                 </div>
 
-                <!-- Interface para SUM_BY_SUBSCALE -->
+                <!-- Interface SUM_BY_SUBSCALE -->
                 <div id="uiSubescala" style="display: none;">
                     <div class="mb-3">
                         <label class="form-label fw-bold small">Sub-escalas</label>
                         <div id="subescalasContainer"></div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddSubescala">+ Adicionar Sub-escala</button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary mt-2" id="btnAddSubescala">
+                            + Adicionar Sub-escala
+                        </button>
                     </div>
                 </div>
 
-                <div class="mt-2 text-end">
-                    <button type="button" id="btnGerarJson" class="btn btn-primary btn-sm rounded-pill fw-bold px-4">Gerar JSON a partir do Assistente</button>
-                </div>
             </div>
-            
+            <!-- Botão fora do card cinza, área branca, alinhado à direita -->
+            <div class="d-flex justify-content-end mt-3 mb-3">
+                <button type="button" id="btnGerarJson" class="btn btn-primary rounded-pill fw-bold px-5 shadow-sm">
+                    Gerar JSON a partir do Assistente
+                </button>
+            </div>
+
             <p class="text-muted fw-bold mb-1">Editor de Metadados JSON:</p>
-            <textarea id="jsonEditor" class="form-control text-monospace rounded-3" rows="10" style="font-family: monospace; background-color: #f8f9fa;"></textarea>
+            <textarea id="jsonEditor" class="form-control rounded-3" rows="10"
+                      style="font-family: monospace; font-size: 0.85rem; background-color: #f8f9fa;"></textarea>
             <div id="jsonError" class="text-danger mt-2 fw-bold" style="display: none;">JSON Inválido!</div>
         </div>
 
         <hr class="my-4">
-        
+
         <div class="text-end">
-            <button id="btnSalvar" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">Salvar Configurações</button>
+            <button id="btnSalvar" class="btn btn-success rounded-pill px-5 fw-bold shadow-sm">
+                Salvar Configurações
+            </button>
         </div>
     </div>
 </div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   TAG INPUT — fábrica reutilizável
+   ════════════════════════════════════════════════════════════ */
+function createTagInput(wrapper, textInput) {
+    const tags = [];
+
+    function renderTags() {
+        // Remove tags antigas (mantém o input de texto)
+        wrapper.querySelectorAll('.tag').forEach(el => el.remove());
+
+        tags.forEach((tag, idx) => {
+            const span = document.createElement('span');
+            span.className = 'tag';
+            span.innerHTML = `${tag}<button class="tag-remove" title="Remover">&#x2715;</button>`;
+            span.querySelector('.tag-remove').addEventListener('click', () => {
+                tags.splice(idx, 1);
+                renderTags();
+            });
+            wrapper.insertBefore(span, textInput);
+        });
+    }
+
+    function addTag(raw) {
+        // Suporta múltiplos valores colados de uma vez (separados por vírgula)
+        raw.split(',').map(v => v.trim()).filter(v => v).forEach(v => {
+            if (!tags.includes(v)) tags.push(v);
+        });
+        textInput.value = '';
+        renderTags();
+    }
+
+    textInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter' || e.key === 'Tab') {
+            e.preventDefault();
+            const val = textInput.value.trim();
+            if (val) addTag(val);
+        }
+        // Backspace sem texto remove a última tag
+        if (e.key === 'Backspace' && textInput.value === '' && tags.length) {
+            tags.pop();
+            renderTags();
+        }
+    });
+
+    textInput.addEventListener('blur', () => {
+        const val = textInput.value.trim();
+        if (val) addTag(val);
+    });
+
+    return {
+        getTags: () => [...tags],
+        setTags: (arr) => {
+            tags.length = 0;
+            arr.forEach(v => { if (!tags.includes(v)) tags.push(v); });
+            renderTags();
+        },
+        clear: () => { tags.length = 0; renderTags(); }
+    };
+}
+
+/* ── Instância global para #uiSimples ── */
+const simplesTagInput = createTagInput(
+    document.getElementById('simplesVarsWrapper'),
+    document.getElementById('simplesVarsInput')
+);
+
+/* ── Fábrica para tag-input dentro de sub-escalas ── */
+window.createSubVarsTagInput = function(wrapper, input) {
+    return createTagInput(wrapper, input);
+};
+
+/* ════════════════════════════════════════════════════════════
+   HELPER: criar card de sub-escala com tag input
+   ════════════════════════════════════════════════════════════ */
+window.buildSubescalaCard = function() {
+    const uid = 'sub_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+    const div = document.createElement('div');
+    div.className = 'card p-3 mb-3 subescala-item';
+    div.innerHTML = `
+        <div class="d-flex justify-content-between align-items-center mb-2" style="max-width:520px;">
+            <input type="text" class="form-control form-control-sm builder-field-sm sub-nome fw-bold"
+                   placeholder="Nome Sub-escala (ex: ansiedade)">
+            <button type="button" class="btn btn-outline-danger btn-sm ms-2"
+                    onclick="this.closest('.subescala-item').remove()">Remover</button>
+        </div>
+        <label class="form-label fw-bold small mb-1">
+            Variáveis
+            <span class="text-muted fw-normal">&nbsp;— <kbd>Enter</kbd> ou <kbd>Tab</kbd> para adicionar</span>
+        </label>
+        <div class="tag-input-wrapper builder-field-lg sub-vars-wrapper mb-2"
+             id="${uid}_wrapper"
+             onclick="this.querySelector('.tag-text-input').focus()">
+            <input class="tag-text-input sub-vars-input" id="${uid}_input"
+                   placeholder="ex: dassa, dassb …" autocomplete="off">
+        </div>
+        <div class="sub-limiares-container ms-1 mt-1"></div>
+        <button type="button" class="btn btn-sm btn-outline-secondary btn-add-sublimiar mt-2 ms-1"
+                onclick="window.addSubLimiar(this)">+ Limiar p/ esta Sub-escala</button>
+    `;
+    return div;
+};
+
+/* ════════════════════════════════════════════════════════════
+   HELPER: ler tags de um wrapper de sub-escala
+   ════════════════════════════════════════════════════════════ */
+window.getSubVarTags = function(item) {
+    return Array.from(item.querySelectorAll('.sub-vars-wrapper .tag'))
+        .map(t => t.textContent.replace('✕', '').replace('×', '').trim().replace(/\u2715/g, '').trim());
+};
+
+/* ════════════════════════════════════════════════════════════
+   HELPER: setar tags num wrapper de sub-escala
+   ════════════════════════════════════════════════════════════ */
+window.setSubVarTags = function(item, vars) {
+    const wrapper = item.querySelector('.sub-vars-wrapper');
+    const input   = item.querySelector('.sub-vars-input');
+    const ctrl    = createTagInput(wrapper, input);
+    ctrl.setTags(vars);
+    return ctrl;
+};
+</script>

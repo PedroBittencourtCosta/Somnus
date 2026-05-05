@@ -3,12 +3,18 @@
 
 {% block content %}
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}</h2>
-            <p class="text-muted">Defina como o sistema deve processar os resultados dessa avaliação.</p>
+    <div class="mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'lista_questionarios' %}" class="text-secondary text-decoration-none me-4 hover-primary">
+                <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="transition">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 8 8 12 12 16"></polyline>
+                    <line x1="16" y1="12" x2="8" y2="12"></line>
+                </svg>
+            </a>
+            <h2 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}</h2>
         </div>
-        <a href="{% url 'lista_questionarios' %}" class="btn btn-outline-secondary rounded-pill">Voltar para Questionários</a>
+        <p class="text-muted mt-2" style="margin-left: 4.2rem;">Defina como o sistema deve processar os resultados dessa avaliação.</p>
     </div>
 
     <!-- Container para as mensagens de sucesso/erro estilo Bootstrap -->
@@ -126,7 +132,7 @@
 
     function loadJsonIntoBuilder(config) {
         // Reset visual builder
-        document.getElementById('simplesVars').value = '';
+        simplesTagInput.clear();
         document.getElementById('simplesLimiaresContainer').innerHTML = '';
         document.getElementById('subescalasContainer').innerHTML = '';
         
@@ -142,7 +148,7 @@
         
         if (config.operacao === 'SUM' || config.operacao === 'AVERAGE') {
             if(config.variaveis) {
-                document.getElementById('simplesVars').value = config.variaveis.join(', ');
+                simplesTagInput.setTags(config.variaveis);
             }
             if(config.limiares) {
                 config.limiares.forEach(lim => {
@@ -159,26 +165,23 @@
         } else if (config.operacao === 'SUM_BY_SUBSCALE') {
             if(config.subescalas) {
                 for (const [nome, vars] of Object.entries(config.subescalas)) {
-                    document.getElementById('btnAddSubescala').click();
-                    const items = document.querySelectorAll('#subescalasContainer .subescala-item');
-                    if (items.length > 0) {
-                        const lastItem = items[items.length - 1];
-                        lastItem.querySelector('.sub-nome').value = nome;
-                        lastItem.querySelector('.sub-vars').value = vars.join(', ');
-                        
-                        if (config.limiares && config.limiares[nome]) {
-                            const btnLimiar = lastItem.querySelector('button[onclick="window.addSubLimiar(this)"]');
-                            config.limiares[nome].forEach(lim => {
-                                window.addSubLimiar(btnLimiar);
-                                const limItems = lastItem.querySelectorAll('.sub-limiar-item');
-                                if (limItems.length > 0) {
-                                    const lastLimItem = limItems[limItems.length - 1];
-                                    const inputs = lastLimItem.querySelectorAll('input');
-                                    inputs[0].value = lim.max;
-                                    inputs[1].value = lim.status;
-                                }
-                            });
-                        }
+                    const card = window.buildSubescalaCard();
+                    document.getElementById('subescalasContainer').appendChild(card);
+                    card.querySelector('.sub-nome').value = nome;
+                    window.setSubVarTags(card, vars);
+                    
+                    if (config.limiares && config.limiares[nome]) {
+                        const btnLimiar = card.querySelector('button[onclick="window.addSubLimiar(this)"]');
+                        config.limiares[nome].forEach(lim => {
+                            window.addSubLimiar(btnLimiar);
+                            const limItems = card.querySelectorAll('.sub-limiar-item');
+                            if (limItems.length > 0) {
+                                const lastLimItem = limItems[limItems.length - 1];
+                                const inputs = lastLimItem.querySelectorAll('input');
+                                inputs[0].value = lim.max;
+                                inputs[1].value = lim.status;
+                            }
+                        });
                     }
                 }
             }
@@ -234,18 +237,8 @@
     // Sub-escalas
     const subescalasContainer = document.getElementById('subescalasContainer');
     document.getElementById('btnAddSubescala').addEventListener('click', () => {
-        const div = document.createElement('div');
-        div.className = 'card p-2 mb-2 subescala-item bg-white border';
-        div.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-2">
-                <input type="text" class="form-control form-control-sm w-50 sub-nome fw-bold" placeholder="Nome Sub-escala (ex: ansiedade)">
-                <button type="button" class="btn btn-outline-danger btn-sm" onclick="this.parentElement.parentElement.remove()">Remover</button>
-            </div>
-            <input type="text" class="form-control form-control-sm mb-2 sub-vars" placeholder="Variáveis (ex: v1, v2, v3)">
-            <div class="sub-limiares-container ms-3"></div>
-            <button type="button" class="btn btn-sm btn-outline-secondary mt-1 ms-3" onclick="addSubLimiar(this)">+ Limiar p/ esta Sub-escala</button>
-        `;
-        subescalasContainer.appendChild(div);
+        const card = window.buildSubescalaCard();
+        subescalasContainer.appendChild(card);
     });
 
     window.addSubLimiar = function(btn) {
@@ -265,8 +258,10 @@
         let result = { operacao: op };
 
         if(op === 'SUM' || op === 'AVERAGE') {
-            const varsInput = document.getElementById('simplesVars').value;
-            result.variaveis = varsInput.split(',').map(v => v.trim()).filter(v => v);
+            // Lê as tags do tag-input (+ qualquer texto ainda no input)
+            const pendingText = document.getElementById('simplesVarsInput').value.trim();
+            if (pendingText) simplesTagInput.setTags([...simplesTagInput.getTags(), ...pendingText.split(',').map(v=>v.trim()).filter(v=>v)]);
+            result.variaveis = simplesTagInput.getTags();
             
             const limiares = [];
             document.querySelectorAll('#simplesLimiaresContainer .limiar-item').forEach(item => {
@@ -285,7 +280,12 @@
             
             document.querySelectorAll('#subescalasContainer .subescala-item').forEach(item => {
                 const nome = item.querySelector('.sub-nome').value.trim();
-                const vars = item.querySelector('.sub-vars').value.split(',').map(v => v.trim()).filter(v => v);
+                // Flush texto pendente antes de ler
+                const pendingInput = item.querySelector('.sub-vars-input');
+                if (pendingInput && pendingInput.value.trim()) {
+                    pendingInput.dispatchEvent(new Event('blur'));
+                }
+                const vars = window.getSubVarTags(item);
                 
                 if(nome && vars.length > 0) {
                     result.subescalas[nome] = vars;
