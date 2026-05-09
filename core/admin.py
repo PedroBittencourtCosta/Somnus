@@ -66,9 +66,9 @@ class QuestionarioAdmin(SortableAdminBase, admin.ModelAdmin):
 # 6. Registros de Respostas (Atualizados para o novo fluxo do Somnus)
 @admin.register(RespostaQuestionario)
 class RespostaQuestionarioAdmin(admin.ModelAdmin):
-    list_display = ('paciente_nome', 'pesquisadora', 'questionario', 'data_submissao')
-    search_fields = ('paciente_nome', 'pesquisadora__username')
-    readonly_fields = ('data_submissao',)
+    list_display = ('codigo_paciente', 'paciente_nome', 'pesquisadora', 'questionario', 'data_submissao')
+    search_fields = ('codigo_paciente', 'pesquisadora__username')
+    readonly_fields = ('data_submissao', 'codigo_paciente')
 
 @admin.register(RespostaPergunta)
 class RespostaPerguntaAdmin(admin.ModelAdmin):
@@ -80,7 +80,7 @@ class RespostaPerguntaAdmin(admin.ModelAdmin):
     get_pesquisadora.short_description = 'Pesquisadora'
 
     def get_paciente(self, obj):
-        return obj.resposta_questionario.paciente_nome
+        return obj.resposta_questionario.codigo_paciente
     get_paciente.short_description = 'Paciente'
 
     def get_resposta(self, obj):
