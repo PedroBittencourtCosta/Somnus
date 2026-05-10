@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Gestão de Colaboradores</h2>
+            <p class="text-muted mb-0">Gerencie o acesso de pesquisadores e assistentes no sistema.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'cadastrar_assistente' %}" class="btn text-white fw-bold shadow-sm rounded-pill px-4"
+                style="background-color: var(--somnus-blue-deep);">
+                + Novo Colaborador
+            </a>
+        </div>
+    </div>
+
+    <!-- {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+            {% if message.tags != 'login_modal' and message.tags != 'login_modal error' and message.tags != 'info' %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endif %}
+        {% endfor %}
+    </div>
+    {% endif %} -->
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 py-3">Nome</th>
+                            <th class="py-3">E-mail</th>
+                            <th class="py-3">Função</th>
+                            <th class="py-3">Status</th>
+                            <th class="pe-4 py-3 text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        <tr>
+                            <td class="ps-4">
+                                <div class="fw-bold text-dark">{{ usuario.get_full_name|default:usuario.email }}</div>
+                            </td>
+                            <td>{{ usuario.email }}</td>
+                            <td>
+                                {% for group in usuario.groups.all %}
+                                <span class="badge bg-secondary rounded-pill">{{ group.name }}</span>
+                                {% empty %}
+                                <span class="text-muted small">Sem função</span>
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% if usuario.is_active %}
+                                <span class="badge bg-success rounded-pill px-3 py-2">Ativo</span>
+                                {% else %}
+                                <span class="badge bg-danger rounded-pill px-3 py-2">Desativado</span>
+                                {% endif %}
+                            </td>
+                            <td class="pe-4 text-end">
+                                <form action="{% url 'alternar_status_assistente' usuario.id %}" method="post"
+                                    class="d-inline">
+                                    {% csrf_token %}
+                                    {% if usuario.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
+                                        title="Desativar acesso">
+                                        Desativar
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3"
+                                        title="Reativar acesso">
+                                        Reativar
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-5 text-muted">
+                                Nenhum colaborador encontrado.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

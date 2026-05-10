@@ -22,7 +22,17 @@ def login_view(request):
             login(request, user)
             return redirect('home')
         else:
-            messages.error(request, "E-mail ou senha inválidos.", extra_tags='login_modal')
+            from django.contrib.auth import get_user_model
+            Usuario = get_user_model()
+            try:
+                u = Usuario.objects.get(email=email_login)
+                if not u.is_active:
+                    messages.error(request, "Sua conta está desativada. Entre em contato com um pesquisador.", extra_tags='login_modal')
+                else:
+                    messages.error(request, "E-mail ou senha inválidos.", extra_tags='login_modal')
+            except Usuario.DoesNotExist:
+                messages.error(request, "E-mail ou senha inválidos.", extra_tags='login_modal')
+            
             # Redireciona para a mesma página onde o usuário tentou logar
             return redirect(request.META.get('HTTP_REFERER', 'home'))
     
@@ -83,8 +93,29 @@ def cadastrar_assistente(request):
             user.groups.add(grupo)
             
             messages.success(request, f'Colaborador {user.first_name} cadastrado com sucesso como {papel.split(" (")[0]}!')
-            return redirect('dashboard_respostas')
+            return redirect('gestao_assistentes')
     else:
         form = CadastroAssistenteForm()
-    
     return render(request, 'cadastrar_assistente.html', {'form': form})
+
+@login_required
+@user_passes_test(eh_pesquisador)
+def gestao_assistentes(request):
+    from accounts.models import Usuario
+    usuarios = Usuario.objects.exclude(id=request.user.id).exclude(is_superuser=True).prefetch_related('groups').order_by('first_name')
+    return render(request, 'gestao_assistentes.html', {'usuarios': usuarios})
+
+@login_required
+@user_passes_test(eh_pesquisador)
+def alternar_status_assistente(request, usuario_id):
+    from accounts.models import Usuario
+    try:
+        usuario = Usuario.objects.get(id=usuario_id)
+        if usuario != request.user:
+            usuario.is_active = not usuario.is_active
+            usuario.save()
+            status = "reativado" if usuario.is_active else "desativado"
+            messages.success(request, f'O acesso de {usuario.first_name} foi {status} com sucesso.')
+    except Usuario.DoesNotExist:
+        messages.error(request, "Usuário não encontrado.")
+    return redirect('gestao_assistentes')
