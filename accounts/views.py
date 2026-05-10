@@ -76,11 +76,13 @@ def cadastrar_assistente(request):
             user.set_password(form.cleaned_data['senha']) # Criptografa a senha
             user.save()
             
-            # Adiciona ao grupo Assistente de Pesquisa automaticamente
-            grupo, created = Group.objects.get_or_create(name='Assistente de Pesquisa')
+            papel = form.cleaned_data.get('papel', 'Assistente de Pesquisa')
+            
+            # Adiciona ao grupo escolhido (Pesquisador ou Assistente)
+            grupo, created = Group.objects.get_or_create(name=papel.split(' (')[0])
             user.groups.add(grupo)
             
-            messages.success(request, f'Assistente {user.first_name} cadastrado com sucesso!')
+            messages.success(request, f'Colaborador {user.first_name} cadastrado com sucesso como {papel.split(" (")[0]}!')
             return redirect('dashboard_respostas')
     else:
         form = CadastroAssistenteForm()

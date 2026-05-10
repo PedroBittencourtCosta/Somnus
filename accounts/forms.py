@@ -19,6 +19,14 @@ class PerfilForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'email']
 
 class CadastroAssistenteForm(forms.ModelForm):
+    ROLE_CHOICES = [
+        ('Assistente de Pesquisa', 'Assistente de Pesquisa (Coleta de Dados)'),
+        ('Pesquisador', 'Pesquisador (Gestão Completa)'),
+    ]
+    papel = forms.ChoiceField(
+        choices=ROLE_CHOICES, 
+        widget=forms.Select(attrs={'class': 'form-select rounded-3'})
+    )
     senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}))
     confirmar_senha = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control rounded-3'}))
 
