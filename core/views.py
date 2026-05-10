@@ -8,7 +8,7 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
-from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
+from core.Scaleprocessor import EscalaEngine, SafeParser
 
 from ethics.models import TCLE, AceiteTCLE
 from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
@@ -191,18 +191,22 @@ def exportar_respostas_excel(request, pk):
             elif rp.resposta_texto:
                 answers_map[identificador] = rp.resposta_texto
 
-    # 3. PROCESSAMENTO DAS ESCALAS (Certifique-se que estas classes existem no seu utils.py)
-    scores_dass  = DASS21Calculator.calculate(answers_map)
-    scores_k10   = K10Calculator.calculate(answers_map)
-    scores_srq   = SRQ20Calculator.calculate(answers_map)
-    scores_ese   = ESECalculator.calculate(answers_map)
-    scores_audit = AUDITCalculator.calculate(answers_map)
-    scores_emssp = EMSSPCalculator.calculate(answers_map)
-    scores_psqi  = PSQICalculator.calculate(answers_map)
+    # 3. PROCESSAMENTO DAS ESCALAS VINCULADAS
+    escalas_resultados = []
+    for escala in res_quest.questionario.escalas_config.all():
+        resultado = EscalaEngine.processar(answers_map, escala)
+        if "erro" not in resultado:
+            for k, v in resultado.items():
+                if isinstance(v, (int, float, str)):
+                    key_formatted = str(k).replace('_', ' ').title()
+                    escalas_resultados.append([f"{escala.nome} - {key_formatted}", v, "-"])
     
+    # IMC Fallback (caso ainda queiram sem precisar configurar)
     peso = SafeParser.to_float(answers_map.get('peso', 0))
     altura = SafeParser.to_float(answers_map.get('altura', 0))
-    imc = round(peso / (altura ** 2), 2) if altura > 0 else 0
+    if altura > 0:
+        imc = round(peso / (altura ** 2), 2)
+        escalas_resultados.append(["IMC Calculado Automaticamente", imc, "kg/m²"])
 
     # 4. CRIAÇÃO DO EXCEL
     wb = openpyxl.Workbook()
@@ -227,12 +231,13 @@ def exportar_respostas_excel(request, pk):
     ws.append([])
 
     def adicionar_secao(titulo, dados):
+        if not dados: return
         ws.append([titulo])
         ws.merge_cells(f'A{ws.max_row}:C{ws.max_row}')
         ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
         ws.cell(row=ws.max_row, column=1).fill = cinza_claro
         
-        ws.append(['Escala/Item', 'Resultado', 'Referência'])
+        ws.append(['Escala/Métrica', 'Resultado', 'Referência'])
         for cell in ws[ws.max_row]:
             cell.fill = azul_somnus
             cell.font = fonte_branca
@@ -241,30 +246,10 @@ def exportar_respostas_excel(request, pk):
             ws.append(linha)
         ws.append([])
 
-    # Adicionando os Scores
-    adicionar_secao("I. SAÚDE MENTAL", [
-        ['DASS-21 Depressão', scores_dass['dass_depressao'], "0-21"],
-        ['DASS-21 Ansiedade', scores_dass['dass_ansiedade'], "0-21"],
-        ['DASS-21 Estresse',  scores_dass['dass_estresse'],  "0-21"],
-        ['K10 Kessler',       scores_k10['k10_total'],       scores_k10['k10_classificacao']],
-        ['SRQ-20 TMC',        scores_srq['srq_total'],       scores_srq['srq_status']],
-    ])
+    # Adicionando os Scores Calculados Dinamicamente
+    adicionar_secao("I. RESULTADOS DAS ESCALAS", escalas_resultados)
 
-    adicionar_secao("II. HÁBITOS E SONO", [
-        ['ESE Epworth',       scores_ese['ese_total'],       scores_ese['ese_status']],
-        ['AUDIT Álcool',      scores_audit['audit_total'],    scores_audit['audit_status']],
-        ['PSQI Pittsburgh',   scores_psqi['psqi_global'],    scores_psqi['psqi_status']],
-        ['IMC Atual',         imc,                           "kg/m²"],
-    ])
-
-    adicionar_secao("III. SUPORTE SOCIAL", [
-        ['Família',           scores_emssp['suporte_familia'], "Máx: 28"],
-        ['Amigos',            scores_emssp['suporte_amigos'],  "Máx: 28"],
-        ['Outros',            scores_emssp['suporte_outros'],  "Máx: 28"],
-        ['TOTAL',             scores_emssp['suporte_total'],   "Máx: 84"],
-    ])
-
-    # IV. Detalhamento
+    # II. Detalhamento
     ws.append(['IV. DETALHAMENTO DAS RESPOSTAS'])
     ws.append(['ID', 'Pergunta', 'Valor'])
     for cell in ws[ws.max_row]:
@@ -449,21 +434,28 @@ def configurar_escala_view(request, pk):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
+            acao = data.get('acao')
             escala_id = data.get('escala_id')
+            
+            if acao == 'vincular':
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.questionarios.add(questionario)
+                return JsonResponse({'status': 'success', 'escala_id': escala.id, 'nome': escala.nome})
+            elif acao == 'desvincular':
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.questionarios.remove(questionario)
+                return JsonResponse({'status': 'success', 'escala_id': escala.id, 'nome': escala.nome})
+            
             nome = data.get('nome', f'Escala para {questionario.titulo}'[:100])
             
             if escala_id:
                 # Editar escala existente
                 config = get_object_or_404(EscalaConfig, id=escala_id)
-                # Se for de outro questionario e o usuario quer editar/salvar,
-                # garante que crie uma nova no questionario atual (Copia)
-                if config.questionario.id != questionario.id:
-                    config = EscalaConfig(questionario=questionario, nome=nome)
-                else:
-                    config.nome = nome
+                config.nome = nome
             else:
                 # Criar nova escala
-                config = EscalaConfig(questionario=questionario, nome=nome)
+                config = EscalaConfig.objects.create(nome=nome)
+                config.questionarios.add(questionario)
                 
             config.strategy_class = data.get('strategy_class', 'DYNAMIC')
             if config.strategy_class == 'DYNAMIC':
@@ -483,16 +475,17 @@ def configurar_escala_view(request, pk):
     ).exclude(identificador__exact='').exclude(identificador__isnull=True).values('id', 'identificador', 'conteudo')
     
     # Coleta configurações de todas as escalas cadastradas
-    escalas_cadastradas = EscalaConfig.objects.exclude(config_dinamica__isnull=True)
-    escalas_templates = [
-        {
+    escalas_cadastradas = EscalaConfig.objects.all().prefetch_related('questionarios')
+    escalas_templates = []
+    for e in escalas_cadastradas:
+        is_linked = e.questionarios.filter(id=questionario.id).exists()
+        escalas_templates.append({
             'id': e.id,
             'nome': e.nome,
-            'questionario_id': e.questionario.id,
-            'questionario_titulo': e.questionario.titulo,
-            'config': e.config_dinamica
-        } for e in escalas_cadastradas if e.config_dinamica and isinstance(e.config_dinamica, dict) and e.config_dinamica
-    ]
+            'strategy_class': e.strategy_class,
+            'is_linked': is_linked,
+            'config': e.config_dinamica or {}
+        })
     
     context = {
         'questionario': questionario,

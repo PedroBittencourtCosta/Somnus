@@ -90,20 +90,26 @@
     function renderizarLista() {
         container.innerHTML = '';
         if(escalasTemplates.length === 0) {
-            container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada anteriormente.</p>`;
+            container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada no sistema ainda.</p>`;
         } else {
             escalasTemplates.forEach(t => {
-                const isCurrent = t.questionario_id === parseInt('{{ questionario.id }}', 10);
+                const isLinked = t.is_linked;
                 const col = document.createElement('div');
-                col.className = 'col-md-6 col-lg-4 text-start';
+                col.className = 'col-md-6 col-lg-4 text-start mb-3';
+                
                 col.innerHTML = `
-                    <div class="card h-100 shadow-sm border-light-subtle" style="cursor: pointer; transition: 0.3s; ${isCurrent ? 'border-color: var(--somnus-green-dark) !important;' : ''}" onmouseover="this.classList.add('shadow')" onmouseout="this.classList.remove('shadow')" onclick="usarTemplate(${t.id})">
-                        <div class="card-body">
+                    <div class="card h-100 shadow-sm border-light-subtle ${isLinked ? 'border-success border-2 bg-success bg-opacity-10' : ''}">
+                        <div class="card-body d-flex flex-column">
                             <h6 class="fw-bold text-dark mb-1">${t.nome}</h6>
-                            <small class="text-muted d-block mb-3">Questionário: ${t.questionario_titulo}</small>
-                            <span class="badge rounded-pill ${isCurrent ? 'bg-success' : 'bg-primary'}">
-                                ${isCurrent ? 'Editar escala desta pesquisa' : 'Copiar esta escala'}
-                            </span>
+                            <small class="text-muted d-block mb-3">Motor: ${t.strategy_class}</small>
+                            <div class="mt-auto d-flex gap-2">
+                                <button class="btn btn-sm flex-grow-1 fw-semibold ${isLinked ? 'btn-outline-danger' : 'btn-success'}" onclick="toggleVincular(${t.id}, ${isLinked})">
+                                    ${isLinked ? '<i class="bi bi-x-circle me-1"></i> Desvincular' : '<i class="bi bi-link me-1"></i> Vincular'}
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" onclick="editarEscala(${t.id})" title="Editar Regras">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -114,19 +120,40 @@
     
     renderizarLista();
 
-    window.usarTemplate = function(id) {
+    window.toggleVincular = function(id, currentlyLinked) {
+        const acao = currentlyLinked ? 'desvincular' : 'vincular';
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ acao: acao, escala_id: id })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'success') {
+                const t = escalasTemplates.find(t => t.id === id);
+                if(t) t.is_linked = !currentlyLinked;
+                renderizarLista();
+                showAlert(`Escala ${acao === 'vincular' ? 'vinculada' : 'desvinculada'} com sucesso!`, 'success');
+            } else {
+                showAlert('Erro: ' + data.message, 'danger');
+            }
+        });
+    }
+
+    window.editarEscala = function(id) {
         const template = escalasTemplates.find(t => t.id === id);
         if(template) {
-            if (template.questionario_id === parseInt('{{ questionario.id }}', 10)) {
-                currentEscalaId = template.id;
-                document.getElementById('nomeEscala').value = template.nome;
-            } else {
-                currentEscalaId = null; // Copying, so we create a new one!
-                document.getElementById('nomeEscala').value = 'Cópia de ' + template.nome;
+            currentEscalaId = template.id;
+            document.getElementById('nomeEscala').value = template.nome;
+            select.value = template.strategy_class;
+            select.dispatchEvent(new Event('change'));
+            if (template.strategy_class === 'DYNAMIC') {
+                loadJsonIntoBuilder(template.config);
             }
-            loadJsonIntoBuilder(template.config);
             showBuilder();
-            showAlert('Configuração carregada nos inputs!', 'info');
         }
     };
 

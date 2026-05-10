@@ -89,5 +89,9 @@ class RespostaPerguntaAdmin(admin.ModelAdmin):
 
 @admin.register(EscalaConfig)
 class EscalaConfigAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'questionario', 'strategy_class')
+    list_display = ('nome', 'get_questionarios', 'strategy_class')
     list_filter = ('strategy_class',)
+
+    def get_questionarios(self, obj):
+        return ", ".join([q.titulo for q in obj.questionarios.all()])
+    get_questionarios.short_description = 'Questionários'

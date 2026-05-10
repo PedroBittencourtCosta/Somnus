@@ -319,8 +319,13 @@ class EscalaEngine:
         if config.strategy_class != "DYNAMIC":
             strategy_factory = {
                 "PSQI": PSQICalculator,
-                "IMC": IMCCalculator
-                # Novas escalas complexas entram aqui
+                "IMC": IMCCalculator,
+                "DASS21": DASS21Calculator,
+                "K10": K10Calculator,
+                "SRQ20": SRQ20Calculator,
+                "ESE": ESECalculator,
+                "AUDIT": AUDITCalculator,
+                "EMSSP": EMSSPCalculator,
             }
             strategy = strategy_factory.get(config.strategy_class)
             if not strategy:

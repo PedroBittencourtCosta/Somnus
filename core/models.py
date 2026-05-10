@@ -156,13 +156,19 @@ class RespostaPergunta(models.Model):
         return f"Resp: {self.resposta_questionario.codigo_paciente} - Pergunta: {self.pergunta.conteudo[:30]}..."
 
 class EscalaConfig(models.Model):
-    questionario = models.ForeignKey(Questionario, related_name='escalas_config', on_delete=models.CASCADE)
+    questionarios = models.ManyToManyField(Questionario, related_name='escalas_config', blank=True)
     nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21") 
     
     ESTRATEGIA_CHOICES = [
         ('DYNAMIC', 'Construtor Visual (Somas, Médias e Regras Simples)'),
         ('PSQI', 'Índice de Qualidade de Sono de Pittsburgh (PSQI)'),
         ('IMC', 'Índice de Massa Corporal (IMC)'),
+        ('DASS21', 'Depression, Anxiety and Stress Scale (DASS-21)'),
+        ('K10', 'Escala de Sofrimento Psicológico de Kessler (K10)'),
+        ('SRQ20', 'Self-Reporting Questionnaire (SRQ-20)'),
+        ('ESE', 'Escala de Sonolência de Epworth (ESE)'),
+        ('AUDIT', 'Alcohol Use Disorder Identification Test (AUDIT)'),
+        ('EMSSP', 'Escala Multidimensional de Suporte Social Percebido (EMSSP)'),
     ]
     
     strategy_class = models.CharField(
