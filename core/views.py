@@ -134,16 +134,11 @@ def responder_questionario(request, pk):
 def lista_questionarios(request):
     questionarios = Questionario.objects.all().order_by('-data_criacao')
     
-    # Se o usuário estiver logado, buscamos os IDs dos questionários que ele já respondeu
-    respondidos = []
-    if request.user.is_authenticated:
-        respondidos = RespostaQuestionario.objects.filter(
-            pesquisadora=request.user
-        ).values_list('questionario_id', flat=True)
-        
+    # Coleta assistida: permite múltiplas submissões pelo pesquisador/assistente.
+    # Ocultamos a lógica de "já respondido".
     return render(request, 'lista_questionarios.html', {
         'questionarios': questionarios,
-        'respondidos': respondidos
+        'respondidos': []
     })
 
 
@@ -196,10 +191,36 @@ def exportar_respostas_excel(request, pk):
     for escala in res_quest.questionario.escalas_config.all():
         resultado = EscalaEngine.processar(answers_map, escala)
         if "erro" not in resultado:
+            chaves_valor = []
+            chaves_status = {}
+            
             for k, v in resultado.items():
-                if isinstance(v, (int, float, str)):
-                    key_formatted = str(k).replace('_', ' ').title()
-                    escalas_resultados.append([f"{escala.nome} - {key_formatted}", v, "-"])
+                k_str = str(k)
+                if k_str.endswith('_status') or k_str == 'status' or k_str.endswith('_classificacao') or k_str == 'classificacao':
+                    prefix = k_str.replace('_status', '').replace('status', '').replace('_classificacao', '').replace('classificacao', '')
+                    chaves_status[prefix] = v
+                elif isinstance(v, (int, float, str)) and not isinstance(v, list):
+                    chaves_valor.append((k_str, v))
+            
+            for k, v in chaves_valor:
+                prefix = k.replace('_total', '').replace('_global', '').replace('_valor', '')
+                
+                referencia = "-"
+                if prefix in chaves_status:
+                    referencia = chaves_status.pop(prefix)
+                elif k in chaves_status:
+                    referencia = chaves_status.pop(k)
+                elif "" in chaves_status:
+                    referencia = chaves_status.pop("")
+                    
+                key_formatted = k.replace('_', ' ').title()
+                escalas_resultados.append([f"{escala.nome} - {key_formatted}", v, str(referencia)])
+                
+            for pref, ref in chaves_status.items():
+                nome_formatado = f"{escala.nome} - Status {pref.replace('_', ' ').title()}".strip()
+                if nome_formatado.endswith('- Status'):
+                    nome_formatado = f"{escala.nome} - Status"
+                escalas_resultados.append([nome_formatado, "-", str(ref)])
     
     # IMC Fallback (caso ainda queiram sem precisar configurar)
     peso = SafeParser.to_float(answers_map.get('peso', 0))
