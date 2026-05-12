@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib import messages
-from .forms import PerfilForm
+from .forms import PerfilForm, AlterarSenhaForm
 from django.contrib.auth.decorators import login_required, user_passes_test
 from accounts.forms import UsuarioCreationForm
 from django.contrib.auth.models import Group
@@ -70,6 +70,21 @@ def perfil_view(request):
         form = PerfilForm(instance=request.user)
     
     return render(request, 'perfil.html', {'form': form})
+
+
+@login_required
+def alterar_senha_view(request):
+    if request.method == 'POST':
+        form = AlterarSenhaForm(request.user, request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Mantém a sessão ativa após a troca (padrão Django)
+            update_session_auth_hash(request, user)
+            messages.success(request, "Sua senha foi alterada com sucesso!")
+            return redirect('perfil')
+    else:
+        form = AlterarSenhaForm(request.user)
+    return render(request, 'password/alterar_senha.html', {'form': form})
 
 
 # Função para verificar se é Pesquisador (Segurança)
