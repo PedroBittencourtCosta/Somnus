@@ -16,23 +16,58 @@
         </div>
     </div>
 
-    <!-- {% if messages %}
-    <div class="mb-4">
-        {% for message in messages %}
-            {% if message.tags != 'login_modal' and message.tags != 'login_modal error' and message.tags != 'info' %}
-            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <!-- Barra de Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body px-4 py-3">
+            <div class="row g-3 align-items-end">
+
+                <!-- Filtro: Nome -->
+                <div class="col-12 col-md-5">
+                    <label class="filter-label" for="filtro-nome">
+                        <i class="bi bi-search me-1"></i>Nome ou e-mail
+                    </label>
+                    <input type="text" id="filtro-nome" class="form-control filter-input"
+                           placeholder="Buscar por nome ou e-mail…">
+                </div>
+
+                <!-- Filtro: Tipo -->
+                <div class="col-6 col-md-4">
+                    <label class="filter-label" for="filtro-tipo">
+                        <i class="bi bi-people me-1"></i>Função
+                    </label>
+                    <select id="filtro-tipo" class="form-select filter-input">
+                        <option value="">Todas as funções</option>
+                    </select>
+                </div>
+
+                <!-- Filtro: Status -->
+                <div class="col-6 col-md-3">
+                    <label class="filter-label" for="filtro-status">
+                        <i class="bi bi-toggle-on me-1"></i>Status
+                    </label>
+                    <select id="filtro-status" class="form-select filter-input">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativos</option>
+                        <option value="desativado">Desativados</option>
+                    </select>
+                </div>
+
             </div>
-            {% endif %}
-        {% endfor %}
+
+            <!-- Contador de resultados -->
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+                <small id="resultado-contador" class="text-muted"></small>
+                <button id="btn-limpar-filtros" class="btn btn-link btn-sm text-decoration-none text-muted d-none p-0">
+                    <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                </button>
+            </div>
+        </div>
     </div>
-    {% endif %} -->
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-body p-0">
             <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
+                <table class="table table-hover align-middle mb-0" id="tabela-colaboradores">
                     <thead class="table-light">
                         <tr>
                             <th class="ps-4 py-3">Nome</th>
@@ -44,7 +79,11 @@
                     </thead>
                     <tbody>
                         {% for usuario in usuarios %}
-                        <tr>
+                        <tr class="linha-colaborador"
+                            data-nome="{{ usuario.get_full_name|lower|default:usuario.email|lower }}"
+                            data-email="{{ usuario.email|lower }}"
+                            data-status="{% if usuario.is_active %}ativo{% else %}desativado{% endif %}"
+                            data-tipo="{% for group in usuario.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% empty %}sem função{% endfor %}">
                             <td class="ps-4">
                                 <div class="fw-bold text-dark">{{ usuario.get_full_name|default:usuario.email }}</div>
                             </td>
@@ -81,17 +120,126 @@
                                 </form>
                             </td>
                         </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center py-5 text-muted">
-                                Nenhum colaborador encontrado.
-                            </td>
-                        </tr>
                         {% endfor %}
                     </tbody>
                 </table>
+
+                <!-- Mensagem vazia após filtro -->
+                <div id="sem-resultados" class="text-center py-5 text-muted d-none">
+                    <i class="bi bi-funnel fs-3 d-block mb-2 opacity-50"></i>
+                    Nenhum colaborador corresponde aos filtros aplicados.
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .filter-input:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.2rem rgba(0,103,177,0.1);
+        background-color: #fff;
+    }
+    .form-select.filter-input {
+        padding-right: 2rem;
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const linhas       = document.querySelectorAll('.linha-colaborador');
+    const inputNome    = document.getElementById('filtro-nome');
+    const selectTipo   = document.getElementById('filtro-tipo');
+    const selectStatus = document.getElementById('filtro-status');
+    const contador     = document.getElementById('resultado-contador');
+    const semResultados = document.getElementById('sem-resultados');
+    const btnLimpar    = document.getElementById('btn-limpar-filtros');
+
+    // ── Popula o select de Função dinamicamente ──
+    const tiposEncontrados = new Set();
+    linhas.forEach(function (linha) {
+        const tipos = linha.dataset.tipo.split(',');
+        tipos.forEach(function (t) {
+            const nome = t.trim();
+            if (nome && nome !== 'sem função') tiposEncontrados.add(nome);
+        });
+    });
+    tiposEncontrados.forEach(function (tipo) {
+        const opt = document.createElement('option');
+        opt.value = tipo.toLowerCase();
+        opt.textContent = tipo;
+        selectTipo.appendChild(opt);
+    });
+
+    // ── Lógica de filtro ──
+    function filtrar() {
+        const termNome   = inputNome.value.toLowerCase().trim();
+        const termTipo   = selectTipo.value.toLowerCase();
+        const termStatus = selectStatus.value.toLowerCase();
+
+        let visiveis = 0;
+
+        linhas.forEach(function (linha) {
+            const nome   = linha.dataset.nome   || '';
+            const email  = linha.dataset.email  || '';
+            const status = linha.dataset.status || '';
+            const tipo   = linha.dataset.tipo.toLowerCase();
+
+            const nomeOk   = !termNome   || nome.includes(termNome)  || email.includes(termNome);
+            const tipoOk   = !termTipo   || tipo.includes(termTipo);
+            const statusOk = !termStatus || status === termStatus;
+
+            if (nomeOk && tipoOk && statusOk) {
+                linha.style.display = '';
+                visiveis++;
+            } else {
+                linha.style.display = 'none';
+            }
+        });
+
+        // Atualiza contador
+        const total = linhas.length;
+        contador.textContent = visiveis === total
+            ? `${total} colaborador${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''}`
+            : `${visiveis} de ${total} colaborador${total !== 1 ? 'es' : ''} exibido${visiveis !== 1 ? 's' : ''}`;
+
+        // Mostra/oculta mensagem de vazio
+        semResultados.classList.toggle('d-none', visiveis > 0);
+
+        // Mostra/oculta botão de limpar
+        const filtroAtivo = termNome || termTipo || termStatus;
+        btnLimpar.classList.toggle('d-none', !filtroAtivo);
+    }
+
+    // ── Limpar filtros ──
+    btnLimpar.addEventListener('click', function () {
+        inputNome.value    = '';
+        selectTipo.value   = '';
+        selectStatus.value = '';
+        filtrar();
+    });
+
+    inputNome.addEventListener('input',    filtrar);
+    selectTipo.addEventListener('change',  filtrar);
+    selectStatus.addEventListener('change', filtrar);
+
+    // Inicializa o contador
+    filtrar();
+});
+</script>
 {% endblock %}
