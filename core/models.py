@@ -162,7 +162,11 @@ class RespostaPergunta(models.Model):
 
 class EscalaConfig(models.Model):
     questionarios = models.ManyToManyField(Questionario, related_name='escalas_config', blank=True)
-    nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21") 
+    nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21")
+    ativo = models.BooleanField(
+        default=True,
+        help_text="Soft-delete: escalas inativas não aparecem na interface e não são processadas em novas avaliações."
+    )
     
     ESTRATEGIA_CHOICES = [
         ('DYNAMIC', 'Construtor Visual (Somas, Médias e Regras Simples)'),

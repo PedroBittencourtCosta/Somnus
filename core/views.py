@@ -489,6 +489,12 @@ def configurar_escala_view(request, pk):
                 escala = get_object_or_404(EscalaConfig, id=escala_id)
                 escala.questionarios.remove(questionario)
                 return JsonResponse({'status': 'success', 'escala_id': escala.id, 'nome': escala.nome})
+            elif acao == 'desativar':
+                # Soft-delete: irreversível pela UI do pesquisador
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.ativo = False
+                escala.save(update_fields=['ativo'])
+                return JsonResponse({'status': 'success', 'escala_id': escala.id})
             
             nome = data.get('nome', f'Escala para {questionario.titulo}'[:100])
             
@@ -518,8 +524,8 @@ def configurar_escala_view(request, pk):
         secao__questionario=questionario
     ).exclude(identificador__exact='').exclude(identificador__isnull=True).values('id', 'identificador', 'conteudo')
     
-    # Coleta configurações de todas as escalas cadastradas
-    escalas_cadastradas = EscalaConfig.objects.all().prefetch_related('questionarios')
+    # Coleta configurações apenas das escalas ativas
+    escalas_cadastradas = EscalaConfig.objects.filter(ativo=True).prefetch_related('questionarios')
     escalas_templates = []
     for e in escalas_cadastradas:
         is_linked = e.questionarios.filter(id=questionario.id).exists()

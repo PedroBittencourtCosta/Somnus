@@ -20,32 +20,33 @@
                 </thead>
                 <tbody>
                     {% for resposta in respostas %}
-                        <tr>
-                            <td class="px-4 py-4">
-                                <div class="fw-bold text-dark">
-                                    <i class="bi bi-shield-lock-fill text-success me-1" style="font-size: 0.8rem;"></i>
-                                    {{ resposta.codigo_paciente }}
-                                </div>
-                                <div class="small text-muted">{{ resposta.paciente_nome }}</div>
-                            </td>
-                            <td class="px-4 py-4">
-                                <span class="badge rounded-pill bg-light text-primary border px-3">
-                                    {{ resposta.questionario.titulo }}
-                                </span>
-                            </td>
-                            <td class="text-muted">
-                                {{ resposta.data_submissao|date:"d/m/Y H:i" }}
-                            </td>
-                            <td class="text-center px-4 py-4">
-                                <a href="{% url 'exportar_respostas_excel' resposta.pk %}" class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
-                                    <i class="bi bi-download me-1"></i> Exportar excel
-                                </a>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td class="px-4 py-4">
+                            <div class="fw-bold text-dark">
+                                <i class="bi bi-shield-lock-fill text-success me-1" style="font-size: 0.8rem;"></i>
+                                {{ resposta.codigo_paciente }}
+                            </div>
+                            <!-- <div class="small text-muted">{{ resposta.paciente_nome }}</div> -->
+                        </td>
+                        <td class="px-4 py-4">
+                            <span class="badge rounded-pill bg-light text-primary border px-3">
+                                {{ resposta.questionario.titulo }}
+                            </span>
+                        </td>
+                        <td class="text-muted">
+                            {{ resposta.data_submissao|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="text-center px-4 py-4">
+                            <a href="{% url 'exportar_respostas_excel' resposta.pk %}"
+                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold">
+                                <i class="bi bi-download me-1"></i> Exportar excel
+                            </a>
+                        </td>
+                    </tr>
                     {% empty %}
-                        <tr>
-                            <td colspan="4" class="text-center py-5 text-muted">Nenhuma resposta encontrada.</td>
-                        </tr>
+                    <tr>
+                        <td colspan="4" class="text-center py-5 text-muted">Nenhuma resposta encontrada.</td>
+                    </tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -56,13 +57,16 @@
     <nav>
         <ul class="pagination justify-content-center">
             {% if respostas.has_previous %}
-                <li class="page-item"><a class="page-link rounded-pill me-2" href="?page={{ respostas.previous_page_number }}">Anterior</a></li>
+            <li class="page-item"><a class="page-link rounded-pill me-2"
+                    href="?page={{ respostas.previous_page_number }}">Anterior</a></li>
             {% endif %}
 
-            <li class="page-item active"><span class="page-link rounded-pill shadow-sm">{{ respostas.number }}</span></li>
+            <li class="page-item active"><span class="page-link rounded-pill shadow-sm">{{ respostas.number }}</span>
+            </li>
 
             {% if respostas.has_next %}
-                <li class="page-item"><a class="page-link rounded-pill ms-2" href="?page={{ respostas.next_page_number }}">Próxima</a></li>
+            <li class="page-item"><a class="page-link rounded-pill ms-2"
+                    href="?page={{ respostas.next_page_number }}">Próxima</a></li>
             {% endif %}
         </ul>
     </nav>
