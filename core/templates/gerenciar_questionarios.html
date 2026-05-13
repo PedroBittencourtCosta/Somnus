@@ -16,7 +16,7 @@
                 Gestão de Questionários
             </h1>
             <p class="text-muted mb-0" style="font-size: 0.92rem;">
-                Crie, edite e configure as escalas dos questionários do sistema.
+                Crie, edite, configure escalas e gerencie o status dos questionários.
             </p>
         </div>
         <a href="{% url 'nova_avaliacao' %}" id="btn-novo-questionario"
@@ -48,25 +48,45 @@
                 <tr>
                     <th class="fw-semibold py-3 px-4 text-black" style="width: 5%;">#</th>
                     <th class="fw-semibold py-3 px-3 text-black">Nome do Questionário</th>
-                    <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell" style="width: 22%;">Criado em
+                    <th class="fw-semibold py-3 px-3 text-black text-center d-none d-md-table-cell" style="width: 12%;">
+                        Status</th>
+                    <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell" style="width: 14%;">Criado em
                     </th>
-                    <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 22%;">Ações</th>
+                    <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 26%;">Ações</th>
                 </tr>
             </thead>
             <tbody id="tbody-questionarios">
                 {% for quest in questionarios %}
-                <tr class="linha-questionario transition-row" data-nome="{{ quest.titulo|lower }}">
+                <tr class="linha-questionario transition-row {% if not quest.ativo %}row-inativa{% endif %}"
+                    data-nome="{{ quest.titulo|lower }}" data-id="{{ quest.id }}"
+                    data-ativo="{{ quest.ativo|yesno:'true,false' }}" id="row-quest-{{ quest.id }}">
+
                     <td class="px-4 text-muted" style="font-size: 0.85rem;">{{ forloop.counter }}</td>
+
                     <td class="px-3">
-                        <span class="fw-semibold" style="color: var(--somnus-blue-deep); font-size: 0.95rem;">
+                        <span class="fw-semibold nome-quest"
+                            style="color: var(--somnus-blue-deep); font-size: 0.95rem;">
                             {{ quest.titulo }}
                         </span>
                     </td>
+
+                    {# ── Badge de status ── #}
+                    <td class="px-3 text-center d-none d-md-table-cell">
+                        <span id="badge-status-{{ quest.id }}" class="badge rounded-pill px-3 py-2 badge-status"
+                            style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+                                   {% if quest.ativo %}background-color: #d1fae5; color: #065f46;{% else %}background-color: #fee2e2; color: #991b1b;{% endif %}">
+                            {% if quest.ativo %}● Ativo{% else %}○ Inativo{% endif %}
+                        </span>
+                    </td>
+
                     <td class="px-3 text-muted d-none d-md-table-cell" style="font-size: 0.85rem;">
                         {{ quest.data_criacao|date:"d/m/Y" }}
                     </td>
+
+                    {# ── Coluna de ações ── #}
                     <td class="px-3">
                         <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            {# Editar #}
                             <a href="{% url 'editar_avaliacao' pk=quest.id %}" id="btn-editar-{{ quest.id }}"
                                 class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
                                 style="border: 1.5px solid var(--somnus-blue-inst); color: var(--somnus-blue-inst); background: transparent; font-size: 0.8rem;"
@@ -77,6 +97,8 @@
                                 </svg>
                                 Editar
                             </a>
+
+                            {# Escalas #}
                             <a href="{% url 'configurar_escala' pk=quest.id %}" id="btn-escala-{{ quest.id }}"
                                 class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
                                 style="border: 1.5px solid var(--somnus-green-dark); color: var(--somnus-green-dark); background: transparent; font-size: 0.8rem;"
@@ -89,12 +111,36 @@
                                 </svg>
                                 Escalas
                             </a>
+
+                            {# Lixeira — Desativar / Reativar #}
+                            <button type="button" id="btn-desativar-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-2 d-flex align-items-center gap-1 btn-lixeira"
+                                data-id="{{ quest.id }}" data-ativo="{{ quest.ativo|yesno:'true,false' }}"
+                                data-nome="{{ quest.titulo }}" data-url="{% url 'desativar_questionario' pk=quest.id %}"
+                                title="{% if quest.ativo %}Desativar questionário{% else %}Reativar questionário{% endif %}"
+                                style="border: 1.5px solid {% if quest.ativo %}#dc2626{% else %}#059669{% endif %};
+                                       color: {% if quest.ativo %}#dc2626{% else %}#059669{% endif %};
+                                       background: transparent; font-size: 0.8rem;">
+                                {% if quest.ativo %}
+                                {# Ícone lixeira #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                {% else %}
+                                {# Ícone reativar (refresh) #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {% endif %}
+                            </button>
                         </div>
                     </td>
                 </tr>
                 {% empty %}
                 <tr id="linha-vazia-inicial">
-                    <td colspan="4" class="text-center py-5">
+                    <td colspan="5" class="text-center py-5">
                         <div class="d-flex flex-column align-items-center gap-2 text-muted">
                             <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 style="opacity: 0.35;">
@@ -129,9 +175,36 @@
 
 </div>
 
+<div class="modal fade" id="modalConfirmarDesativar" tabindex="-1" aria-labelledby="modalConfirmarDesativarLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalConfirmarDesativarLabel"
+                    style="color: var(--somnus-blue-deep);">
+                    Confirmar ação
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <p id="modal-mensagem" class="mb-0 text-muted" style="font-size: 0.93rem;"></p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn rounded-pill px-4 fw-semibold" id="btn-confirmar-acao"
+                    style="background-color: #dc2626; color: white; border: none;">Confirmar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <style>
     .transition-row {
-        transition: background-color 0.2s ease;
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+    }
+
+    .row-inativa {
+        opacity: 0.55;
     }
 
     .table> :not(caption)>*>* {
@@ -156,9 +229,15 @@
         background-color: var(--somnus-green-dark) !important;
         color: white !important;
     }
+
+    .btn-lixeira:hover {
+        filter: brightness(1.1);
+        background-color: rgba(220, 38, 38, 0.06) !important;
+    }
 </style>
 
 <script>
+    /* ── Filtro de busca ── */
     document.addEventListener('DOMContentLoaded', function () {
         const input = document.getElementById('filtro-nome');
         const linhas = document.querySelectorAll('.linha-questionario');
@@ -188,6 +267,97 @@
             } else {
                 semResultado.classList.add('d-none');
             }
+        });
+
+        /* ── Soft-delete: lixeira ── */
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmarDesativar'));
+        const modalMensagem = document.getElementById('modal-mensagem');
+        const btnConfirmar = document.getElementById('btn-confirmar-acao');
+
+        let pendingUrl = null;
+        let pendingId = null;
+        let pendingAtivo = null;
+
+        document.querySelectorAll('.btn-lixeira').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                pendingUrl = this.dataset.url;
+                pendingId = this.dataset.id;
+                pendingAtivo = this.dataset.ativo === 'true';
+                const nome = this.dataset.nome;
+
+                if (pendingAtivo) {
+                    modalMensagem.textContent =
+                        `"${nome}" será desativado e não aparecerá mais para coleta. ` +
+                        `O registro e todas as respostas serão preservados no banco de dados.`;
+                    btnConfirmar.style.backgroundColor = '#dc2626';
+                    btnConfirmar.textContent = 'Desativar';
+                } else {
+                    modalMensagem.textContent =
+                        `"${nome}" será reativado e voltará a aparecer para coleta.`;
+                    btnConfirmar.style.backgroundColor = '#059669';
+                    btnConfirmar.textContent = 'Reativar';
+                }
+
+                modal.show();
+            });
+        });
+
+        btnConfirmar.addEventListener('click', function () {
+            if (!pendingUrl) return;
+
+            fetch(pendingUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const novoAtivo = data.ativo;
+                        const row = document.getElementById(`row-quest-${pendingId}`);
+                        const badge = document.getElementById(`badge-status-${pendingId}`);
+                        const btnLix = document.getElementById(`btn-desativar-${pendingId}`);
+
+                        /* Atualiza badge */
+                        if (novoAtivo) {
+                            badge.style.backgroundColor = '#d1fae5';
+                            badge.style.color = '#065f46';
+                            badge.textContent = '● Ativo';
+                            row.classList.remove('row-inativa');
+                        } else {
+                            badge.style.backgroundColor = '#fee2e2';
+                            badge.style.color = '#991b1b';
+                            badge.textContent = '○ Inativo';
+                            row.classList.add('row-inativa');
+                        }
+
+                        /* Atualiza botão lixeira */
+                        btnLix.dataset.ativo = novoAtivo ? 'true' : 'false';
+                        row.dataset.ativo = novoAtivo ? 'true' : 'false';
+
+                        const corBotao = novoAtivo ? '#dc2626' : '#059669';
+                        btnLix.style.borderColor = corBotao;
+                        btnLix.style.color = corBotao;
+                        btnLix.title = novoAtivo ? 'Desativar questionário' : 'Reativar questionário';
+                        btnLix.innerHTML = novoAtivo
+                            ? `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>`
+                            : `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>`;
+                    }
+                    modal.hide();
+                    pendingUrl = pendingId = pendingAtivo = null;
+                })
+                .catch(() => {
+                    modal.hide();
+                });
         });
     });
 </script>

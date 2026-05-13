@@ -132,10 +132,8 @@ def responder_questionario(request, pk):
     return render(request, 'responder_questionario.html', context)
 
 def lista_questionarios(request):
-    questionarios = Questionario.objects.all().order_by('-data_criacao')
-    
-    # Coleta assistida: permite múltiplas submissões pelo pesquisador/assistente.
-    # Ocultamos a lógica de "já respondido".
+    # Exibe apenas questínarios ativos para coleta assistida.
+    questionarios = Questionario.objects.filter(ativo=True).order_by('-data_criacao')
     return render(request, 'lista_questionarios.html', {
         'questionarios': questionarios,
         'respondidos': []
@@ -144,10 +142,24 @@ def lista_questionarios(request):
 
 @login_required
 def gerenciar_questionarios(request):
-    """Tela de gestão centralizada de questionários (somente pesquisadores/staff)."""
+    """Tela de gestão centralizada (pesquisadores/staff). Exibe todos, ativos e inativos."""
     questionarios = Questionario.objects.all().order_by('-data_criacao')
     return render(request, 'gerenciar_questionarios.html', {
         'questionarios': questionarios,
+    })
+
+
+@login_required
+@require_POST
+def desativar_questionario(request, pk):
+    """Soft-delete: marca o questionário como inativo. Não apaga do banco."""
+    questionario = get_object_or_404(Questionario, pk=pk)
+    questionario.ativo = not questionario.ativo   # Toggle: ativa/desativa
+    questionario.save(update_fields=['ativo'])
+    return JsonResponse({
+        'status': 'success',
+        'ativo': questionario.ativo,
+        'message': 'Questionário ativado.' if questionario.ativo else 'Questionário desativado.'
     })
 
 

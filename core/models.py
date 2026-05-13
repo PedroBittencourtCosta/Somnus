@@ -5,9 +5,14 @@ import uuid
 from encrypted_model_fields.fields import EncryptedCharField, EncryptedTextField
 
 class Questionario(models.Model):
-    titulo = models.CharField(max_length=200) 
+    titulo = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
+    ativo = models.BooleanField(
+        default=True,
+        help_text="Controla se o questionário está visível para coleta. "
+                  "Desativar é um soft-delete: o registro é preservado no banco."
+    )
 
     def __str__(self):
         return self.titulo

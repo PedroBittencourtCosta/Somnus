@@ -5,16 +5,20 @@
 <div class="container py-5">
     <div class="mb-4">
         <div class="d-flex align-items-center">
-            <a href="{% url 'lista_questionarios' %}" class="text-secondary text-decoration-none me-4 hover-primary">
-                <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="transition">
+            <a href="{% url 'gerenciar_questionarios' %}"
+                class="text-secondary text-decoration-none me-4 hover-primary">
+                <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24" class="transition">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 8 8 12 12 16"></polyline>
                     <line x1="16" y1="12" x2="8" y2="12"></line>
                 </svg>
             </a>
-            <h2 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}</h2>
+            <h2 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}
+            </h2>
         </div>
-        <p class="text-muted mt-2" style="margin-left: 4.2rem;">Defina como o sistema deve processar os resultados dessa avaliação.</p>
+        <p class="text-muted mt-2" style="margin-left: 4.2rem;">Defina como o sistema deve processar os resultados dessa
+            avaliação.</p>
     </div>
 
     <!-- Container para as mensagens de sucesso/erro estilo Bootstrap -->
@@ -26,9 +30,9 @@
             <div class="row g-3 justify-content-center mb-4" id="templateCardsContainer">
                 <!-- Preenchido via JS -->
             </div>
-            
+
             <hr class="w-50 mx-auto my-4">
-            
+
             <h5 class="fw-bold mb-3">Ou crie uma nova escala do zero</h5>
             <button id="btnNovaEscala" class="btn btn-success btn-lg rounded-pill px-5 fw-bold shadow-sm">
                 <i class="bi bi-plus-circle me-2"></i>Cadastrar Nova Escala
@@ -52,7 +56,7 @@
     const configAtual = JSON.parse(document.getElementById('configData').textContent);
     const perguntas = JSON.parse(document.getElementById('perguntasData').textContent);
     const escalasTemplates = JSON.parse(document.getElementById('escalasTemplatesData').textContent);
-    
+
     const select = document.getElementById('strategySelect');
     const builder = document.getElementById('dynamicBuilder');
     const editor = document.getElementById('jsonEditor');
@@ -61,7 +65,7 @@
 
     const viewList = document.getElementById('viewList');
     const viewBuilder = document.getElementById('viewBuilder');
-    
+
     let currentEscalaId = null;
 
     function showBuilder() {
@@ -86,17 +90,17 @@
 
     // Carrega templates na lista
     const container = document.getElementById('templateCardsContainer');
-    
+
     function renderizarLista() {
         container.innerHTML = '';
-        if(escalasTemplates.length === 0) {
+        if (escalasTemplates.length === 0) {
             container.innerHTML = `<p class="text-muted">Nenhuma escala cadastrada no sistema ainda.</p>`;
         } else {
             escalasTemplates.forEach(t => {
                 const isLinked = t.is_linked;
                 const col = document.createElement('div');
                 col.className = 'col-md-6 col-lg-4 text-start mb-3';
-                
+
                 col.innerHTML = `
                     <div class="card h-100 shadow-sm border-light-subtle ${isLinked ? 'border-success border-2 bg-success bg-opacity-10' : ''}">
                         <div class="card-body d-flex flex-column">
@@ -117,10 +121,10 @@
             });
         }
     }
-    
+
     renderizarLista();
 
-    window.toggleVincular = function(id, currentlyLinked) {
+    window.toggleVincular = function (id, currentlyLinked) {
         const acao = currentlyLinked ? 'desvincular' : 'vincular';
         fetch(window.location.href, {
             method: 'POST',
@@ -130,22 +134,22 @@
             },
             body: JSON.stringify({ acao: acao, escala_id: id })
         })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                const t = escalasTemplates.find(t => t.id === id);
-                if(t) t.is_linked = !currentlyLinked;
-                renderizarLista();
-                showAlert(`Escala ${acao === 'vincular' ? 'vinculada' : 'desvinculada'} com sucesso!`, 'success');
-            } else {
-                showAlert('Erro: ' + data.message, 'danger');
-            }
-        });
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const t = escalasTemplates.find(t => t.id === id);
+                    if (t) t.is_linked = !currentlyLinked;
+                    renderizarLista();
+                    showAlert(`Escala ${acao === 'vincular' ? 'vinculada' : 'desvinculada'} com sucesso!`, 'success');
+                } else {
+                    showAlert('Erro: ' + data.message, 'danger');
+                }
+            });
     }
 
-    window.editarEscala = function(id) {
+    window.editarEscala = function (id) {
         const template = escalasTemplates.find(t => t.id === id);
-        if(template) {
+        if (template) {
             currentEscalaId = template.id;
             document.getElementById('nomeEscala').value = template.nome;
             select.value = template.strategy_class;
@@ -162,22 +166,22 @@
         simplesTagInput.clear();
         document.getElementById('simplesLimiaresContainer').innerHTML = '';
         document.getElementById('subescalasContainer').innerHTML = '';
-        
-        if(!config || !config.operacao) {
+
+        if (!config || !config.operacao) {
             document.getElementById('opType').value = 'SUM';
             document.getElementById('opType').dispatchEvent(new Event('change'));
             editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
             return;
         }
-        
+
         document.getElementById('opType').value = config.operacao;
         document.getElementById('opType').dispatchEvent(new Event('change'));
-        
+
         if (config.operacao === 'SUM' || config.operacao === 'AVERAGE') {
-            if(config.variaveis) {
+            if (config.variaveis) {
                 simplesTagInput.setTags(config.variaveis);
             }
-            if(config.limiares) {
+            if (config.limiares) {
                 config.limiares.forEach(lim => {
                     document.getElementById('btnAddLimiarSimples').click();
                     const items = document.querySelectorAll('#simplesLimiaresContainer .limiar-item');
@@ -190,13 +194,13 @@
                 });
             }
         } else if (config.operacao === 'SUM_BY_SUBSCALE') {
-            if(config.subescalas) {
+            if (config.subescalas) {
                 for (const [nome, vars] of Object.entries(config.subescalas)) {
                     const card = window.buildSubescalaCard();
                     document.getElementById('subescalasContainer').appendChild(card);
                     card.querySelector('.sub-nome').value = nome;
                     window.setSubVarTags(card, vars);
-                    
+
                     if (config.limiares && config.limiares[nome]) {
                         const btnLimiar = card.querySelector('button[onclick="window.addSubLimiar(this)"]');
                         config.limiares[nome].forEach(lim => {
@@ -213,7 +217,7 @@
                 }
             }
         }
-        
+
         // Atualiza JSON editor
         editor.value = JSON.stringify(config, null, 2);
     }
@@ -224,13 +228,13 @@
 
     // Toggle builder
     select.addEventListener('change', (e) => {
-        if(e.target.value === 'DYNAMIC') {
+        if (e.target.value === 'DYNAMIC') {
             builder.style.display = 'block';
         } else {
             builder.style.display = 'none';
         }
     });
-    
+
     select.dispatchEvent(new Event('change'));
 
     // Assistente Visual Lógica
@@ -239,7 +243,7 @@
     const uiSubescala = document.getElementById('uiSubescala');
 
     opType.addEventListener('change', () => {
-        if(opType.value === 'SUM_BY_SUBSCALE') {
+        if (opType.value === 'SUM_BY_SUBSCALE') {
             uiSimples.style.display = 'none';
             uiSubescala.style.display = 'block';
         } else {
@@ -268,7 +272,7 @@
         subescalasContainer.appendChild(card);
     });
 
-    window.addSubLimiar = function(btn) {
+    window.addSubLimiar = function (btn) {
         const container = btn.previousElementSibling;
         const div = document.createElement('div');
         div.className = 'd-flex gap-2 mt-2 sub-limiar-item';
@@ -284,27 +288,27 @@
         const op = opType.value;
         let result = { operacao: op };
 
-        if(op === 'SUM' || op === 'AVERAGE') {
+        if (op === 'SUM' || op === 'AVERAGE') {
             // Lê as tags do tag-input (+ qualquer texto ainda no input)
             const pendingText = document.getElementById('simplesVarsInput').value.trim();
-            if (pendingText) simplesTagInput.setTags([...simplesTagInput.getTags(), ...pendingText.split(',').map(v=>v.trim()).filter(v=>v)]);
+            if (pendingText) simplesTagInput.setTags([...simplesTagInput.getTags(), ...pendingText.split(',').map(v => v.trim()).filter(v => v)]);
             result.variaveis = simplesTagInput.getTags();
-            
+
             const limiares = [];
             document.querySelectorAll('#simplesLimiaresContainer .limiar-item').forEach(item => {
                 const inputs = item.querySelectorAll('input');
                 const maxVal = parseFloat(inputs[0].value);
                 const statusVal = inputs[1].value.trim();
-                if(!isNaN(maxVal) && statusVal) {
+                if (!isNaN(maxVal) && statusVal) {
                     limiares.push({ max: maxVal, status: statusVal });
                 }
             });
-            if(limiares.length > 0) result.limiares = limiares;
+            if (limiares.length > 0) result.limiares = limiares;
 
-        } else if(op === 'SUM_BY_SUBSCALE') {
+        } else if (op === 'SUM_BY_SUBSCALE') {
             result.subescalas = {};
             result.limiares = {};
-            
+
             document.querySelectorAll('#subescalasContainer .subescala-item').forEach(item => {
                 const nome = item.querySelector('.sub-nome').value.trim();
                 // Flush texto pendente antes de ler
@@ -313,27 +317,27 @@
                     pendingInput.dispatchEvent(new Event('blur'));
                 }
                 const vars = window.getSubVarTags(item);
-                
-                if(nome && vars.length > 0) {
+
+                if (nome && vars.length > 0) {
                     result.subescalas[nome] = vars;
-                    
+
                     const limiares = [];
                     item.querySelectorAll('.sub-limiar-item').forEach(limItem => {
                         const inputs = limItem.querySelectorAll('input');
                         const maxVal = parseFloat(inputs[0].value);
                         const statusVal = inputs[1].value.trim();
-                        if(!isNaN(maxVal) && statusVal) {
+                        if (!isNaN(maxVal) && statusVal) {
                             limiares.push({ max: maxVal, status: statusVal });
                         }
                     });
-                    
-                    if(limiares.length > 0) {
+
+                    if (limiares.length > 0) {
                         result.limiares[nome] = limiares;
                     }
                 }
             });
-            
-            if(Object.keys(result.limiares).length === 0) {
+
+            if (Object.keys(result.limiares).length === 0) {
                 delete result.limiares;
             }
         }
@@ -349,11 +353,11 @@
             nome: document.getElementById('nomeEscala').value
         };
 
-        if(select.value === 'DYNAMIC') {
+        if (select.value === 'DYNAMIC') {
             try {
                 payload.config_dinamica = JSON.parse(editor.value);
                 jsonError.style.display = 'none';
-            } catch(err) {
+            } catch (err) {
                 jsonError.style.display = 'block';
                 return;
             }
@@ -370,39 +374,39 @@
             },
             body: JSON.stringify(payload)
         })
-        .then(res => res.json())
-        .then(data => {
-            if(data.status === 'success') {
-                showAlert('Regras de cálculo salvas com sucesso!', 'success');
-                currentEscalaId = data.escala_id;
-                
-                // Update templates array and re-render
-                let existing = escalasTemplates.find(t => t.id === currentEscalaId);
-                if (existing) {
-                    existing.nome = data.nome;
-                    existing.config = payload.config_dinamica;
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showAlert('Regras de cálculo salvas com sucesso!', 'success');
+                    currentEscalaId = data.escala_id;
+
+                    // Update templates array and re-render
+                    let existing = escalasTemplates.find(t => t.id === currentEscalaId);
+                    if (existing) {
+                        existing.nome = data.nome;
+                        existing.config = payload.config_dinamica;
+                    } else {
+                        escalasTemplates.push({
+                            id: currentEscalaId,
+                            nome: data.nome,
+                            questionario_id: parseInt('{{ questionario.id }}', 10),
+                            questionario_titulo: '{{ questionario.titulo }}',
+                            config: payload.config_dinamica
+                        });
+                    }
+                    renderizarLista();
                 } else {
-                    escalasTemplates.push({
-                        id: currentEscalaId,
-                        nome: data.nome,
-                        questionario_id: parseInt('{{ questionario.id }}', 10),
-                        questionario_titulo: '{{ questionario.titulo }}',
-                        config: payload.config_dinamica
-                    });
+                    showAlert('Erro ao salvar: ' + data.message, 'danger');
                 }
-                renderizarLista();
-            } else {
-                showAlert('Erro ao salvar: ' + data.message, 'danger');
-            }
-        })
-        .catch(err => {
-            showAlert('Falha na requisição.', 'danger');
-        })
-        .finally(() => {
-            btnSalvar.disabled = false;
-            btnSalvar.innerText = "Salvar Configurações";
-            window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe a página para o usuário ver o alerta
-        });
+            })
+            .catch(err => {
+                showAlert('Falha na requisição.', 'danger');
+            })
+            .finally(() => {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "Salvar Configurações";
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe a página para o usuário ver o alerta
+            });
     });
 
     // Helper CSRF
@@ -431,7 +435,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
             </div>
         `;
-        
+
         setTimeout(() => {
             const alertNode = container.querySelector('.alert');
             if (alertNode) {

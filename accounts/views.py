@@ -124,13 +124,32 @@ def gestao_assistentes(request):
 @user_passes_test(eh_pesquisador)
 def alternar_status_assistente(request, usuario_id):
     from accounts.models import Usuario
+    from django.http import JsonResponse
+    from django.views.decorators.http import require_POST
+
     try:
         usuario = Usuario.objects.get(id=usuario_id)
         if usuario != request.user:
             usuario.is_active = not usuario.is_active
             usuario.save()
-            status = "reativado" if usuario.is_active else "desativado"
-            messages.success(request, f'O acesso de {usuario.first_name} foi {status} com sucesso.')
+            status_label = "reativado" if usuario.is_active else "desativado"
+
+            # Resposta JSON para requisições fetch (AJAX)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or \
+               'application/json' in request.headers.get('Accept', ''):
+                return JsonResponse({
+                    'status': 'success',
+                    'is_active': usuario.is_active,
+                    'message': f'O acesso de {usuario.first_name} foi {status_label} com sucesso.'
+                })
+
+            messages.success(request, f'O acesso de {usuario.first_name} foi {status_label} com sucesso.')
+        else:
+            if 'application/json' in request.headers.get('Accept', ''):
+                return JsonResponse({'status': 'error', 'message': 'Você não pode alterar seu próprio acesso.'}, status=403)
     except Usuario.DoesNotExist:
+        if 'application/json' in request.headers.get('Accept', ''):
+            return JsonResponse({'status': 'error', 'message': 'Usuário não encontrado.'}, status=404)
         messages.error(request, "Usuário não encontrado.")
+
     return redirect('gestao_assistentes')

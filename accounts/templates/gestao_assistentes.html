@@ -65,70 +65,91 @@
     </div>
 
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
-        <div class="card-body p-0">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0" id="tabela-colaboradores">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4 py-3">Nome</th>
-                            <th class="py-3">E-mail</th>
-                            <th class="py-3">Função</th>
-                            <th class="py-3">Status</th>
-                            <th class="pe-4 py-3 text-end">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for usuario in usuarios %}
-                        <tr class="linha-colaborador"
-                            data-nome="{{ usuario.get_full_name|lower|default:usuario.email|lower }}"
-                            data-email="{{ usuario.email|lower }}"
-                            data-status="{% if usuario.is_active %}ativo{% else %}desativado{% endif %}"
-                            data-tipo="{% for group in usuario.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% empty %}sem função{% endfor %}">
-                            <td class="ps-4">
-                                <div class="fw-bold text-dark">{{ usuario.get_full_name|default:usuario.email }}</div>
-                            </td>
-                            <td>{{ usuario.email }}</td>
-                            <td>
-                                {% for group in usuario.groups.all %}
-                                <span class="badge bg-secondary rounded-pill">{{ group.name }}</span>
-                                {% empty %}
-                                <span class="text-muted small">Sem função</span>
-                                {% endfor %}
-                            </td>
-                            <td>
-                                {% if usuario.is_active %}
-                                <span class="badge bg-success rounded-pill px-3 py-2">Ativo</span>
-                                {% else %}
-                                <span class="badge bg-danger rounded-pill px-3 py-2">Desativado</span>
-                                {% endif %}
-                            </td>
-                            <td class="pe-4 text-end">
-                                <form action="{% url 'alternar_status_assistente' usuario.id %}" method="post"
-                                    class="d-inline">
-                                    {% csrf_token %}
-                                    {% if usuario.is_active %}
-                                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3"
-                                        title="Desativar acesso">
-                                        Desativar
-                                    </button>
-                                    {% else %}
-                                    <button type="submit" class="btn btn-sm btn-outline-success rounded-pill px-3"
-                                        title="Reativar acesso">
-                                        Reativar
-                                    </button>
-                                    {% endif %}
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabela-colaboradores">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-semibold py-3 ps-4 text-black">Nome</th>
+                        <th class="fw-semibold py-3 px-3 text-black">E-mail</th>
+                        <th class="fw-semibold py-3 px-3 text-black">Função</th>
+                        <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 12%;">Status</th>
+                        <th class="fw-semibold py-3 pe-4 text-black text-center" style="width: 12%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr class="linha-colaborador transition-row {% if not usuario.is_active %}row-inativa{% endif %}"
+                        data-nome="{{ usuario.get_full_name|lower|default:usuario.email|lower }}"
+                        data-email="{{ usuario.email|lower }}"
+                        data-status="{% if usuario.is_active %}ativo{% else %}desativado{% endif %}"
+                        data-tipo="{% for group in usuario.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% empty %}sem função{% endfor %}"
+                        data-id="{{ usuario.id }}"
+                        id="row-user-{{ usuario.id }}">
 
-                <!-- Mensagem vazia após filtro -->
-                <div id="sem-resultados" class="text-center py-5 text-muted d-none">
-                    <i class="bi bi-funnel fs-3 d-block mb-2 opacity-50"></i>
-                    Nenhum colaborador corresponde aos filtros aplicados.
-                </div>
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ usuario.get_full_name|default:usuario.email }}</div>
+                        </td>
+
+                        <td class="px-3" style="font-size: 0.9rem; color: #555;">{{ usuario.email }}</td>
+
+                        <td class="px-3">
+                            {% for group in usuario.groups.all %}
+                            <span class="badge rounded-pill px-3 py-2"
+                                style="background-color: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 600;">
+                                {{ group.name }}
+                            </span>
+                            {% empty %}
+                            <span class="text-muted small">Sem função</span>
+                            {% endfor %}
+                        </td>
+
+                        {# ── Badge de status — mesmo padrão de gerenciar_questionarios ── #}
+                        <td class="px-3 text-center">
+                            <span id="badge-status-{{ usuario.id }}"
+                                class="badge rounded-pill px-3 py-2"
+                                style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+                                       {% if usuario.is_active %}background-color: #d1fae5; color: #065f46;{% else %}background-color: #fee2e2; color: #991b1b;{% endif %}">
+                                {% if usuario.is_active %}● Ativo{% else %}○ Inativo{% endif %}
+                            </span>
+                        </td>
+
+                        {# ── Botão lixeira / reativar — mesmo padrão de gerenciar_questionarios ── #}
+                        <td class="pe-4 text-center">
+                            <button type="button"
+                                id="btn-toggle-{{ usuario.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center gap-1 btn-lixeira"
+                                data-id="{{ usuario.id }}"
+                                data-ativo="{% if usuario.is_active %}true{% else %}false{% endif %}"
+                                data-nome="{{ usuario.get_full_name|default:usuario.email }}"
+                                data-url="{% url 'alternar_status_assistente' usuario.id %}"
+                                title="{% if usuario.is_active %}Desativar acesso{% else %}Reativar acesso{% endif %}"
+                                style="border: 1.5px solid {% if usuario.is_active %}#dc2626{% else %}#059669{% endif %};
+                                       color: {% if usuario.is_active %}#dc2626{% else %}#059669{% endif %};
+                                       background: transparent;">
+                                {% if usuario.is_active %}
+                                {# Ícone lixeira #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                {% else %}
+                                {# Ícone reativar (refresh) #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {% endif %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Mensagem vazia após filtro -->
+            <div id="sem-resultados" class="text-center py-5 text-muted d-none">
+                <i class="bi bi-funnel fs-3 d-block mb-2 opacity-50"></i>
+                Nenhum colaborador corresponde aos filtros aplicados.
             </div>
         </div>
     </div>
@@ -160,6 +181,27 @@
 
     .form-select.filter-input {
         padding-right: 2rem;
+    }
+
+    .transition-row {
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+    }
+
+    .row-inativa {
+        opacity: 0.55;
+    }
+
+    .table> :not(caption)>*>* {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    .btn-lixeira:hover {
+        filter: brightness(1.1);
+        background-color: rgba(220, 38, 38, 0.06) !important;
     }
 </style>
 
@@ -194,7 +236,6 @@
             const termNome = inputNome.value.toLowerCase().trim();
             const termTipo = selectTipo.value.toLowerCase();
             const termStatus = selectStatus.value.toLowerCase();
-
             let visiveis = 0;
 
             linhas.forEach(function (linha) {
@@ -215,16 +256,13 @@
                 }
             });
 
-            // Atualiza contador
             const total = linhas.length;
             contador.textContent = visiveis === total
                 ? `${total} colaborador${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''}`
                 : `${visiveis} de ${total} colaborador${total !== 1 ? 'es' : ''} exibido${visiveis !== 1 ? 's' : ''}`;
 
-            // Mostra/oculta mensagem de vazio
             semResultados.classList.toggle('d-none', visiveis > 0);
 
-            // Mostra/oculta botão de limpar
             const filtroAtivo = termNome || termTipo || termStatus;
             btnLimpar.classList.toggle('d-none', !filtroAtivo);
         }
@@ -240,9 +278,69 @@
         inputNome.addEventListener('input', filtrar);
         selectTipo.addEventListener('change', filtrar);
         selectStatus.addEventListener('change', filtrar);
-
-        // Inicializa o contador
         filtrar();
+
+        // ── Toggle ativo/inativo via fetch (sem modal, sem reload) ──
+        document.querySelectorAll('.btn-lixeira').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                const url = this.dataset.url;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') return;
+
+                    const novoAtivo = data.is_active;
+                    const row = document.getElementById(`row-user-${id}`);
+                    const badge = document.getElementById(`badge-status-${id}`);
+                    const btnEl = document.getElementById(`btn-toggle-${id}`);
+
+                    // Atualiza badge
+                    if (novoAtivo) {
+                        badge.style.backgroundColor = '#d1fae5';
+                        badge.style.color = '#065f46';
+                        badge.textContent = '● Ativo';
+                        row.classList.remove('row-inativa');
+                        row.dataset.status = 'ativo';
+                    } else {
+                        badge.style.backgroundColor = '#fee2e2';
+                        badge.style.color = '#991b1b';
+                        badge.textContent = '○ Inativo';
+                        row.classList.add('row-inativa');
+                        row.dataset.status = 'desativado';
+                    }
+
+                    // Atualiza botão
+                    btnEl.dataset.ativo = novoAtivo ? 'true' : 'false';
+                    const cor = novoAtivo ? '#dc2626' : '#059669';
+                    btnEl.style.borderColor = cor;
+                    btnEl.style.color = cor;
+                    btnEl.title = novoAtivo ? 'Desativar acesso' : 'Reativar acesso';
+                    btnEl.innerHTML = novoAtivo
+                        ? `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>`
+                        : `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>`;
+
+                    // Re-executa filtro para manter coerência com o select de status ativo
+                    filtrar();
+                })
+                .catch(err => console.error('Erro ao alternar status:', err));
+            });
+        });
     });
 </script>
 {% endblock %}
