@@ -10,7 +10,7 @@
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
             <a href="{% url 'cadastrar_assistente' %}" class="btn text-white fw-bold shadow-sm rounded-pill px-4"
-                style="background-color: var(--somnus-blue-deep);">
+                style="background-color: var(--somnus-blue-inst);">
                 + Novo Colaborador
             </a>
         </div>
@@ -27,7 +27,7 @@
                         <i class="bi bi-search me-1"></i>Nome ou e-mail
                     </label>
                     <input type="text" id="filtro-nome" class="form-control filter-input"
-                           placeholder="Buscar por nome ou e-mail…">
+                        placeholder="Buscar por nome ou e-mail…">
                 </div>
 
                 <!-- Filtro: Tipo -->
@@ -142,6 +142,7 @@
         margin-bottom: 0.4rem;
         display: block;
     }
+
     .filter-input {
         border-radius: 0.75rem;
         border: 1px solid #e5e7eb;
@@ -150,96 +151,98 @@
         padding: 0.55rem 0.9rem;
         transition: border-color 0.2s, box-shadow 0.2s;
     }
+
     .filter-input:focus {
         border-color: var(--somnus-blue-inst);
-        box-shadow: 0 0 0 0.2rem rgba(0,103,177,0.1);
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
         background-color: #fff;
     }
+
     .form-select.filter-input {
         padding-right: 2rem;
     }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const linhas       = document.querySelectorAll('.linha-colaborador');
-    const inputNome    = document.getElementById('filtro-nome');
-    const selectTipo   = document.getElementById('filtro-tipo');
-    const selectStatus = document.getElementById('filtro-status');
-    const contador     = document.getElementById('resultado-contador');
-    const semResultados = document.getElementById('sem-resultados');
-    const btnLimpar    = document.getElementById('btn-limpar-filtros');
+    document.addEventListener('DOMContentLoaded', function () {
+        const linhas = document.querySelectorAll('.linha-colaborador');
+        const inputNome = document.getElementById('filtro-nome');
+        const selectTipo = document.getElementById('filtro-tipo');
+        const selectStatus = document.getElementById('filtro-status');
+        const contador = document.getElementById('resultado-contador');
+        const semResultados = document.getElementById('sem-resultados');
+        const btnLimpar = document.getElementById('btn-limpar-filtros');
 
-    // ── Popula o select de Função dinamicamente ──
-    const tiposEncontrados = new Set();
-    linhas.forEach(function (linha) {
-        const tipos = linha.dataset.tipo.split(',');
-        tipos.forEach(function (t) {
-            const nome = t.trim();
-            if (nome && nome !== 'sem função') tiposEncontrados.add(nome);
-        });
-    });
-    tiposEncontrados.forEach(function (tipo) {
-        const opt = document.createElement('option');
-        opt.value = tipo.toLowerCase();
-        opt.textContent = tipo;
-        selectTipo.appendChild(opt);
-    });
-
-    // ── Lógica de filtro ──
-    function filtrar() {
-        const termNome   = inputNome.value.toLowerCase().trim();
-        const termTipo   = selectTipo.value.toLowerCase();
-        const termStatus = selectStatus.value.toLowerCase();
-
-        let visiveis = 0;
-
+        // ── Popula o select de Função dinamicamente ──
+        const tiposEncontrados = new Set();
         linhas.forEach(function (linha) {
-            const nome   = linha.dataset.nome   || '';
-            const email  = linha.dataset.email  || '';
-            const status = linha.dataset.status || '';
-            const tipo   = linha.dataset.tipo.toLowerCase();
-
-            const nomeOk   = !termNome   || nome.includes(termNome)  || email.includes(termNome);
-            const tipoOk   = !termTipo   || tipo.includes(termTipo);
-            const statusOk = !termStatus || status === termStatus;
-
-            if (nomeOk && tipoOk && statusOk) {
-                linha.style.display = '';
-                visiveis++;
-            } else {
-                linha.style.display = 'none';
-            }
+            const tipos = linha.dataset.tipo.split(',');
+            tipos.forEach(function (t) {
+                const nome = t.trim();
+                if (nome && nome !== 'sem função') tiposEncontrados.add(nome);
+            });
+        });
+        tiposEncontrados.forEach(function (tipo) {
+            const opt = document.createElement('option');
+            opt.value = tipo.toLowerCase();
+            opt.textContent = tipo;
+            selectTipo.appendChild(opt);
         });
 
-        // Atualiza contador
-        const total = linhas.length;
-        contador.textContent = visiveis === total
-            ? `${total} colaborador${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''}`
-            : `${visiveis} de ${total} colaborador${total !== 1 ? 'es' : ''} exibido${visiveis !== 1 ? 's' : ''}`;
+        // ── Lógica de filtro ──
+        function filtrar() {
+            const termNome = inputNome.value.toLowerCase().trim();
+            const termTipo = selectTipo.value.toLowerCase();
+            const termStatus = selectStatus.value.toLowerCase();
 
-        // Mostra/oculta mensagem de vazio
-        semResultados.classList.toggle('d-none', visiveis > 0);
+            let visiveis = 0;
 
-        // Mostra/oculta botão de limpar
-        const filtroAtivo = termNome || termTipo || termStatus;
-        btnLimpar.classList.toggle('d-none', !filtroAtivo);
-    }
+            linhas.forEach(function (linha) {
+                const nome = linha.dataset.nome || '';
+                const email = linha.dataset.email || '';
+                const status = linha.dataset.status || '';
+                const tipo = linha.dataset.tipo.toLowerCase();
 
-    // ── Limpar filtros ──
-    btnLimpar.addEventListener('click', function () {
-        inputNome.value    = '';
-        selectTipo.value   = '';
-        selectStatus.value = '';
+                const nomeOk = !termNome || nome.includes(termNome) || email.includes(termNome);
+                const tipoOk = !termTipo || tipo.includes(termTipo);
+                const statusOk = !termStatus || status === termStatus;
+
+                if (nomeOk && tipoOk && statusOk) {
+                    linha.style.display = '';
+                    visiveis++;
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            // Atualiza contador
+            const total = linhas.length;
+            contador.textContent = visiveis === total
+                ? `${total} colaborador${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''}`
+                : `${visiveis} de ${total} colaborador${total !== 1 ? 'es' : ''} exibido${visiveis !== 1 ? 's' : ''}`;
+
+            // Mostra/oculta mensagem de vazio
+            semResultados.classList.toggle('d-none', visiveis > 0);
+
+            // Mostra/oculta botão de limpar
+            const filtroAtivo = termNome || termTipo || termStatus;
+            btnLimpar.classList.toggle('d-none', !filtroAtivo);
+        }
+
+        // ── Limpar filtros ──
+        btnLimpar.addEventListener('click', function () {
+            inputNome.value = '';
+            selectTipo.value = '';
+            selectStatus.value = '';
+            filtrar();
+        });
+
+        inputNome.addEventListener('input', filtrar);
+        selectTipo.addEventListener('change', filtrar);
+        selectStatus.addEventListener('change', filtrar);
+
+        // Inicializa o contador
         filtrar();
     });
-
-    inputNome.addEventListener('input',    filtrar);
-    selectTipo.addEventListener('change',  filtrar);
-    selectStatus.addEventListener('change', filtrar);
-
-    // Inicializa o contador
-    filtrar();
-});
 </script>
 {% endblock %}

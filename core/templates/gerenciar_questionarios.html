@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Questionários — Somnus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-5 gap-3">
+        <div>
+            <h1 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                    class="me-2 align-text-bottom">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Gestão de Questionários
+            </h1>
+            <p class="text-muted mb-0" style="font-size: 0.92rem;">
+                Crie, edite e configure as escalas dos questionários do sistema.
+            </p>
+        </div>
+        <a href="{% url 'nova_avaliacao' %}" id="btn-novo-questionario"
+            class="btn fw-bold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2 align-self-start align-self-md-center"
+            style="background-color: var(--somnus-blue-inst); color: white; border: none; white-space: nowrap;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Questionário
+        </a>
+    </div>
+
+
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3">
+        <div class="input-group" id="filter-group">
+            <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+            </span>
+            <input type="text" id="filtro-nome" class="form-control border-start-0 rounded-end-4 shadow-none"
+                placeholder="Buscar questionário pelo nome…" style="font-size: 0.9rem; border-color: #dee2e6;">
+        </div>
+    </div>
+
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-hover align-middle mb-0" id="tabela-questionarios">
+            <thead class="table-light">
+                <tr>
+                    <th class="fw-semibold py-3 px-4 text-black" style="width: 5%;">#</th>
+                    <th class="fw-semibold py-3 px-3 text-black">Nome do Questionário</th>
+                    <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell" style="width: 22%;">Criado em
+                    </th>
+                    <th class="fw-semibold py-3 px-3 text-black text-end" style="width: 22%;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-questionarios">
+                {% for quest in questionarios %}
+                <tr class="linha-questionario transition-row" data-nome="{{ quest.titulo|lower }}">
+                    <td class="px-4 text-muted" style="font-size: 0.85rem;">{{ forloop.counter }}</td>
+                    <td class="px-3">
+                        <span class="fw-semibold" style="color: var(--somnus-blue-deep); font-size: 0.95rem;">
+                            {{ quest.titulo }}
+                        </span>
+                        <!-- {% if quest.descricao %}
+                        <div class="text-muted mt-1" style="font-size: 0.78rem; line-height: 1.4;">
+                            {{ quest.descricao|truncatewords:18 }}
+                        </div>
+                        {% endif %} -->
+                    </td>
+                    <td class="px-3 text-muted d-none d-md-table-cell" style="font-size: 0.85rem;">
+                        {{ quest.data_criacao|date:"d/m/Y" }}
+                    </td>
+                    <td class="px-3 text-end">
+                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                            <a href="{% url 'editar_avaliacao' pk=quest.id %}" id="btn-editar-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
+                                style="border: 1.5px solid var(--somnus-blue-inst); color: var(--somnus-blue-inst); background: transparent; font-size: 0.8rem;"
+                                title="Editar questionário">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Editar
+                            </a>
+                            <a href="{% url 'configurar_escala' pk=quest.id %}" id="btn-escala-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
+                                style="border: 1.5px solid var(--somnus-green-dark); color: var(--somnus-green-dark); background: transparent; font-size: 0.8rem;"
+                                title="Configurar escalas">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Escalas
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="linha-vazia-inicial">
+                    <td colspan="4" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style="opacity: 0.35;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p class="mb-0" style="font-size: 0.9rem;">Nenhum questionário cadastrado.</p>
+                            <a href="{% url 'nova_avaliacao' %}"
+                                class="btn btn-sm btn-somnus rounded-pill px-3 mt-1">Criar o primeiro</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+
+        <div id="sem-resultado" class="text-center py-5 d-none">
+            <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+                <p class="mb-0" style="font-size: 0.88rem;">Nenhum questionário encontrado para "<strong
+                        id="termo-buscado"></strong>".</p>
+            </div>
+        </div>
+    </div>
+
+
+    <p class="text-muted mt-3 mb-0 text-end" style="font-size: 0.8rem;">
+        <span id="contador-visivel">{{ questionarios|length }}</span> questionário(s) exibido(s)
+    </p>
+
+</div>
+
+<style>
+    .transition-row {
+        transition: background-color 0.2s ease;
+    }
+
+    .table> :not(caption)>*>* {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    #filtro-nome:focus {
+        box-shadow: none;
+        border-color: var(--somnus-blue-inst) !important;
+    }
+
+    .btn[style*="somnus-blue-inst"]:hover {
+        background-color: var(--somnus-blue-inst) !important;
+        color: white !important;
+    }
+
+    .btn[style*="somnus-green-dark"]:hover {
+        background-color: var(--somnus-green-dark) !important;
+        color: white !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('filtro-nome');
+        const linhas = document.querySelectorAll('.linha-questionario');
+        const semResultado = document.getElementById('sem-resultado');
+        const contador = document.getElementById('contador-visivel');
+        const termoBuscado = document.getElementById('termo-buscado');
+
+        input.addEventListener('input', function () {
+            const termo = this.value.toLowerCase().trim();
+            let visiveis = 0;
+
+            linhas.forEach(function (linha) {
+                const nome = linha.getAttribute('data-nome');
+                if (nome.includes(termo)) {
+                    linha.style.display = '';
+                    visiveis++;
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            if (termoBuscado) termoBuscado.textContent = this.value;
+            contador.textContent = visiveis;
+
+            if (visiveis === 0 && termo.length > 0) {
+                semResultado.classList.remove('d-none');
+            } else {
+                semResultado.classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

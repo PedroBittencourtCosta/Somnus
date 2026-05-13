@@ -142,6 +142,17 @@ def lista_questionarios(request):
     })
 
 
+@login_required
+def gerenciar_questionarios(request):
+    """Tela de gestão centralizada de questionários (somente pesquisadores/staff)."""
+    questionarios = Questionario.objects.all().order_by('-data_criacao')
+    return render(request, 'gerenciar_questionarios.html', {
+        'questionarios': questionarios,
+    })
+
+
+
+
 
 @login_required
 def dashboard_respostas(request):
