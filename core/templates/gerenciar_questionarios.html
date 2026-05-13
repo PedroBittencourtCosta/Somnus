@@ -6,12 +6,10 @@
 {% block content %}
 <div class="container py-5">
 
-
     <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-5 gap-3">
         <div>
             <h1 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">
-                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    class="me-2 align-text-bottom">
+                <svg width="34" height="34" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
@@ -31,7 +29,6 @@
         </a>
     </div>
 
-
     <div class="card border-0 shadow-sm rounded-4 mb-4 p-3">
         <div class="input-group" id="filter-group">
             <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
@@ -45,7 +42,6 @@
         </div>
     </div>
 
-
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <table class="table table-hover align-middle mb-0" id="tabela-questionarios">
             <thead class="table-light">
@@ -54,7 +50,7 @@
                     <th class="fw-semibold py-3 px-3 text-black">Nome do Questionário</th>
                     <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell" style="width: 22%;">Criado em
                     </th>
-                    <th class="fw-semibold py-3 px-3 text-black text-end" style="width: 22%;">Ações</th>
+                    <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 22%;">Ações</th>
                 </tr>
             </thead>
             <tbody id="tbody-questionarios">
@@ -65,17 +61,12 @@
                         <span class="fw-semibold" style="color: var(--somnus-blue-deep); font-size: 0.95rem;">
                             {{ quest.titulo }}
                         </span>
-                        <!-- {% if quest.descricao %}
-                        <div class="text-muted mt-1" style="font-size: 0.78rem; line-height: 1.4;">
-                            {{ quest.descricao|truncatewords:18 }}
-                        </div>
-                        {% endif %} -->
                     </td>
                     <td class="px-3 text-muted d-none d-md-table-cell" style="font-size: 0.85rem;">
                         {{ quest.data_criacao|date:"d/m/Y" }}
                     </td>
-                    <td class="px-3 text-end">
-                        <div class="d-flex justify-content-end gap-2 flex-wrap">
+                    <td class="px-3">
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
                             <a href="{% url 'editar_avaliacao' pk=quest.id %}" id="btn-editar-{{ quest.id }}"
                                 class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
                                 style="border: 1.5px solid var(--somnus-blue-inst); color: var(--somnus-blue-inst); background: transparent; font-size: 0.8rem;"
@@ -120,7 +111,6 @@
             </tbody>
         </table>
 
-
         <div id="sem-resultado" class="text-center py-5 d-none">
             <div class="d-flex flex-column align-items-center gap-2 text-muted">
                 <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
@@ -132,7 +122,6 @@
             </div>
         </div>
     </div>
-
 
     <p class="text-muted mt-3 mb-0 text-end" style="font-size: 0.8rem;">
         <span id="contador-visivel">{{ questionarios|length }}</span> questionário(s) exibido(s)
