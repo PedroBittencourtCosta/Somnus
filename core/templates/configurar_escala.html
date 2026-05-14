@@ -43,6 +43,22 @@
             </button>
         </div>
 
+        <!-- Filtro de busca -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+            <div class="input-group" id="filtro-escala-group">
+                <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                    </svg>
+                </span>
+                <input type="text" id="filtro-nome-escala"
+                    class="form-control border-start-0 rounded-end-4 shadow-none"
+                    placeholder="Buscar escala pelo nome…"
+                    style="font-size: 0.9rem; border-color: #dee2e6;">
+            </div>
+        </div>
+
         <!-- Tabela -->
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
             <div class="table-responsive">
@@ -140,6 +156,11 @@
     const container = document.getElementById('templateCardsContainer');
 
     function renderizarLista() {
+        const termo = (document.getElementById('filtro-nome-escala')?.value || '').toLowerCase().trim();
+        const lista = termo
+            ? escalasTemplates.filter(t => t.nome.toLowerCase().includes(termo))
+            : escalasTemplates;
+
         container.innerHTML = '';
         if (escalasTemplates.length === 0) {
             container.innerHTML = `
@@ -154,8 +175,21 @@
                         </div>
                     </td>
                 </tr>`;
+        } else if (lista.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                            </svg>
+                            <p class="mb-0" style="font-size: 0.88rem;">Nenhuma escala encontrada para "<strong>${termo}</strong>".</p>
+                        </div>
+                    </td>
+                </tr>`;
         } else {
-            escalasTemplates.forEach(t => {
+            lista.forEach(t => {
                 const isLinked = t.is_linked;
                 const row = document.createElement('tr');
                 row.className = 'align-middle transition-row' + (isLinked ? '' : ' row-nao-vinculada');
@@ -216,6 +250,9 @@
     }
 
     renderizarLista();
+
+    // Filtro de busca em tempo real
+    document.getElementById('filtro-nome-escala').addEventListener('input', renderizarLista);
 
     window.toggleVincular = function (id, currentlyLinked) {
         const acao = currentlyLinked ? 'desvincular' : 'vincular';
