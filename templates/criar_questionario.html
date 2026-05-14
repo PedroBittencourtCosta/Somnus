@@ -487,7 +487,7 @@
                 const v = tipoSelect.value;
                 altWrapper.classList.toggle('d-none', v === 'TX');
                 configContainer.classList.toggle('d-none', v !== 'MX');
-                mascContainer.classList.toggle('d-none', v !== 'TX');
+                mascContainer.classList.toggle('d-none', v !== 'TX' && v !== 'MX');
             }
             tipoSelect.addEventListener('change', updateTipos);
             updateTipos();

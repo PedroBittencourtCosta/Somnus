@@ -526,9 +526,9 @@
                         escalasTemplates.push({
                             id: currentEscalaId,
                             nome: data.nome,
-                            questionario_id: parseInt('{{ questionario.id }}', 10),
-                            questionario_titulo: '{{ questionario.titulo }}',
-                            config: payload.config_dinamica
+                            strategy_class: payload.strategy_class,
+                            is_linked: true,
+                            config: payload.config_dinamica || {}
                         });
                     }
                     renderizarLista();
