@@ -7,6 +7,87 @@
         <p class="text-muted">Lista de participações e submissões nos questionários.</p>
     </div>
 
+    {# ── Barra de Filtros ── #}
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4">
+        <form method="get" id="filtro-form" class="d-flex flex-wrap gap-3 align-items-end">
+
+            {# Filtro: Questionário #}
+            <div class="flex-grow-1" style="min-width: 220px;">
+                <label class="form-label fw-semibold mb-1" for="filtro-questionario"
+                    style="font-size: 0.82rem; color: var(--somnus-blue-deep); letter-spacing: 0.02em;">
+                    Questionário
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </span>
+                    <select id="filtro-questionario" name="questionario"
+                        class="form-select border-start-0 rounded-end-4 shadow-none"
+                        style="font-size: 0.9rem; border-color: #dee2e6;"
+                        onchange="this.form.submit()">
+                        <option value="">Todos os questionários</option>
+                        {% for q in questionarios %}
+                        <option value="{{ q.pk }}" {% if filtro_questionario == q.pk|stringformat:"s" %}selected{% endif %}>
+                            {{ q.titulo }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {# Filtro: Ordenação por data #}
+            <div>
+                <label class="form-label fw-semibold mb-1 d-block"
+                    style="font-size: 0.82rem; color: var(--somnus-blue-deep); letter-spacing: 0.02em;">
+                    Ordenar por data
+                </label>
+                <div class="d-flex gap-2">
+                    <a href="?questionario={{ filtro_questionario }}&ordem=desc"
+                        id="btn-ordem-desc"
+                        class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 btn-ordenar
+                            {% if filtro_ordem == 'desc' %}btn-ativo{% endif %}"
+                        title="Mais recentes primeiro">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                                d="M19 9l-7 7-7-7"/>
+                        </svg>
+                        Mais recente
+                    </a>
+                    <a href="?questionario={{ filtro_questionario }}&ordem=asc"
+                        id="btn-ordem-asc"
+                        class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 btn-ordenar
+                            {% if filtro_ordem == 'asc' %}btn-ativo{% endif %}"
+                        title="Mais antigos primeiro">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                                d="M5 15l7-7 7 7"/>
+                        </svg>
+                        Mais antigo
+                    </a>
+                </div>
+            </div>
+
+            {# Limpar filtros #}
+            {% if filtro_questionario or filtro_ordem != 'desc' %}
+            <div class="ms-auto align-self-end">
+                <a href="{% url 'dashboard_respostas' %}"
+                    class="btn btn-sm rounded-pill px-3 fw-semibold d-inline-flex align-items-center gap-1"
+                    style="border: 1.5px solid #6b7280; color: #6b7280; background: transparent; font-size: 0.82rem;">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    Limpar filtros
+                </a>
+            </div>
+            {% endif %}
+
+        </form>
+    </div>
+
+    {# ── Tabela de Respostas ── #}
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
@@ -14,7 +95,20 @@
                     <tr>
                         <th class="px-4 py-3">Usuário</th>
                         <th class="py-3">Questionário</th>
-                        <th class="py-3">Data da Resposta</th>
+                        <th class="py-3">
+                            <span class="d-inline-flex align-items-center gap-1">
+                                Data da Resposta
+                                {% if filtro_ordem == 'asc' %}
+                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.55;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
+                                </svg>
+                                {% else %}
+                                <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.55;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                                </svg>
+                                {% endif %}
+                            </span>
+                        </th>
                         <th class="text-center py-3">Ações</th>
                     </tr>
                 </thead>
@@ -26,7 +120,6 @@
                                 <i class="bi bi-shield-lock-fill text-success me-1" style="font-size: 0.8rem;"></i>
                                 {{ resposta.codigo_paciente }}
                             </div>
-                            <!-- <div class="small text-muted">{{ resposta.paciente_nome }}</div> -->
                         </td>
                         <td class="px-4 py-4">
                             <span class="badge rounded-pill bg-light text-primary border px-3">
@@ -45,7 +138,15 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5 text-muted">Nenhuma resposta encontrada.</td>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                                <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                </svg>
+                                <p class="mb-0" style="font-size: 0.9rem;">Nenhuma resposta encontrada para os filtros selecionados.</p>
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -53,23 +154,70 @@
         </div>
     </div>
 
+    {# ── Paginação ── #}
     {% if respostas.has_other_pages %}
     <nav>
         <ul class="pagination justify-content-center">
             {% if respostas.has_previous %}
-            <li class="page-item"><a class="page-link rounded-pill me-2"
-                    href="?page={{ respostas.previous_page_number }}">Anterior</a></li>
+            <li class="page-item">
+                <a class="page-link rounded-pill me-2"
+                    href="?questionario={{ filtro_questionario }}&ordem={{ filtro_ordem }}&page={{ respostas.previous_page_number }}">
+                    Anterior
+                </a>
+            </li>
             {% endif %}
 
-            <li class="page-item active"><span class="page-link rounded-pill shadow-sm">{{ respostas.number }}</span>
+            <li class="page-item active">
+                <span class="page-link rounded-pill shadow-sm">{{ respostas.number }}</span>
             </li>
 
             {% if respostas.has_next %}
-            <li class="page-item"><a class="page-link rounded-pill ms-2"
-                    href="?page={{ respostas.next_page_number }}">Próxima</a></li>
+            <li class="page-item">
+                <a class="page-link rounded-pill ms-2"
+                    href="?questionario={{ filtro_questionario }}&ordem={{ filtro_ordem }}&page={{ respostas.next_page_number }}">
+                    Próxima
+                </a>
+            </li>
             {% endif %}
         </ul>
     </nav>
     {% endif %}
 </div>
+
+<style>
+    /* Botões de ordenação */
+    .btn-ordenar {
+        border: 1.5px solid #dee2e6;
+        color: #6b7280;
+        background: transparent;
+        font-size: 0.82rem;
+        transition: all 0.18s ease;
+    }
+
+    .btn-ordenar:hover {
+        border-color: var(--somnus-blue-inst);
+        color: var(--somnus-blue-inst);
+        background: rgba(0, 103, 177, 0.05);
+    }
+
+    .btn-ordenar.btn-ativo {
+        background-color: var(--somnus-blue-inst);
+        border-color: var(--somnus-blue-inst);
+        color: #fff;
+    }
+
+    .btn-ordenar.btn-ativo:hover {
+        filter: brightness(1.08);
+        color: #fff;
+    }
+
+    /* Hover na tabela */
+    .table > :not(caption) > * > * {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover > tbody > tr:hover > * {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+</style>
 {% endblock %}

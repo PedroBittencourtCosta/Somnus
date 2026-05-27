@@ -168,15 +168,31 @@ def desativar_questionario(request, pk):
 
 @login_required
 def dashboard_respostas(request):
-    # Ordenação decrescente por data de submissão
-    respostas_list = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all().order_by('-data_submissao')
-    
+    # --- Filtros via GET ---
+    questionario_id = request.GET.get('questionario', '')
+    ordem = request.GET.get('ordem', 'desc')  # 'desc' = mais recente | 'asc' = mais antigo
+
+    qs = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all()
+
+    if questionario_id:
+        qs = qs.filter(questionario_id=questionario_id)
+
+    qs = qs.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
+
     # Paginação: 10 itens por página
-    paginator = Paginator(respostas_list, 10)
+    paginator = Paginator(qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
+
+    # Lista de questionários para popular o select de filtro
+    questionarios = Questionario.objects.order_by('titulo')
+
+    return render(request, 'dashboard_respostas.html', {
+        'respostas': page_obj,
+        'questionarios': questionarios,
+        'filtro_questionario': questionario_id,
+        'filtro_ordem': ordem,
+    })
 
 
 
