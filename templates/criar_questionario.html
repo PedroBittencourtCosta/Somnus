@@ -622,13 +622,7 @@
                     <label class="builder-label">Título da Seção</label>
                     <input type="text" class="builder-input s-titulo" placeholder="Ex: Dados Demográficos">
                 </div>
-                <div class="col-md-4">
-                    <label class="builder-label">Layout de Exibição</label>
-                    <select class="builder-input meta-select s-layout" style="height:auto;">
-                        <option value="LISTA">📋 Lista Vertical</option>
-                        <option value="TABELA">📊 Tabela (Matriz)</option>
-                    </select>
-                </div>
+
                 <div class="col-12">
                     <label class="builder-label">Instruções da Seção
                         <span style="font-weight:400; color:#94a3b8;">(opcional)</span>
@@ -660,10 +654,15 @@
             <input type="hidden" class="p-id" value="">
 
             {# Linha principal: drag handle + input da pergunta + remover #}
-            <div class="pergunta-header-row">
+            <div class="pergunta-header-row" style="cursor: pointer;">
                 <span class="drag-handle-p" title="Arrastar Pergunta" style="margin-top:0.45rem;">
                     <svg width="16" height="16" fill="#cbd5e1" viewBox="0 0 16 16">
                         <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                    </svg>
+                </span>
+                <span class="chevron-icon-p" style="margin-top:0.45rem; color: #94a3b8; transition: transform 0.25s ease;">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </span>
                 <div class="flex-grow-1">
@@ -678,71 +677,74 @@
                 </button>
             </div>
 
-            {# Metadados da pergunta #}
-            <div class="pergunta-meta-row">
-                <div class="meta-field">
-                    <label>Tipo</label>
-                    <select class="meta-select p-tipo">
-                        <option value="MC">Múltipla Escolha</option>
-                        <option value="TX">Texto Livre</option>
-                        <option value="MX">Mista (Opção + Texto)</option>
-                    </select>
-                </div>
+            <div class="pergunta-body">
+                {# Metadados da pergunta #}
+                <div class="pergunta-meta-row">
+                    <div class="meta-field">
+                        <label>Tipo</label>
+                        <select class="meta-select p-tipo">
+                            <option value="MC">Múltipla Escolha</option>
+                            <option value="TX">Texto Livre</option>
+                            <option value="MX">Mista (Opção + Texto)</option>
+                        </select>
+                    </div>
 
-                <div class="meta-field p-config-container d-none">
-                    <label>Lógica Mista</label>
-                    <select class="meta-select p-config">
-                        <option value="QUALQUER">Um ou Outro</option>
-                        <option value="AMBOS">Ambos Obrigatórios</option>
-                        <option value="APENAS_OPCAO">Opção Obrigatória</option>
-                        <option value="APENAS_TEXTO">Texto Obrigatório</option>
-                    </select>
-                </div>
+                    <div class="meta-field p-config-container d-none">
+                        <label>Lógica Mista</label>
+                        <select class="meta-select p-config">
+                            <option value="QUALQUER">Um ou Outro</option>
+                            <option value="AMBOS">Ambos Obrigatórios</option>
+                            <option value="APENAS_OPCAO">Opção Obrigatória</option>
+                            <option value="APENAS_TEXTO">Texto Obrigatório</option>
+                        </select>
+                    </div>
 
-                <div class="meta-field p-mascara-container d-none">
-                    <label>Máscara</label>
-                    <select class="meta-select p-mascara">
-                        <option value="NENHUMA">Nenhuma</option>
-                        <option value="HORA">Hora (00:00)</option>
-                        <option value="ALTURA">Altura (m)</option>
-                        <option value="PESO">Peso (kg)</option>
-                        <option value="DATA">Data</option>
-                        <option value="OUTRO">Outro</option>
-                    </select>
-                </div>
+                    <div class="meta-field p-mascara-container d-none">
+                        <label>Máscara</label>
+                        <select class="meta-select p-mascara">
+                            <option value="NENHUMA">Nenhuma</option>
+                            <option value="HORA">Hora (00:00)</option>
+                            <option value="ALTURA">Altura (m)</option>
+                            <option value="PESO">Peso (kg)</option>
+                            <option value="DATA">Data</option>
+                            <option value="OUTRO">Outro</option>
+                        </select>
+                    </div>
 
-                <div class="meta-field">
-                    <label>Identificador</label>
-                    <input type="text" class="meta-input p-identificador" placeholder="ex: p1_idade" style="width:130px;">
-                </div>
+                    <div class="meta-field">
+                        <label>Identificador</label>
+                        <input type="text" class="meta-input p-identificador" placeholder="ex: p1_idade" style="width:130px;">
+                    </div>
 
-                <div class="obrigatoria-toggle">
-                    <div class="form-check form-switch mb-0">
-                        <input class="form-check-input p-obrigatoria" type="checkbox" checked
-                            style="cursor:pointer;">
-                        <label class="form-check-label" style="font-size:0.75rem; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">
-                            Obrigatória
-                        </label>
+                    <div class="obrigatoria-toggle">
+                        <div class="form-check form-switch mb-0">
+                            <input class="form-check-input p-obrigatoria" type="checkbox" checked
+                                style="cursor:pointer;">
+                            <label class="form-check-label" style="font-size:0.75rem; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">
+                                Obrigatória
+                            </label>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        {# Alternativas #}
-        <div class="alternativas-wrapper d-none">
-            <p class="mb-2" style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">
-                Alternativas de Resposta
-            </p>
-            <div class="alternativas-container d-flex flex-column gap-2 mb-2">
-                {# Alternativas renderizadas pelo JS #}
-            </div>
-            <button type="button" class="btn-add-alternativa">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:3px;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-                </svg>
-                Adicionar Alternativa
-            </button>
-        </div>
+                {# Alternativas #}
+                <div class="alternativas-wrapper d-none">
+                    <p class="mb-2" style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">
+                        Alternativas de Resposta
+                    </p>
+                    <div class="alternativas-container d-flex flex-column gap-2 mb-2">
+                        {# Alternativas renderizadas pelo JS #}
+                    </div>
+                    <button type="button" class="btn-add-alternativa">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:3px;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Adicionar Alternativa
+                    </button>
+                </div>
+
+            </div> <!-- End pergunta-body -->
+        </div> <!-- End pergunta-block-inner -->
     </div>
 </template>
 
@@ -910,7 +912,6 @@
             const tituloInput = secEl.querySelector('.s-titulo');
             tituloInput.value = dados.titulo || '';
             secEl.querySelector('.s-instrucao').value = dados.instrucao || '';
-            if (dados.layout) secEl.querySelector('.s-layout').value = dados.layout;
 
             // Atualiza Titulo no Header em tempo real
             const tituloVisor = secEl.querySelector('.secao-titulo-header');
@@ -1011,6 +1012,21 @@
             // Habilitar DnD das Alternativas
             initContainerDnD(containerAlt, 'alternativa-block');
 
+            // Accordion Pergunta
+            const pHeader = pEl.querySelector('.pergunta-header-row');
+            const pBody = pEl.querySelector('.pergunta-body');
+            const pChevron = pEl.querySelector('.chevron-icon-p');
+
+            pHeader.addEventListener('click', (e) => {
+                if (e.target.closest('.drag-handle-p') || e.target.closest('.btn-remove-pergunta') || e.target.tagName.toLowerCase() === 'input') return;
+                pBody.classList.toggle('d-none');
+                if (pBody.classList.contains('d-none')) {
+                    pChevron.style.transform = 'rotate(-90deg)';
+                } else {
+                    pChevron.style.transform = 'rotate(0deg)';
+                }
+            });
+
             // Eventos Pergunta
             pEl.querySelector('.btn-remove-pergunta').addEventListener('click', () => pEl.remove());
             pEl.querySelector('.btn-add-alternativa').addEventListener('click', () => renderAlternativa({}, containerAlt));
@@ -1058,7 +1074,7 @@
                     id: secEl.querySelector('.s-id').value || null,
                     titulo: secEl.querySelector('.s-titulo').value.trim(),
                     instrucao: secEl.querySelector('.s-instrucao').value.trim(),
-                    layout: secEl.querySelector('.s-layout').value,
+                    layout: "LISTA",
                     perguntas: []
                 };
 
