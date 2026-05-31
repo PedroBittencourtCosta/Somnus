@@ -1,27 +1,175 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Construtor de Questionário - Somnus{% endblock %}
+{% block title %}Construtor de Questionário — Somnus{% endblock %}
 
 {% block content %}
 <style>
+    /* ── Layout geral ──────────────────────────────── */
+    .builder-wrapper {
+        background-color: #f4f6fb;
+        min-height: 100vh;
+        padding: 2rem 0 4rem;
+    }
+
+    /* ── Header sticky ─────────────────────────────── */
+    .builder-topbar {
+        position: sticky;
+        top: 56px; /* altura da navbar */
+        z-index: 100;
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(37, 55, 134, 0.08);
+        padding: 0.85rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .builder-topbar-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .builder-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: var(--somnus-blue-deep);
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin: 0;
+    }
+
+    /* ── Card de informações gerais ─────────────────── */
+    .meta-card {
+        background: #ffffff;
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 1px 4px rgba(37, 55, 134, 0.07), 0 4px 20px rgba(37, 55, 134, 0.05);
+        padding: 1.75rem 2rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .meta-card-label {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: var(--somnus-blue-inst);
+        margin-bottom: 1.25rem;
+    }
+
+    .meta-card-label::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(0,103,177,0.2), transparent);
+    }
+
+    .builder-input {
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.65rem;
+        padding: 0.7rem 1rem;
+        font-size: 0.95rem;
+        background: #fafbfd;
+        transition: border-color 0.18s, box-shadow 0.18s;
+        width: 100%;
+    }
+
+    .builder-input:focus {
+        outline: none;
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 3px rgba(0, 103, 177, 0.1);
+        background: #fff;
+    }
+
+    .builder-input-lg {
+        font-size: 1.1rem;
+        font-weight: 600;
+        padding: 0.9rem 1.1rem;
+        color: var(--somnus-blue-deep);
+    }
+
+    .builder-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #64748b;
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    /* ── Seção ──────────────────────────────────────── */
     .secao-block {
-        border-left: 4px solid var(--somnus-blue-deep);
+        background: #ffffff;
+        border: none;
+        border-radius: 1rem;
+        box-shadow: 0 1px 4px rgba(37, 55, 134, 0.07), 0 4px 20px rgba(37, 55, 134, 0.05);
+        overflow: hidden;
+        transition: box-shadow 0.2s;
     }
 
-    .pergunta-block {
-        border-left: 3px solid #6c757d;
-        background-color: #fdfdfd;
+    .secao-block:hover {
+        box-shadow: 0 2px 8px rgba(37, 55, 134, 0.1), 0 8px 30px rgba(37, 55, 134, 0.08);
     }
 
-    .alternativa-block {
-        border-left: 2px solid #adb5bd;
+    .secao-header {
+        cursor: pointer;
+        user-select: none;
+        background: linear-gradient(135deg, var(--somnus-blue-deep) 0%, var(--somnus-blue-inst) 100%);
+        padding: 1rem 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+    }
+
+    .secao-header:hover {
+        background: linear-gradient(135deg, #1e2d70 0%, #0059a0 100%) !important;
+    }
+
+    .secao-header-left {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        min-width: 0;
+    }
+
+    .secao-numero {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.2);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border: 1.5px solid rgba(255,255,255,0.3);
+    }
+
+    .secao-titulo-header {
+        color: #ffffff;
+        font-size: 0.95rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .drag-handle,
     .drag-handle-p,
     .drag-handle-a {
         cursor: grab;
+        color: rgba(255,255,255,0.6);
+        flex-shrink: 0;
     }
 
     .drag-handle:active,
@@ -30,224 +178,593 @@
         cursor: grabbing;
     }
 
-    .dragging {
-        opacity: 0.5;
-        background-color: #f8f9fa !important;
-        border: 2px dashed #adb5bd !important;
+    .drag-handle-p,
+    .drag-handle-a {
+        color: #cbd5e1;
     }
 
-    .secao-header {
+    .chevron-icon {
+        display: inline-block;
+        color: rgba(255,255,255,0.8);
+        transition: transform 0.25s ease;
+    }
+
+    .btn-remove-secao {
+        background: rgba(255,255,255,0.12);
+        border: 1px solid rgba(255,255,255,0.25) !important;
+        color: rgba(255,255,255,0.85) !important;
+        border-radius: 0.5rem !important;
+        font-size: 0.78rem !important;
+        padding: 0.3rem 0.75rem !important;
+        white-space: nowrap;
+        flex-shrink: 0;
+        transition: all 0.18s;
+    }
+
+    .btn-remove-secao:hover {
+        background: rgba(220, 38, 38, 0.5) !important;
+        border-color: rgba(220, 38, 38, 0.4) !important;
+        color: #fff !important;
+    }
+
+    .secao-body {
+        padding: 1.5rem 1.5rem 1rem;
+        background: #fff;
+    }
+
+    /* ── Pergunta ────────────────────────────────────── */
+    .pergunta-block {
+        background: #fafbfd;
+        border: 1.5px solid #e8edf5;
+        border-radius: 0.75rem;
+        transition: border-color 0.18s, box-shadow 0.18s;
+        overflow: hidden;
+    }
+
+    .pergunta-block:hover {
+        border-color: #c7d4ea;
+        box-shadow: 0 2px 10px rgba(37, 55, 134, 0.06);
+    }
+
+    .pergunta-block-inner {
+        padding: 1rem 1rem 0.75rem;
+    }
+
+    .pergunta-header-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .btn-remove-pergunta {
+        flex-shrink: 0;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        padding: 0.3rem;
+        border-radius: 0.4rem;
+        line-height: 1;
+        font-size: 0.9rem;
+        transition: color 0.15s, background 0.15s;
+    }
+
+    .btn-remove-pergunta:hover {
+        color: #dc2626;
+        background: rgba(220, 38, 38, 0.08);
+    }
+
+    .pergunta-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+        align-items: flex-end;
+        padding-top: 0.6rem;
+        border-top: 1px solid #eef1f7;
+        margin-top: 0.5rem;
+    }
+
+    .meta-field {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .meta-field label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin-bottom: 0.25rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .meta-select,
+    .meta-input {
+        font-size: 0.8rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.35rem 0.65rem;
+        background: #fff;
+        color: var(--somnus-blue-deep);
+        font-weight: 500;
+        transition: border-color 0.15s;
+        height: 32px;
+    }
+
+    .meta-select:focus,
+    .meta-input:focus {
+        outline: none;
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 2px rgba(0, 103, 177, 0.1);
+    }
+
+    .tipo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        padding: 0.25rem 0.65rem;
+        border-radius: 0.4rem;
+    }
+
+    .obrigatoria-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-left: auto;
+    }
+
+    .obrigatoria-toggle label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
+        margin: 0;
         cursor: pointer;
-        user-select: none;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
     }
 
-    .secao-header:hover {
-        background-color: #f8f9fa !important;
+    /* ── Alternativa ─────────────────────────────────── */
+    .alternativas-wrapper {
+        background: #f0f4fb;
+        border-top: 1.5px solid #e8edf5;
+        padding: 0.75rem 1rem;
+    }
+
+    .alternativa-block {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: #fff;
+        border: 1.5px solid #e8edf5;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.6rem;
+        margin-bottom: 0.4rem;
+        transition: border-color 0.15s;
+    }
+
+    .alternativa-block:hover {
+        border-color: #c7d4ea;
+    }
+
+    .alt-numero {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--somnus-blue-deep);
+        color: #fff;
+        font-size: 0.68rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    .btn-remove-alt {
+        background: transparent;
+        border: none;
+        color: #cbd5e1;
+        padding: 0.2rem;
+        border-radius: 0.3rem;
+        font-size: 0.8rem;
+        line-height: 1;
+        flex-shrink: 0;
+        transition: color 0.15s;
+    }
+
+    .btn-remove-alt:hover {
+        color: #dc2626;
+    }
+
+    .btn-add-alternativa {
+        font-size: 0.8rem;
+        color: var(--somnus-blue-inst) !important;
+        font-weight: 600;
+        padding: 0.3rem 0;
+        background: none;
+        border: none;
+        text-decoration: none;
+        cursor: pointer;
+        transition: opacity 0.15s;
+    }
+
+    .btn-add-alternativa:hover {
+        opacity: 0.7;
+    }
+
+    /* ── Botão Adicionar Pergunta ─────────────────────── */
+    .btn-add-pergunta {
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: var(--somnus-blue-inst);
+        background: rgba(0, 103, 177, 0.05);
+        border: 1.5px dashed rgba(0, 103, 177, 0.3);
+        border-radius: 0.6rem;
+        padding: 0.5rem 1.25rem;
+        width: 100%;
+        text-align: center;
+        margin-top: 0.75rem;
+        transition: all 0.18s;
+        cursor: pointer;
+    }
+
+    .btn-add-pergunta:hover {
+        background: rgba(0, 103, 177, 0.1);
+        border-color: rgba(0, 103, 177, 0.5);
+        color: var(--somnus-blue-deep);
+    }
+
+    /* ── Botão Adicionar Seção ───────────────────────── */
+    .btn-add-secao-wrapper {
+        text-align: center;
+        margin: 2rem 0 3rem;
+    }
+
+    #btn-add-secao {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: #fff;
+        color: var(--somnus-blue-deep);
+        border: 2px solid var(--somnus-blue-deep);
+        border-radius: 2rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.7rem 2rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        box-shadow: 0 2px 8px rgba(37, 55, 134, 0.1);
+    }
+
+    #btn-add-secao:hover {
+        background: var(--somnus-blue-deep);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 55, 134, 0.2);
+    }
+
+    /* ── DnD estado ──────────────────────────────────── */
+    .dragging {
+        opacity: 0.45;
+        border: 2px dashed var(--somnus-blue-inst) !important;
+        background: rgba(0, 103, 177, 0.03) !important;
+        box-shadow: none !important;
+    }
+
+    /* ── Inputs focus global ─────────────────────────── */
+    .form-control:focus,
+    .form-select:focus {
+        border-color: var(--somnus-blue-inst) !important;
+        box-shadow: 0 0 0 3px rgba(0, 103, 177, 0.1) !important;
+    }
+
+    /* ── Botões da topbar ────────────────────────────── */
+    .btn-cancelar {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #64748b;
+        background: transparent;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.65rem;
+        padding: 0.55rem 1.25rem;
+        text-decoration: none;
+        transition: all 0.18s;
+    }
+
+    .btn-cancelar:hover {
+        border-color: #94a3b8;
+        color: #374151;
+        background: #f8fafc;
+    }
+
+    .btn-salvar {
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #fff;
+        background: var(--somnus-blue-deep);
+        border: none;
+        border-radius: 0.65rem;
+        padding: 0.55rem 1.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.18s;
+        box-shadow: 0 2px 8px rgba(37, 55, 134, 0.25);
+    }
+
+    .btn-salvar:hover {
+        background: var(--somnus-blue-inst);
+        box-shadow: 0 4px 16px rgba(37, 55, 134, 0.3);
+        transform: translateY(-1px);
+    }
+
+    /* ── Perguntas gap container ─────────────────────── */
+    .perguntas-container {
+        display: flex;
+        flex-column: column;
+        gap: 0.6rem;
     }
 </style>
 
-<div class="container py-4">
-    <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-        <h2 class="fw-bold mb-0 text-primary" style="color: var(--somnus-blue-deep) !important;">
-            <svg width="32" height="32" fill="none" class="me-2" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                </path>
-            </svg>
-            <span id="modo-texto">Novo Questionário</span>
-        </h2>
-        <div class="d-flex gap-2">
-            <a href="{% url 'gerenciar_questionarios' %}" class="btn btn-outline-secondary">Cancelar</a>
-            <button id="btn-save" class="btn btn-primary px-4 fw-semibold"
-                style="background-color: var(--somnus-blue-deep); border: none;">
-                Salvar Questionário
-            </button>
+<div class="builder-wrapper">
+
+    {# ── Topbar sticky ── #}
+    <div class="builder-topbar">
+        <div class="container">
+            <div class="builder-topbar-inner">
+                <h2 class="builder-title">
+                    <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    <span id="modo-texto">Novo Questionário</span>
+                </h2>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'gerenciar_questionarios' %}" class="btn-cancelar">Cancelar</a>
+                    <button id="btn-save" class="btn-salvar">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Salvar Questionário
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Meta Info -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body">
-            <h5 class="card-title fw-bold text-secondary mb-3">Informações Gerais</h5>
-            <div class="mb-3">
-                <label class="form-label fw-bold">Título do Questionário <span class="text-danger">*</span></label>
-                <input type="text" id="q_titulo" class="form-control form-control-lg"
-                    placeholder="Ex: Avaliação Inicial de Saúde Mental" required>
+    <div class="container">
+
+        {# ── Card de Informações Gerais ── #}
+        <div class="meta-card">
+            <div class="meta-card-label">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Informações Gerais
             </div>
-            <div class="mb-3">
-                <label class="form-label fw-bold">Descrição / Introdução</label>
-                <textarea id="q_descricao" class="form-control" rows="3"
+
+            <div class="mb-4">
+                <label class="builder-label" for="q_titulo">
+                    Título do Questionário <span style="color:#dc2626;">*</span>
+                </label>
+                <input type="text" id="q_titulo"
+                    class="builder-input builder-input-lg"
+                    placeholder="Ex: Avaliação Inicial de Saúde Mental"
+                    required>
+            </div>
+            <div>
+                <label class="builder-label" for="q_descricao">Descrição / Introdução</label>
+                <textarea id="q_descricao" rows="3"
+                    class="builder-input"
+                    style="resize: vertical;"
                     placeholder="Instruções visíveis para o paciente sobre como o questionário deve ser preenchido..."></textarea>
             </div>
         </div>
-    </div>
 
-    <!-- Container de Seções -->
-    <div id="secoes-container" class="d-flex flex-column gap-4">
-        <!-- JS injetará as seções aqui -->
-    </div>
+        {# ── Container de Seções ── #}
+        <div id="secoes-container" class="d-flex flex-column gap-3">
+            {# JS injetará as seções aqui #}
+        </div>
 
-    <div class="text-center mt-5 mb-5">
-        <button id="btn-add-secao" class="btn btn-outline-primary rounded-pill px-4 py-2 border-2 fw-bold"
-            style="color: var(--somnus-blue-deep); border-color: var(--somnus-blue-deep);">
-            + Adicionar Nova Seção
-        </button>
+        <div class="btn-add-secao-wrapper">
+            <button id="btn-add-secao" type="button">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                Adicionar Nova Seção
+            </button>
+        </div>
+
     </div>
 </div>
 
-<!-- ================= TEMPLATES ================= -->
+{# ================= TEMPLATES ================= #}
 
 <template id="tpl-secao">
-    <div class="card shadow-sm border-0 secao-block position-relative">
-        <div
-            class="card-header secao-header bg-white border-bottom-0 d-flex justify-content-between align-items-center pt-3 pb-3">
-            <h5 class="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                <span class="drag-handle text-muted me-1 px-1" title="Arrastar Seção">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+    <div class="secao-block position-relative">
+        {# Header da seção #}
+        <div class="secao-header">
+            <div class="secao-header-left">
+                <span class="drag-handle" title="Arrastar Seção">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
                     </svg>
                 </span>
-                <span class="chevron-icon d-inline-block transition text-primary me-2"
-                    style="transition: transform 0.3s; transform: rotate(0deg);">
-                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                <span class="chevron-icon">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </span>
                 <span class="secao-titulo-header">Nova Seção</span>
-            </h5>
-            <button type="button" class="btn btn-sm btn-outline-danger btn-remove-secao border-0" title="Remover Seção">
-                Remover Seção
+            </div>
+            <button type="button" class="btn btn-remove-secao" title="Remover Seção">
+                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:3px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+                Remover
             </button>
         </div>
-        <div class="card-body secao-body">
+
+        {# Body da seção #}
+        <div class="secao-body">
             <input type="hidden" class="s-id" value="">
-            <div class="row g-3 mb-3">
+
+            {# Campos de configuração da seção #}
+            <div class="row g-3 mb-4">
                 <div class="col-md-8">
-                    <label class="form-label small fw-bold text-secondary">Título da Seção</label>
-                    <input type="text" class="form-control s-titulo" placeholder="Ex: Dados Demográficos">
+                    <label class="builder-label">Título da Seção</label>
+                    <input type="text" class="builder-input s-titulo" placeholder="Ex: Dados Demográficos">
                 </div>
                 <div class="col-md-4">
-                    <label class="form-label small fw-bold text-secondary">Layout</label>
-                    <select class="form-select s-layout">
-                        <option value="LISTA">Lista Vertical</option>
-                        <option value="TABELA">Tabela (Matriz)</option>
+                    <label class="builder-label">Layout de Exibição</label>
+                    <select class="builder-input meta-select s-layout" style="height:auto;">
+                        <option value="LISTA">📋 Lista Vertical</option>
+                        <option value="TABELA">📊 Tabela (Matriz)</option>
                     </select>
                 </div>
                 <div class="col-12">
-                    <label class="form-label small fw-bold text-secondary">Instruções da Seção</label>
-                    <textarea class="form-control form-control-sm s-instrucao" rows="1"
-                        placeholder="Ex: Responda as perguntas circulando..."></textarea>
+                    <label class="builder-label">Instruções da Seção
+                        <span style="font-weight:400; color:#94a3b8;">(opcional)</span>
+                    </label>
+                    <textarea class="builder-input s-instrucao" rows="2"
+                        placeholder="Ex: Para cada item abaixo, marque a opção que melhor descreve você..."
+                        style="resize: vertical;"></textarea>
                 </div>
             </div>
 
-            <div class="perguntas-container d-flex flex-column gap-3 mt-4 ps-2 pe-1">
-                <!-- Perguntas da seção -->
+            {# Perguntas #}
+            <div class="perguntas-container d-flex flex-column gap-3 pe-1">
+                {# JS injetará as perguntas aqui #}
             </div>
 
-            <div class="mt-3 ps-2">
-                <button type="button" class="btn btn-sm btn-light text-primary fw-semibold btn-add-pergunta border">
-                    + Adicionar Pergunta
-                </button>
-            </div>
+            <button type="button" class="btn-add-pergunta">
+                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:4px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                Adicionar Pergunta
+            </button>
         </div>
     </div>
 </template>
 
 <template id="tpl-pergunta">
-    <div class="card pergunta-block shadow-sm">
-        <div class="card-body p-3">
+    <div class="pergunta-block">
+        <div class="pergunta-block-inner">
             <input type="hidden" class="p-id" value="">
-            <div class="d-flex justify-content-between align-items-start mb-2">
-                <div class="d-flex align-items-center gap-2 w-100 me-3">
-                    <span class="drag-handle-p text-muted px-1" title="Arrastar Pergunta">
-                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
-                            <path
-                                d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
-                        </svg>
-                    </span>
-                    <div class="flex-grow-1">
-                        <input type="text" class="form-control p-conteudo fw-medium" placeholder="Digite a pergunta..."
-                            required>
-                    </div>
+
+            {# Linha principal: drag handle + input da pergunta + remover #}
+            <div class="pergunta-header-row">
+                <span class="drag-handle-p" title="Arrastar Pergunta" style="margin-top:0.45rem;">
+                    <svg width="16" height="16" fill="#cbd5e1" viewBox="0 0 16 16">
+                        <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+                    </svg>
+                </span>
+                <div class="flex-grow-1">
+                    <input type="text" class="builder-input p-conteudo"
+                        placeholder="Digite o enunciado da pergunta..."
+                        required>
                 </div>
-                <button type="button" class="btn btn-sm btn-outline-danger border-0 p-1 btn-remove-pergunta"
-                    title="Remover Pergunta">✕</button>
+                <button type="button" class="btn-remove-pergunta" title="Remover Pergunta">
+                    <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
             </div>
 
-            <div class="row g-2 mt-2 align-items-end">
-                <div class="col-md-3">
-                    <label class="form-label small text-muted mb-1">Tipo de Pergunta</label>
-                    <select class="form-select form-select-sm p-tipo">
+            {# Metadados da pergunta #}
+            <div class="pergunta-meta-row">
+                <div class="meta-field">
+                    <label>Tipo</label>
+                    <select class="meta-select p-tipo">
                         <option value="MC">Múltipla Escolha</option>
                         <option value="TX">Texto Livre</option>
-                        <option value="MX">Mista (Opções + Texto)</option>
+                        <option value="MX">Mista (Opção + Texto)</option>
                     </select>
                 </div>
-                <div class="col-md-3 p-config-container d-none">
-                    <label class="form-label small text-muted mb-1">Logica Mista</label>
-                    <select class="form-select form-select-sm p-config">
+
+                <div class="meta-field p-config-container d-none">
+                    <label>Lógica Mista</label>
+                    <select class="meta-select p-config">
                         <option value="QUALQUER">Um ou Outro</option>
                         <option value="AMBOS">Ambos Obrigatórios</option>
                         <option value="APENAS_OPCAO">Opção Obrigatória</option>
                         <option value="APENAS_TEXTO">Texto Obrigatório</option>
                     </select>
                 </div>
-                <div class="col-md-2 p-mascara-container d-none">
-                    <label class="form-label small text-muted mb-1">Máscara</label>
-                    <select class="form-select form-select-sm p-mascara">
+
+                <div class="meta-field p-mascara-container d-none">
+                    <label>Máscara</label>
+                    <select class="meta-select p-mascara">
                         <option value="NENHUMA">Nenhuma</option>
-                        <option value="HORA">Hora</option>
-                        <option value="ALTURA">Altura</option>
-                        <option value="PESO">Peso</option>
+                        <option value="HORA">Hora (00:00)</option>
+                        <option value="ALTURA">Altura (m)</option>
+                        <option value="PESO">Peso (kg)</option>
                         <option value="DATA">Data</option>
                         <option value="OUTRO">Outro</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <label class="form-label small text-muted mb-1">Cód. / Identificador</label>
-                    <input type="text" class="form-control form-control-sm p-identificador" placeholder="ex: p1_idade">
+
+                <div class="meta-field">
+                    <label>Identificador</label>
+                    <input type="text" class="meta-input p-identificador" placeholder="ex: p1_idade" style="width:130px;">
                 </div>
-                <div class="col-md-2 text-md-end pt-2">
-                    <div class="form-check form-switch d-inline-block">
-                        <input class="form-check-input p-obrigatoria" type="checkbox" checked>
-                        <label class="form-check-label small text-muted">Obrigatória</label>
+
+                <div class="obrigatoria-toggle">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input p-obrigatoria" type="checkbox" checked
+                            style="cursor:pointer;">
+                        <label class="form-check-label" style="font-size:0.75rem; font-weight:600; color:#94a3b8; text-transform:uppercase; letter-spacing:0.05em; cursor:pointer;">
+                            Obrigatória
+                        </label>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="alternativas-wrapper mt-3 ms-4 ps-2 border-start d-none">
-                <div class="alternativas-container d-flex flex-column gap-2 mb-2">
-                    <!-- Alternativas -->
-                </div>
-                <button type="button"
-                    class="btn btn-sm btn-link text-decoration-none p-0 mt-1 btn-add-alternativa fw-semibold"
-                    style="font-size: 0.85rem;">
-                    + Adicionar Alternativa
-                </button>
+        {# Alternativas #}
+        <div class="alternativas-wrapper d-none">
+            <p class="mb-2" style="font-size:0.72rem; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:0.08em;">
+                Alternativas de Resposta
+            </p>
+            <div class="alternativas-container d-flex flex-column gap-2 mb-2">
+                {# Alternativas renderizadas pelo JS #}
             </div>
+            <button type="button" class="btn-add-alternativa">
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="vertical-align:middle; margin-right:3px;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                Adicionar Alternativa
+            </button>
         </div>
     </div>
 </template>
 
 <template id="tpl-alternativa">
-    <div class="d-flex align-items-center gap-2 alternativa-block">
+    <div class="alternativa-block">
         <input type="hidden" class="a-id" value="">
-        <span class="drag-handle-a text-muted px-1" title="Arrastar Alternativa" style="cursor: grab;">
-            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16">
-                <path
-                    d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
+        <span class="drag-handle-a" title="Arrastar Alternativa" style="cursor:grab;">
+            <svg width="12" height="12" fill="#cbd5e1" viewBox="0 0 16 16">
+                <path d="M7 2a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 8a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 11a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM7 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm3 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0z" />
             </svg>
         </span>
-        <input type="text" class="form-control form-control-sm a-conteudo" placeholder="Texto da alternativa">
-        <input type="number" class="form-control form-control-sm a-valor" placeholder="Valor numérico (peso)"
-            style="width: 150px;">
-        <button type="button" class="btn btn-sm text-danger p-1 btn-remove-alternativa border-0">✕</button>
+        <input type="text" class="builder-input a-conteudo"
+            placeholder="Texto da alternativa"
+            style="font-size:0.85rem; padding:0.35rem 0.7rem; flex:1;">
+        <input type="number" class="builder-input a-valor"
+            placeholder="Valor"
+            style="font-size:0.85rem; padding:0.35rem 0.7rem; width:90px; text-align:center;">
+        <button type="button" class="btn-remove-alt btn-remove-alternativa">✕</button>
     </div>
 </template>
 
-<!-- Modal de Confirmação Genérico -->
+{# ── Modal de Confirmação ── #}
 <div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow rounded-4">
@@ -446,10 +963,8 @@
                 // Animar sutilmente o chevron
                 if (body.classList.contains('d-none')) {
                     chevron.style.transform = 'rotate(-90deg)';
-                    header.classList.add('border-bottom');
                 } else {
                     chevron.style.transform = 'rotate(0deg)';
-                    header.classList.remove('border-bottom');
                 }
             });
 
@@ -521,7 +1036,7 @@
 
         // Salvar Questionário (Extrair JSON da UI e Enviar)
         document.getElementById('btn-save').addEventListener('click', async (e) => {
-            const btn = e.target;
+            const btn = e.target.closest('#btn-save');
             const oText = btn.innerHTML;
 
             const qTitulo = document.getElementById('q_titulo').value.trim();
