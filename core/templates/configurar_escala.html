@@ -84,28 +84,7 @@
     {% include 'partials/_escala_builder.html' %}
 </div>
 
-<div class="modal fade" id="modalConfirmarExcluirEscala" tabindex="-1"
-    aria-labelledby="modalConfirmarExcluirEscalaLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalConfirmarExcluirEscalaLabel"
-                    style="color: var(--somnus-blue-deep);">
-                    Confirmar exclusão
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <p id="modal-escala-mensagem" class="mb-0 text-muted" style="font-size: 0.93rem;"></p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn rounded-pill px-4 fw-semibold" id="btn-confirmar-excluir-escala"
-                    style="background-color: #dc2626; color: white; border: none;">Excluir</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partials/_modal_confirmacao.html' with modal_id="modalConfirmarExcluirEscala" modal_text_id="modal-escala-mensagem" btn_confirm_id="btn-confirmar-excluir-escala" btn_text="Excluir" %}
 
 <script id="configData" type="application/json">
     {{ config_json|safe }}

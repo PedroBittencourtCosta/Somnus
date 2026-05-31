@@ -505,7 +505,7 @@
     /* ── Perguntas gap container ─────────────────────── */
     .perguntas-container {
         display: flex;
-        flex-column: column;
+        flex-direction: column;
         gap: 0.6rem;
     }
 </style>
@@ -767,28 +767,7 @@
 </template>
 
 {# ── Modal de Confirmação ── #}
-<div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalConfirmacaoLabel"
-                    style="color: var(--somnus-blue-deep);">
-                    Confirmar ação
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <p class="mb-0 text-muted" id="modalConfirmacaoTexto" style="font-size: 0.93rem;">Tem certeza que deseja continuar?</p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4"
-                    data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn rounded-pill px-4 fw-semibold" id="btnModalConfirmar"
-                    style="background-color: #dc2626; color: white; border: none;">Sim, remover</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partials/_modal_confirmacao.html' %}
 
 {% csrf_token %}
 

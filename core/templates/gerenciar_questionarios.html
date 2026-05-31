@@ -175,28 +175,7 @@
 
 </div>
 
-<div class="modal fade" id="modalConfirmarDesativar" tabindex="-1" aria-labelledby="modalConfirmarDesativarLabel"
-    aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow rounded-4">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="modalConfirmarDesativarLabel"
-                    style="color: var(--somnus-blue-deep);">
-                    Confirmar ação
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <p id="modal-mensagem" class="mb-0 text-muted" style="font-size: 0.93rem;"></p>
-            </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn rounded-pill px-4 fw-semibold" id="btn-confirmar-acao"
-                    style="background-color: #dc2626; color: white; border: none;">Confirmar</button>
-            </div>
-        </div>
-    </div>
-</div>
+{% include 'partials/_modal_confirmacao.html' with modal_id="modalConfirmarDesativar" modal_text_id="modal-mensagem" btn_confirm_id="btn-confirmar-acao" btn_text="Confirmar" %}
 
 <style>
     .transition-row {
@@ -284,18 +263,32 @@
                 pendingId = this.dataset.id;
                 pendingAtivo = this.dataset.ativo === 'true';
                 const nome = this.dataset.nome;
+                
+                const modalIcon = document.getElementById('modalConfirmarDesativar-icon');
 
                 if (pendingAtivo) {
                     modalMensagem.textContent =
                         `"${nome}" será desativado e não aparecerá mais para coleta. ` +
                         `O registro e todas as respostas serão preservados no banco de dados.`;
                     btnConfirmar.style.backgroundColor = '#dc2626';
+                    btnConfirmar.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.25)';
                     btnConfirmar.textContent = 'Desativar';
+                    if (modalIcon) {
+                        modalIcon.style.backgroundColor = '#fee2e2';
+                        modalIcon.style.color = '#dc2626';
+                        modalIcon.innerHTML = `<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+                    }
                 } else {
                     modalMensagem.textContent =
                         `"${nome}" será reativado e voltará a aparecer para coleta.`;
                     btnConfirmar.style.backgroundColor = '#059669';
+                    btnConfirmar.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.25)';
                     btnConfirmar.textContent = 'Reativar';
+                    if (modalIcon) {
+                        modalIcon.style.backgroundColor = '#d1fae5';
+                        modalIcon.style.color = '#059669';
+                        modalIcon.innerHTML = `<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+                    }
                 }
 
                 modal.show();
