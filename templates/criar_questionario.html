@@ -248,30 +248,24 @@
 </template>
 
 <!-- Modal de Confirmação Genérico -->
-<div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="modalConfirmacao" tabindex="-1" aria-labelledby="modalConfirmacaoLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
-            <div class="modal-header bg-danger text-white border-0">
-                <h5 class="modal-title fw-bold">
-                    <svg width="24" height="24" fill="none" class="me-2 d-inline" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
-                        </path>
-                    </svg>
-                    Confirmar Ação
+        <div class="modal-content border-0 shadow rounded-4">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalConfirmacaoLabel"
+                    style="color: var(--somnus-blue-deep);">
+                    Confirmar ação
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                    aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
             </div>
-            <div class="modal-body text-center py-4">
-                <p class="mb-0 fs-5 text-dark" id="modalConfirmacaoTexto">Tem certeza que deseja continuar?</p>
+            <div class="modal-body pt-2">
+                <p class="mb-0 text-muted" id="modalConfirmacaoTexto" style="font-size: 0.93rem;">Tem certeza que deseja continuar?</p>
             </div>
-            <div class="modal-footer border-0 d-flex justify-content-center bg-light">
-                <button type="button" class="btn btn-outline-secondary px-4 fw-semibold"
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light rounded-pill px-4"
                     data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger px-4 fw-semibold" id="btnModalConfirmar">Sim,
-                    remover</button>
+                <button type="button" class="btn rounded-pill px-4 fw-semibold" id="btnModalConfirmar"
+                    style="background-color: #dc2626; color: white; border: none;">Sim, remover</button>
             </div>
         </div>
     </div>
