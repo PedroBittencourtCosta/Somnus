@@ -29,16 +29,36 @@
         </a>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3">
-        <div class="input-group" id="filter-group">
-            <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
-                </svg>
-            </span>
-            <input type="text" id="filtro-nome" class="form-control border-start-0 rounded-end-4 shadow-none"
-                placeholder="Buscar questionário pelo nome…" style="font-size: 0.9rem; border-color: #dee2e6;">
+    <!-- Barra de Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body px-4 py-3">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-8">
+                    <label class="filter-label" for="filtro-nome">
+                        <i class="bi bi-search me-1"></i>Nome do questionário
+                    </label>
+                    <input type="text" id="filtro-nome" class="form-control filter-input"
+                        placeholder="Buscar questionário pelo nome…">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="filter-label" for="filtro-status">
+                        <i class="bi bi-toggle-on me-1"></i>Status
+                    </label>
+                    <select id="filtro-status" class="form-select filter-input">
+                        <option value="">Todos</option>
+                        <option value="true">Ativos</option>
+                        <option value="false">Inativos</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Contador de resultados -->
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+                <small id="resultado-contador" class="text-muted"><span id="contador-visivel">{{ questionarios|length }}</span> questionário(s) exibido(s)</small>
+                <button id="btn-limpar-filtros" class="btn btn-link btn-sm text-decoration-none text-muted d-none p-0">
+                    <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                </button>
+            </div>
         </div>
     </div>
 
@@ -169,9 +189,7 @@
         </div>
     </div>
 
-    <p class="text-muted mt-3 mb-0 text-end" style="font-size: 0.8rem;">
-        <span id="contador-visivel">{{ questionarios|length }}</span> questionário(s) exibido(s)
-    </p>
+
 
 </div>
 
@@ -194,9 +212,31 @@
         background-color: rgba(0, 103, 177, 0.04);
     }
 
-    #filtro-nome:focus {
-        box-shadow: none;
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .filter-input:focus {
         border-color: var(--somnus-blue-inst) !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
+        background-color: #fff;
+    }
+
+    .form-select.filter-input {
+        padding-right: 2rem;
     }
 
     .btn[style*="somnus-blue-inst"]:hover {
@@ -224,13 +264,22 @@
         const contador = document.getElementById('contador-visivel');
         const termoBuscado = document.getElementById('termo-buscado');
 
-        input.addEventListener('input', function () {
-            const termo = this.value.toLowerCase().trim();
+        const selectStatus = document.getElementById('filtro-status');
+        const btnLimpar = document.getElementById('btn-limpar-filtros');
+
+        function filtrar() {
+            const termo = input.value.toLowerCase().trim();
+            const status = selectStatus.value;
             let visiveis = 0;
 
             linhas.forEach(function (linha) {
                 const nome = linha.getAttribute('data-nome');
-                if (nome.includes(termo)) {
+                const ativo = linha.getAttribute('data-ativo');
+                
+                const nomeOk = !termo || nome.includes(termo);
+                const statusOk = !status || ativo === status;
+
+                if (nomeOk && statusOk) {
                     linha.style.display = '';
                     visiveis++;
                 } else {
@@ -238,14 +287,26 @@
                 }
             });
 
-            if (termoBuscado) termoBuscado.textContent = this.value;
+            if (termoBuscado) termoBuscado.textContent = termo;
             contador.textContent = visiveis;
 
-            if (visiveis === 0 && termo.length > 0) {
+            if (visiveis === 0 && (termo.length > 0 || status)) {
                 semResultado.classList.remove('d-none');
             } else {
                 semResultado.classList.add('d-none');
             }
+
+            const filtroAtivo = termo || status;
+            btnLimpar.classList.toggle('d-none', !filtroAtivo);
+        }
+
+        input.addEventListener('input', filtrar);
+        selectStatus.addEventListener('change', filtrar);
+
+        btnLimpar.addEventListener('click', function () {
+            input.value = '';
+            selectStatus.value = '';
+            filtrar();
         });
 
         /* ── Soft-delete: lixeira ── */
