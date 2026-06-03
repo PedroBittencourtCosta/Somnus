@@ -28,3 +28,135 @@
     background-color: var(--somnus-blue-deep);
     color: white;
 }
+
+/* ══════════════════════════════════════════════════
+   COMPONENTES GLOBAIS REUTILIZÁVEIS
+   ══════════════════════════════════════════════════ */
+
+/* Hover shadow para cards interativos */
+.hover-shadow {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+.hover-shadow:hover {
+    box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12) !important;
+    transform: translateY(-6px);
+}
+
+/* Transição genérica */
+.transition {
+    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+/* Estilos de formulário padrão Somnus */
+.somnus-form .form-control,
+.somnus-form .form-select {
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    background-color: #f8f9fa;
+    border: 1px solid #eee;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.somnus-form .form-control:focus,
+.somnus-form .form-select:focus {
+    border-color: var(--somnus-blue-inst);
+    box-shadow: 0 0 0 0.25rem rgba(0, 103, 177, 0.1);
+}
+.somnus-form label {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--somnus-blue-deep);
+    margin-bottom: 0.4rem;
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVIDADE — MOBILE (≤576px)
+   ══════════════════════════════════════════════════ */
+@media (max-width: 576px) {
+    /* Títulos hero menores */
+    .display-3 {
+        font-size: 2rem !important;
+    }
+    .display-4 {
+        font-size: 1.75rem !important;
+    }
+
+    /* Containers com menos padding vertical */
+    .container.py-5 {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    /* Cards com padding reduzido */
+    .card-body.p-4 {
+        padding: 1rem !important;
+    }
+    .card-body.p-md-5 {
+        padding: 1rem !important;
+    }
+
+    /* Botões de ação menores */
+    .btn-lg {
+        font-size: 1rem;
+        padding: 0.6rem 1.5rem;
+    }
+
+    /* Tabelas */
+    .table th, .table td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.82rem;
+    }
+
+    /* Footer compacto */
+    footer.py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+    footer .pt-4 {
+        padding-top: 1rem !important;
+    }
+    footer .h5 {
+        font-size: 0.95rem;
+    }
+
+    /* Badges menores */
+    .badge {
+        font-size: 0.68rem !important;
+        padding: 0.3rem 0.6rem !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVIDADE — TABLET (577px – 991px)
+   ══════════════════════════════════════════════════ */
+@media (min-width: 577px) and (max-width: 991px) {
+    .display-3 {
+        font-size: 2.75rem !important;
+    }
+
+    .container.py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Tabelas com células mais compactas */
+    .table th, .table td {
+        padding: 0.7rem 0.6rem;
+        font-size: 0.85rem;
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVIDADE — MOBILE LANDSCAPE / SMALL TABLET
+   ══════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+    /* Seção Segurança do Perfil — empilha verticalmente */
+    .security-section {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+    .security-section .btn {
+        width: 100%;
+        text-align: center;
+    }
+}

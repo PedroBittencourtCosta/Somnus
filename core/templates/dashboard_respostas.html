@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-3 py-lg-5">
     <div class="row mb-4 align-items-center">
         <div class="col-md-8">
             <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Relatórios Médicos</h2>
@@ -89,11 +89,11 @@
             <table class="table table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th class="fw-semibold py-3 ps-4 text-black">Usuário</th>
-                        <th class="fw-semibold py-3 px-3 text-black">Questionário</th>
+                        <th class="fw-semibold py-3 ps-3 ps-md-4 text-black">Usuário</th>
+                        <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell">Questionário</th>
                         <th class="fw-semibold py-3 px-3 text-black">
                             <span class="d-inline-flex align-items-center gap-1">
-                                Data da Resposta
+                                Data
                                 {% if filtro_ordem == 'asc' %}
                                 <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.55;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7"/>
@@ -105,27 +105,27 @@
                                 {% endif %}
                             </span>
                         </th>
-                        <th class="fw-semibold py-3 pe-4 text-black text-center">Exportar</th>
+                        <th class="fw-semibold py-3 pe-3 pe-md-4 text-black text-center">Exportar</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for resposta in respostas %}
                     <tr>
-                        <td class="px-4 py-4">
-                            <div class="fw-bold text-dark">
+                        <td class="ps-3 ps-md-4 py-3">
+                            <div class="fw-bold text-dark" style="font-size: 0.88rem;">
                                 <i class="bi bi-shield-lock-fill text-success me-1" style="font-size: 0.8rem;"></i>
                                 {{ resposta.codigo_paciente }}
                             </div>
                         </td>
-                        <td class="px-4 py-4">
+                        <td class="px-3 py-3 d-none d-md-table-cell">
                             <span class="badge rounded-pill bg-light text-primary border px-3">
                                 {{ resposta.questionario.titulo }}
                             </span>
                         </td>
-                        <td class="text-muted">
+                        <td class="text-muted py-3" style="font-size: 0.88rem;">
                             {{ resposta.data_submissao|date:"d/m/Y H:i" }}
                         </td>
-                        <td class="pe-4 text-center">
+                        <td class="pe-3 pe-md-4 text-center py-3">
                             <a href="{% url 'exportar_respostas_excel' resposta.pk %}"
                                 class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center gap-1 btn-exportar"
                                 title="Exportar para Excel"
@@ -139,7 +139,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="text-center py-5">
+                        <td colspan="4" class="text-center py-4 py-md-5">
                             <div class="d-flex flex-column align-items-center gap-2 text-muted">
                                 <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
