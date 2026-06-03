@@ -90,7 +90,7 @@
                 <thead class="table-light">
                     <tr>
                         <th class="fw-semibold py-3 ps-3 ps-md-4 text-black">Usuário</th>
-                        <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell">Questionário</th>
+                        <th class="fw-semibold py-3 px-3 text-black">Questionário</th>
                         <th class="fw-semibold py-3 px-3 text-black">
                             <span class="d-inline-flex align-items-center gap-1">
                                 Data
@@ -117,9 +117,12 @@
                                 {{ resposta.codigo_paciente }}
                             </div>
                         </td>
-                        <td class="px-3 py-3 d-none d-md-table-cell">
-                            <span class="badge rounded-pill bg-light text-primary border px-3">
+                        <td class="px-3 py-3">
+                            <span class="badge rounded-pill bg-light text-primary border px-3 d-none d-lg-inline-block">
                                 {{ resposta.questionario.titulo }}
+                            </span>
+                            <span class="badge rounded-pill bg-light text-primary border px-3 d-lg-none">
+                                {{ resposta.questionario.titulo|truncatewords:3 }}
                             </span>
                         </td>
                         <td class="text-muted py-3" style="font-size: 0.88rem;">
