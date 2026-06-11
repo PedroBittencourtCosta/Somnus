@@ -8,10 +8,10 @@ import openpyxl
 from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
-from core.Scaleprocessor import AUDITCalculator, DASS21Calculator, EMSSPCalculator, ESECalculator, K10Calculator, PSQICalculator, SRQ20Calculator, SafeParser
+from core.Scaleprocessor import EscalaEngine, SafeParser
 
 from ethics.models import TCLE, AceiteTCLE
-from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
 import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -132,33 +132,67 @@ def responder_questionario(request, pk):
     return render(request, 'responder_questionario.html', context)
 
 def lista_questionarios(request):
-    questionarios = Questionario.objects.all().order_by('-data_criacao')
-    
-    # Se o usuário estiver logado, buscamos os IDs dos questionários que ele já respondeu
-    respondidos = []
-    if request.user.is_authenticated:
-        respondidos = RespostaQuestionario.objects.filter(
-            pesquisadora=request.user
-        ).values_list('questionario_id', flat=True)
-        
+    # Exibe apenas questínarios ativos para coleta assistida.
+    questionarios = Questionario.objects.filter(ativo=True).order_by('-data_criacao')
     return render(request, 'lista_questionarios.html', {
         'questionarios': questionarios,
-        'respondidos': respondidos
+        'respondidos': []
     })
+
+
+@login_required
+def gerenciar_questionarios(request):
+    """Tela de gestão centralizada (pesquisadores/staff). Exibe todos, ativos e inativos."""
+    questionarios = Questionario.objects.all().order_by('-data_criacao')
+    return render(request, 'gerenciar_questionarios.html', {
+        'questionarios': questionarios,
+    })
+
+
+@login_required
+@require_POST
+def desativar_questionario(request, pk):
+    """Soft-delete: marca o questionário como inativo. Não apaga do banco."""
+    questionario = get_object_or_404(Questionario, pk=pk)
+    questionario.ativo = not questionario.ativo   # Toggle: ativa/desativa
+    questionario.save(update_fields=['ativo'])
+    return JsonResponse({
+        'status': 'success',
+        'ativo': questionario.ativo,
+        'message': 'Questionário ativado.' if questionario.ativo else 'Questionário desativado.'
+    })
+
+
 
 
 
 @login_required
 def dashboard_respostas(request):
-    # Ordenação decrescente por data de submissão
-    respostas_list = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all().order_by('-data_submissao')
-    
+    # --- Filtros via GET ---
+    questionario_id = request.GET.get('questionario', '')
+    ordem = request.GET.get('ordem', 'desc')  # 'desc' = mais recente | 'asc' = mais antigo
+
+    qs = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all()
+
+    if questionario_id:
+        qs = qs.filter(questionario_id=questionario_id)
+
+    qs = qs.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
+
     # Paginação: 10 itens por página
-    paginator = Paginator(respostas_list, 10)
+    paginator = Paginator(qs, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    return render(request, 'dashboard_respostas.html', {'respostas': page_obj})
+
+    # Lista de questionários para popular o select de filtro
+    questionarios = Questionario.objects.order_by('titulo')
+
+    return render(request, 'dashboard_respostas.html', {
+        'respostas': page_obj,
+        'questionarios': questionarios,
+        'filtro_questionario': questionario_id,
+        'filtro_ordem': ordem,
+    })
 
 
 
@@ -191,18 +225,48 @@ def exportar_respostas_excel(request, pk):
             elif rp.resposta_texto:
                 answers_map[identificador] = rp.resposta_texto
 
-    # 3. PROCESSAMENTO DAS ESCALAS (Certifique-se que estas classes existem no seu utils.py)
-    scores_dass  = DASS21Calculator.calculate(answers_map)
-    scores_k10   = K10Calculator.calculate(answers_map)
-    scores_srq   = SRQ20Calculator.calculate(answers_map)
-    scores_ese   = ESECalculator.calculate(answers_map)
-    scores_audit = AUDITCalculator.calculate(answers_map)
-    scores_emssp = EMSSPCalculator.calculate(answers_map)
-    scores_psqi  = PSQICalculator.calculate(answers_map)
+    # 3. PROCESSAMENTO DAS ESCALAS VINCULADAS
+    escalas_resultados = []
+    for escala in res_quest.questionario.escalas_config.all():
+        resultado = EscalaEngine.processar(answers_map, escala)
+        if "erro" not in resultado:
+            chaves_valor = []
+            chaves_status = {}
+            
+            for k, v in resultado.items():
+                k_str = str(k)
+                if k_str.endswith('_status') or k_str == 'status' or k_str.endswith('_classificacao') or k_str == 'classificacao':
+                    prefix = k_str.replace('_status', '').replace('status', '').replace('_classificacao', '').replace('classificacao', '')
+                    chaves_status[prefix] = v
+                elif isinstance(v, (int, float, str)) and not isinstance(v, list):
+                    chaves_valor.append((k_str, v))
+            
+            for k, v in chaves_valor:
+                prefix = k.replace('_total', '').replace('_global', '').replace('_valor', '')
+                
+                referencia = "-"
+                if prefix in chaves_status:
+                    referencia = chaves_status.pop(prefix)
+                elif k in chaves_status:
+                    referencia = chaves_status.pop(k)
+                elif "" in chaves_status:
+                    referencia = chaves_status.pop("")
+                    
+                key_formatted = k.replace('_', ' ').title()
+                escalas_resultados.append([f"{escala.nome} - {key_formatted}", v, str(referencia)])
+                
+            for pref, ref in chaves_status.items():
+                nome_formatado = f"{escala.nome} - Status {pref.replace('_', ' ').title()}".strip()
+                if nome_formatado.endswith('- Status'):
+                    nome_formatado = f"{escala.nome} - Status"
+                escalas_resultados.append([nome_formatado, "-", str(ref)])
     
+    # IMC Fallback (caso ainda queiram sem precisar configurar)
     peso = SafeParser.to_float(answers_map.get('peso', 0))
     altura = SafeParser.to_float(answers_map.get('altura', 0))
-    imc = round(peso / (altura ** 2), 2) if altura > 0 else 0
+    if altura > 0:
+        imc = round(peso / (altura ** 2), 2)
+        escalas_resultados.append(["IMC Calculado Automaticamente", imc, "kg/m²"])
 
     # 4. CRIAÇÃO DO EXCEL
     wb = openpyxl.Workbook()
@@ -227,12 +291,13 @@ def exportar_respostas_excel(request, pk):
     ws.append([])
 
     def adicionar_secao(titulo, dados):
+        if not dados: return
         ws.append([titulo])
         ws.merge_cells(f'A{ws.max_row}:C{ws.max_row}')
         ws.cell(row=ws.max_row, column=1).font = Font(bold=True)
         ws.cell(row=ws.max_row, column=1).fill = cinza_claro
         
-        ws.append(['Escala/Item', 'Resultado', 'Referência'])
+        ws.append(['Escala/Métrica', 'Resultado', 'Referência'])
         for cell in ws[ws.max_row]:
             cell.fill = azul_somnus
             cell.font = fonte_branca
@@ -241,30 +306,10 @@ def exportar_respostas_excel(request, pk):
             ws.append(linha)
         ws.append([])
 
-    # Adicionando os Scores
-    adicionar_secao("I. SAÚDE MENTAL", [
-        ['DASS-21 Depressão', scores_dass['dass_depressao'], "0-21"],
-        ['DASS-21 Ansiedade', scores_dass['dass_ansiedade'], "0-21"],
-        ['DASS-21 Estresse',  scores_dass['dass_estresse'],  "0-21"],
-        ['K10 Kessler',       scores_k10['k10_total'],       scores_k10['k10_classificacao']],
-        ['SRQ-20 TMC',        scores_srq['srq_total'],       scores_srq['srq_status']],
-    ])
+    # Adicionando os Scores Calculados Dinamicamente
+    adicionar_secao("I. RESULTADOS DAS ESCALAS", escalas_resultados)
 
-    adicionar_secao("II. HÁBITOS E SONO", [
-        ['ESE Epworth',       scores_ese['ese_total'],       scores_ese['ese_status']],
-        ['AUDIT Álcool',      scores_audit['audit_total'],    scores_audit['audit_status']],
-        ['PSQI Pittsburgh',   scores_psqi['psqi_global'],    scores_psqi['psqi_status']],
-        ['IMC Atual',         imc,                           "kg/m²"],
-    ])
-
-    adicionar_secao("III. SUPORTE SOCIAL", [
-        ['Família',           scores_emssp['suporte_familia'], "Máx: 28"],
-        ['Amigos',            scores_emssp['suporte_amigos'],  "Máx: 28"],
-        ['Outros',            scores_emssp['suporte_outros'],  "Máx: 28"],
-        ['TOTAL',             scores_emssp['suporte_total'],   "Máx: 84"],
-    ])
-
-    # IV. Detalhamento
+    # II. Detalhamento
     ws.append(['IV. DETALHAMENTO DAS RESPOSTAS'])
     ws.append(['ID', 'Pergunta', 'Valor'])
     for cell in ws[ws.max_row]:
@@ -441,3 +486,77 @@ def salvar_questionario_api(request):
     except Exception as e:
         import traceback
         return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+
+@login_required
+def configurar_escala_view(request, pk):
+    questionario = get_object_or_404(Questionario, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            acao = data.get('acao')
+            escala_id = data.get('escala_id')
+            
+            if acao == 'vincular':
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.questionarios.add(questionario)
+                return JsonResponse({'status': 'success', 'escala_id': escala.id, 'nome': escala.nome})
+            elif acao == 'desvincular':
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.questionarios.remove(questionario)
+                return JsonResponse({'status': 'success', 'escala_id': escala.id, 'nome': escala.nome})
+            elif acao == 'desativar':
+                # Soft-delete: irreversível pela UI do pesquisador
+                escala = get_object_or_404(EscalaConfig, id=escala_id)
+                escala.ativo = False
+                escala.save(update_fields=['ativo'])
+                return JsonResponse({'status': 'success', 'escala_id': escala.id})
+            
+            nome = data.get('nome', f'Escala para {questionario.titulo}'[:100])
+            
+            if escala_id:
+                # Editar escala existente
+                config = get_object_or_404(EscalaConfig, id=escala_id)
+                config.nome = nome
+            else:
+                # Criar nova escala
+                config = EscalaConfig.objects.create(nome=nome)
+                config.questionarios.add(questionario)
+                
+            config.strategy_class = data.get('strategy_class', 'DYNAMIC')
+            if config.strategy_class == 'DYNAMIC':
+                config.config_dinamica = data.get('config_dinamica', {})
+            else:
+                config.config_dinamica = None
+                
+            config.save()
+            return JsonResponse({'status': 'success', 'escala_id': config.id, 'nome': config.nome})
+        except Exception as e:
+            import traceback
+            return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+            
+    # Coleta todas as perguntas que possuem um identificador (variáveis)
+    perguntas_com_id = Pergunta.objects.filter(
+        secao__questionario=questionario
+    ).exclude(identificador__exact='').exclude(identificador__isnull=True).values('id', 'identificador', 'conteudo')
+    
+    # Coleta configurações apenas das escalas ativas
+    escalas_cadastradas = EscalaConfig.objects.filter(ativo=True).prefetch_related('questionarios')
+    escalas_templates = []
+    for e in escalas_cadastradas:
+        is_linked = e.questionarios.filter(id=questionario.id).exists()
+        escalas_templates.append({
+            'id': e.id,
+            'nome': e.nome,
+            'strategy_class': e.strategy_class,
+            'is_linked': is_linked,
+            'config': e.config_dinamica or {}
+        })
+    
+    context = {
+        'questionario': questionario,
+        'config_json': '{}',
+        'perguntas_json': json.dumps(list(perguntas_com_id)),
+        'escalas_templates_json': json.dumps(escalas_templates)
+    }
+    return render(request, 'configurar_escala.html', context)

@@ -1,0 +1,346 @@
+{% extends 'base.html' %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Gestão de Colaboradores</h2>
+            <p class="text-muted mb-0">Gerencie o acesso de pesquisadores e assistentes no sistema.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'cadastrar_assistente' %}" class="btn text-white fw-bold shadow-sm rounded-pill px-4"
+                style="background-color: var(--somnus-blue-inst);">
+                + Novo Colaborador
+            </a>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body px-4 py-3">
+            <div class="row g-3 align-items-end">
+
+                <!-- Filtro: Nome -->
+                <div class="col-12 col-md-5">
+                    <label class="filter-label" for="filtro-nome">
+                        <i class="bi bi-search me-1"></i>Nome ou e-mail
+                    </label>
+                    <input type="text" id="filtro-nome" class="form-control filter-input"
+                        placeholder="Buscar por nome ou e-mail…">
+                </div>
+
+                <!-- Filtro: Tipo -->
+                <div class="col-6 col-md-4">
+                    <label class="filter-label" for="filtro-tipo">
+                        <i class="bi bi-people me-1"></i>Função
+                    </label>
+                    <select id="filtro-tipo" class="form-select filter-input">
+                        <option value="">Todas as funções</option>
+                    </select>
+                </div>
+
+                <!-- Filtro: Status -->
+                <div class="col-6 col-md-3">
+                    <label class="filter-label" for="filtro-status">
+                        <i class="bi bi-toggle-on me-1"></i>Status
+                    </label>
+                    <select id="filtro-status" class="form-select filter-input">
+                        <option value="">Todos</option>
+                        <option value="ativo">Ativos</option>
+                        <option value="desativado">Desativados</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <!-- Contador de resultados -->
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+                <small id="resultado-contador" class="text-muted"></small>
+                <button id="btn-limpar-filtros" class="btn btn-link btn-sm text-decoration-none text-muted d-none p-0">
+                    <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tabela-colaboradores">
+                <thead class="table-light">
+                    <tr>
+                        <th class="fw-semibold py-3 ps-4 text-black">Nome</th>
+                        <th class="fw-semibold py-3 px-3 text-black">E-mail</th>
+                        <th class="fw-semibold py-3 px-3 text-black">Função</th>
+                        <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 12%;">Status</th>
+                        <th class="fw-semibold py-3 pe-4 text-black text-center" style="width: 12%;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for usuario in usuarios %}
+                    <tr class="linha-colaborador transition-row {% if not usuario.is_active %}row-inativa{% endif %}"
+                        data-nome="{{ usuario.get_full_name|lower|default:usuario.email|lower }}"
+                        data-email="{{ usuario.email|lower }}"
+                        data-status="{% if usuario.is_active %}ativo{% else %}desativado{% endif %}"
+                        data-tipo="{% for group in usuario.groups.all %}{{ group.name }}{% if not forloop.last %},{% endif %}{% empty %}sem função{% endfor %}"
+                        data-id="{{ usuario.id }}"
+                        id="row-user-{{ usuario.id }}">
+
+                        <td class="ps-4">
+                            <div class="fw-bold text-dark">{{ usuario.get_full_name|default:usuario.email }}</div>
+                        </td>
+
+                        <td class="px-3" style="font-size: 0.9rem; color: #555;">{{ usuario.email }}</td>
+
+                        <td class="px-3">
+                            {% for group in usuario.groups.all %}
+                            <span class="badge rounded-pill px-3 py-2"
+                                style="background-color: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 600;">
+                                {{ group.name }}
+                            </span>
+                            {% empty %}
+                            <span class="text-muted small">Sem função</span>
+                            {% endfor %}
+                        </td>
+
+                        {# ── Badge de status — mesmo padrão de gerenciar_questionarios ── #}
+                        <td class="px-3 text-center">
+                            <span id="badge-status-{{ usuario.id }}"
+                                class="badge rounded-pill px-3 py-2"
+                                style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+                                       {% if usuario.is_active %}background-color: #d1fae5; color: #065f46;{% else %}background-color: #fee2e2; color: #991b1b;{% endif %}">
+                                {% if usuario.is_active %}● Ativo{% else %}○ Inativo{% endif %}
+                            </span>
+                        </td>
+
+                        {# ── Botão lixeira / reativar — mesmo padrão de gerenciar_questionarios ── #}
+                        <td class="pe-4 text-center">
+                            <button type="button"
+                                id="btn-toggle-{{ usuario.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center gap-1 btn-lixeira"
+                                data-id="{{ usuario.id }}"
+                                data-ativo="{% if usuario.is_active %}true{% else %}false{% endif %}"
+                                data-nome="{{ usuario.get_full_name|default:usuario.email }}"
+                                data-url="{% url 'alternar_status_assistente' usuario.id %}"
+                                title="{% if usuario.is_active %}Desativar acesso{% else %}Reativar acesso{% endif %}"
+                                style="border: 1.5px solid {% if usuario.is_active %}#dc2626{% else %}#059669{% endif %};
+                                       color: {% if usuario.is_active %}#dc2626{% else %}#059669{% endif %};
+                                       background: transparent;">
+                                {% if usuario.is_active %}
+                                {# Ícone lixeira #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                {% else %}
+                                {# Ícone reativar (refresh) #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {% endif %}
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Mensagem vazia após filtro -->
+            <div id="sem-resultados" class="text-center py-5 text-muted d-none">
+                <i class="bi bi-funnel fs-3 d-block mb-2 opacity-50"></i>
+                Nenhum colaborador corresponde aos filtros aplicados.
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .filter-input:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
+        background-color: #fff;
+    }
+
+    .form-select.filter-input {
+        padding-right: 2rem;
+    }
+
+    .transition-row {
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+    }
+
+    .row-inativa {
+        opacity: 0.55;
+    }
+
+    .table> :not(caption)>*>* {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    .btn-lixeira:hover {
+        filter: brightness(1.1);
+        background-color: rgba(220, 38, 38, 0.06) !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const linhas = document.querySelectorAll('.linha-colaborador');
+        const inputNome = document.getElementById('filtro-nome');
+        const selectTipo = document.getElementById('filtro-tipo');
+        const selectStatus = document.getElementById('filtro-status');
+        const contador = document.getElementById('resultado-contador');
+        const semResultados = document.getElementById('sem-resultados');
+        const btnLimpar = document.getElementById('btn-limpar-filtros');
+
+        // ── Popula o select de Função dinamicamente ──
+        const tiposEncontrados = new Set();
+        linhas.forEach(function (linha) {
+            const tipos = linha.dataset.tipo.split(',');
+            tipos.forEach(function (t) {
+                const nome = t.trim();
+                if (nome && nome !== 'sem função') tiposEncontrados.add(nome);
+            });
+        });
+        tiposEncontrados.forEach(function (tipo) {
+            const opt = document.createElement('option');
+            opt.value = tipo.toLowerCase();
+            opt.textContent = tipo;
+            selectTipo.appendChild(opt);
+        });
+
+        // ── Lógica de filtro ──
+        function filtrar() {
+            const termNome = inputNome.value.toLowerCase().trim();
+            const termTipo = selectTipo.value.toLowerCase();
+            const termStatus = selectStatus.value.toLowerCase();
+            let visiveis = 0;
+
+            linhas.forEach(function (linha) {
+                const nome = linha.dataset.nome || '';
+                const email = linha.dataset.email || '';
+                const status = linha.dataset.status || '';
+                const tipo = linha.dataset.tipo.toLowerCase();
+
+                const nomeOk = !termNome || nome.includes(termNome) || email.includes(termNome);
+                const tipoOk = !termTipo || tipo.includes(termTipo);
+                const statusOk = !termStatus || status === termStatus;
+
+                if (nomeOk && tipoOk && statusOk) {
+                    linha.style.display = '';
+                    visiveis++;
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            const total = linhas.length;
+            contador.textContent = visiveis === total
+                ? `${total} colaborador${total !== 1 ? 'es' : ''} cadastrado${total !== 1 ? 's' : ''}`
+                : `${visiveis} de ${total} colaborador${total !== 1 ? 'es' : ''} exibido${visiveis !== 1 ? 's' : ''}`;
+
+            semResultados.classList.toggle('d-none', visiveis > 0);
+
+            const filtroAtivo = termNome || termTipo || termStatus;
+            btnLimpar.classList.toggle('d-none', !filtroAtivo);
+        }
+
+        // ── Limpar filtros ──
+        btnLimpar.addEventListener('click', function () {
+            inputNome.value = '';
+            selectTipo.value = '';
+            selectStatus.value = '';
+            filtrar();
+        });
+
+        inputNome.addEventListener('input', filtrar);
+        selectTipo.addEventListener('change', filtrar);
+        selectStatus.addEventListener('change', filtrar);
+        filtrar();
+
+        // ── Toggle ativo/inativo via fetch (sem modal, sem reload) ──
+        document.querySelectorAll('.btn-lixeira').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const id = this.dataset.id;
+                const url = this.dataset.url;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status !== 'success') return;
+
+                    const novoAtivo = data.is_active;
+                    const row = document.getElementById(`row-user-${id}`);
+                    const badge = document.getElementById(`badge-status-${id}`);
+                    const btnEl = document.getElementById(`btn-toggle-${id}`);
+
+                    // Atualiza badge
+                    if (novoAtivo) {
+                        badge.style.backgroundColor = '#d1fae5';
+                        badge.style.color = '#065f46';
+                        badge.textContent = '● Ativo';
+                        row.classList.remove('row-inativa');
+                        row.dataset.status = 'ativo';
+                    } else {
+                        badge.style.backgroundColor = '#fee2e2';
+                        badge.style.color = '#991b1b';
+                        badge.textContent = '○ Inativo';
+                        row.classList.add('row-inativa');
+                        row.dataset.status = 'desativado';
+                    }
+
+                    // Atualiza botão
+                    btnEl.dataset.ativo = novoAtivo ? 'true' : 'false';
+                    const cor = novoAtivo ? '#dc2626' : '#059669';
+                    btnEl.style.borderColor = cor;
+                    btnEl.style.color = cor;
+                    btnEl.title = novoAtivo ? 'Desativar acesso' : 'Reativar acesso';
+                    btnEl.innerHTML = novoAtivo
+                        ? `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                           </svg>`
+                        : `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>`;
+
+                    // Re-executa filtro para manter coerência com o select de status ativo
+                    filtrar();
+                })
+                .catch(err => console.error('Erro ao alternar status:', err));
+            });
+        });
+    });
+</script>
+{% endblock %}

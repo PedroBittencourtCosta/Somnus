@@ -1,11 +1,18 @@
 
 from django.db import models
 from django.conf import settings
+import uuid
+from encrypted_model_fields.fields import EncryptedCharField, EncryptedTextField
 
 class Questionario(models.Model):
-    titulo = models.CharField(max_length=200) 
+    titulo = models.CharField(max_length=200)
     descricao = models.TextField(blank=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
+    ativo = models.BooleanField(
+        default=True,
+        help_text="Controla se o questionário está visível para coleta. "
+                  "Desativar é um soft-delete: o registro é preservado no banco."
+    )
 
     def __str__(self):
         return self.titulo
@@ -115,35 +122,80 @@ class RespostaQuestionario(models.Model):
     questionario = models.ForeignKey(Questionario, on_delete=models.CASCADE)
     data_submissao = models.DateTimeField(auto_now_add=True) 
 
-    paciente_nome = models.CharField(max_length=255, null=True)
+    # Pseudônimo público — pesquisável, ordenável, indexável (LGPD art. 13 §4º)
+    codigo_paciente = models.CharField(
+        max_length=12,
+        unique=True,
+        editable=False,
+        default=None,  # Será preenchido automaticamente no save()
+        verbose_name="Código do Paciente"
+    )
+
+    # Nome real criptografado com AES-256 (LGPD art. 46)
+    paciente_nome = EncryptedCharField(max_length=255, null=True, verbose_name="Nome do Paciente (protegido)")  # type: ignore
 
     class Meta:
         verbose_name = 'Resposta de Questionário'
         verbose_name_plural = 'Respostas dos Questionários'
         # unique_together = ('usuario', 'questionario')
 
+    def save(self, *args, **kwargs):
+        if not self.codigo_paciente:
+            self.codigo_paciente = str(uuid.uuid4()).replace('-', '')[:10].upper()
+            while RespostaQuestionario.objects.filter(codigo_paciente=self.codigo_paciente).exists():
+                self.codigo_paciente = str(uuid.uuid4()).replace('-', '')[:10].upper()
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        # Atualizado para usar pesquisadora em vez de usuario
-        return f"Paciente: {self.paciente_nome} - Pesquisadora: {self.pesquisadora.username}"
+        return f"[{self.codigo_paciente}] {self.paciente_nome} - Pesq: {self.pesquisadora.username}"
 
 class RespostaPergunta(models.Model):
     resposta_questionario = models.ForeignKey(RespostaQuestionario, related_name='respostas', on_delete=models.CASCADE)
     pergunta = models.ForeignKey(Pergunta, on_delete=models.CASCADE)
     alternativa = models.ForeignKey(Alternativa, on_delete=models.SET_NULL, null=True, blank=True)
-    resposta_texto = models.TextField(null=True, blank=True)
+    
+    # Texto livre criptografado com AES-256 (LGPD art. 46)
+    resposta_texto = EncryptedTextField(null=True, blank=True)  # type: ignore
 
     def __str__(self):
-        # Retorna o e-mail do usuário e o início da pergunta para fácil identificação
-        return f"Resp: {self.resposta_questionario.usuario.email} - Pergunta: {self.pergunta.conteudo[:30]}..."
+        return f"Resp: {self.resposta_questionario.codigo_paciente} - Pergunta: {self.pergunta.conteudo[:30]}..."
 
-class RegraEquacao(models.Model):
-    questionario = models.OneToOneField(Questionario, on_delete=models.CASCADE)
-    nome = models.CharField(max_length=100) 
-    logica = models.TextField(help_text="Explicação ou fórmula para o cálculo")
+class EscalaConfig(models.Model):
+    questionarios = models.ManyToManyField(Questionario, related_name='escalas_config', blank=True)
+    nome = models.CharField(max_length=100, help_text="Ex: Escala de Depressão DASS-21")
+    ativo = models.BooleanField(
+        default=True,
+        help_text="Soft-delete: escalas inativas não aparecem na interface e não são processadas em novas avaliações."
+    )
+    
+    ESTRATEGIA_CHOICES = [
+        ('DYNAMIC', 'Construtor Visual (Somas, Médias e Regras Simples)'),
+        ('PSQI', 'Índice de Qualidade de Sono de Pittsburgh (PSQI)'),
+        ('IMC', 'Índice de Massa Corporal (IMC)'),
+        ('DASS21', 'Depression, Anxiety and Stress Scale (DASS-21)'),
+        ('K10', 'Escala de Sofrimento Psicológico de Kessler (K10)'),
+        ('SRQ20', 'Self-Reporting Questionnaire (SRQ-20)'),
+        ('ESE', 'Escala de Sonolência de Epworth (ESE)'),
+        ('AUDIT', 'Alcohol Use Disorder Identification Test (AUDIT)'),
+        ('EMSSP', 'Escala Multidimensional de Suporte Social Percebido (EMSSP)'),
+    ]
+    
+    strategy_class = models.CharField(
+        max_length=50, 
+        choices=ESTRATEGIA_CHOICES,
+        default='DYNAMIC', 
+        help_text="Selecione 'Construtor Visual' para criar regras pelo sistema, ou escolha uma escala clínica complexa já nativa do sistema."
+    )
+    
+    config_dinamica = models.JSONField(
+        blank=True, 
+        null=True,
+        help_text="Armazena a lógica gerada pela interface do Pesquisador (não precisa ser preenchido manualmente)."
+    )
 
     class Meta:
-        verbose_name = 'Regra de Cálculo'
-        verbose_name_plural = 'Regras de Cálculos'
+        verbose_name = 'Configuração de Escala'
+        verbose_name_plural = 'Configurações de Escalas'
 
     def __str__(self):
-        return self.nome
+        return f"{self.nome} ({self.get_strategy_class_display()})"

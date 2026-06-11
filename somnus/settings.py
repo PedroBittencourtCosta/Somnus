@@ -54,6 +54,7 @@ INSTALLED_APPS = [
 
     'django_bootstrap5',
     'adminsortable2',
+    'encrypted_model_fields',
     'core',
     'accounts',
     'ethics',
@@ -238,3 +239,6 @@ STORAGES = {
 CSRF_TRUSTED_ORIGINS = ['https://somnus-production-0b31.up.railway.app']
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# Criptografia de campos sensíveis (LGPD art. 46)
+FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY')

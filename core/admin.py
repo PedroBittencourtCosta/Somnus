@@ -1,6 +1,6 @@
 from django.contrib import admin
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin, SortableAdminBase 
-from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, RegraEquacao
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
 
 # 1. Inline para Alternativas (Mantido para edição individual da pergunta)
 class AlternativaInline(admin.TabularInline):
@@ -66,9 +66,9 @@ class QuestionarioAdmin(SortableAdminBase, admin.ModelAdmin):
 # 6. Registros de Respostas (Atualizados para o novo fluxo do Somnus)
 @admin.register(RespostaQuestionario)
 class RespostaQuestionarioAdmin(admin.ModelAdmin):
-    list_display = ('paciente_nome', 'pesquisadora', 'questionario', 'data_submissao')
-    search_fields = ('paciente_nome', 'pesquisadora__username')
-    readonly_fields = ('data_submissao',)
+    list_display = ('codigo_paciente', 'paciente_nome', 'pesquisadora', 'questionario', 'data_submissao')
+    search_fields = ('codigo_paciente', 'pesquisadora__username')
+    readonly_fields = ('data_submissao', 'codigo_paciente')
 
 @admin.register(RespostaPergunta)
 class RespostaPerguntaAdmin(admin.ModelAdmin):
@@ -80,11 +80,18 @@ class RespostaPerguntaAdmin(admin.ModelAdmin):
     get_pesquisadora.short_description = 'Pesquisadora'
 
     def get_paciente(self, obj):
-        return obj.resposta_questionario.paciente_nome
+        return obj.resposta_questionario.codigo_paciente
     get_paciente.short_description = 'Paciente'
 
     def get_resposta(self, obj):
         return obj.alternativa.conteudo if obj.alternativa else obj.resposta_texto
     get_resposta.short_description = 'Resposta'
 
-admin.site.register(RegraEquacao)
+@admin.register(EscalaConfig)
+class EscalaConfigAdmin(admin.ModelAdmin):
+    list_display = ('nome', 'get_questionarios', 'strategy_class')
+    list_filter = ('strategy_class',)
+
+    def get_questionarios(self, obj):
+        return ", ".join([q.titulo for q in obj.questionarios.all()])
+    get_questionarios.short_description = 'Questionários'

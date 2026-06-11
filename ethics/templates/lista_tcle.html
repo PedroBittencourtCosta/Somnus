@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gerenciar TCLE · Somnus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <!-- Cabeçalho da página -->
+    <div class="d-flex align-items-center justify-content-between mb-5 flex-wrap gap-3">
+        <div>
+            <h1 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">Termos de Consentimento (TCLE)</h1>
+            <p class="text-muted mb-0">Histórico de versões do documento de consentimento livre e esclarecido.</p>
+        </div>
+        <a href="{% url 'nova_versao_tcle' %}" id="btn-nova-versao-tcle"
+            class="btn rounded-pill fw-bold text-white px-4 py-2 shadow-sm d-flex align-items-center gap-2"
+            style="background-color: var(--somnus-blue-inst); border: none;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Nova Versão
+        </a>
+    </div>
+
+    <!-- Linha decorativa -->
+    <div class="rounded-pill mb-5" style="height: 4px; width: 60px; background-color: var(--somnus-green-dark);"></div>
+
+    <!-- Estatísticas rápidas -->
+    <div class="row g-3 mb-5">
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-center tcle-stat-card">
+                <div class="fs-2 fw-bold" style="color: var(--somnus-blue-deep);">{{ tcles.count }}</div>
+                <div class="text-muted small mt-1">Versões cadastradas</div>
+            </div>
+        </div>
+        {% if tcles %}
+        <div class="col-6 col-md-3">
+            <div class="card border-0 rounded-4 shadow-sm p-4 text-center tcle-stat-card">
+                <div class="fs-2 fw-bold" style="color: var(--somnus-blue-deep);">v{{ tcles.first.versao }}</div>
+                <div class="text-muted small mt-1">Versão mais recente</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Lista de TCLEs -->
+    {% if tcles %}
+    <div class="row g-4">
+        {% for tcle in tcles %}
+        <div class="col-12">
+            <div class="card border-0 shadow-sm rounded-4 tcle-card overflow-hidden">
+                <div class="card-body p-0">
+                    <div class="d-flex flex-column flex-md-row align-items-md-center gap-3 p-4">
+
+                        <!-- Badge de versão -->
+                        <div class="flex-shrink-0 d-flex align-items-center justify-content-center rounded-3"
+                            style="width:70px; height:70px; background-color: {% if forloop.first %}var(--somnus-blue-deep){% else %}#e9ecef{% endif %};">
+                            <div class="text-center">
+                                <div class="fw-bold {% if forloop.first %}text-white{% else %}text-secondary{% endif %}"
+                                    style="font-size:1.1rem; line-height:1.1;">v{{ tcle.versao }}</div>
+                                {% if forloop.first %}
+                                <div style="font-size:0.6rem; color:rgba(255,255,255,0.8); letter-spacing:0.05em;">ATIVA
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Conteúdo principal -->
+                        <div class="flex-grow-1 min-w-0">
+                            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+                                <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">
+                                    TCLE — Versão {{ tcle.versao }}
+                                </h5>
+                                {% if forloop.first %}
+                                <span class="badge rounded-pill"
+                                    style="background-color: var(--somnus-green-dark); font-size: 0.7rem;">Versão
+                                    Atual</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-muted small mb-2">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    class="me-1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                Criado em {{ tcle.data_criacao|date:"d/m/Y" }} às {{ tcle.data_criacao|date:"H:i" }}
+                            </p>
+                            <p class="mb-0 text-muted tcle-preview">
+                                {{ tcle.conteudo|truncatechars:200 }}
+                            </p>
+                        </div>
+
+                        <!-- Ações -->
+                        <div class="flex-shrink-0 d-flex flex-md-column gap-2 align-items-stretch">
+                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill fw-semibold px-3"
+                                data-bs-toggle="modal" data-bs-target="#modalPreview{{ tcle.id }}">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                    class="me-1">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                Visualizar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Preview -->
+        <div class="modal fade" id="modalPreview{{ tcle.id }}" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0 px-4 pt-4">
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">
+                                TCLE — Versão {{ tcle.versao }}
+                            </h5>
+                            <p class="text-muted small mb-0">Criado em {{ tcle.data_criacao|date:"d/m/Y \à\s H:i" }}</p>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body px-4">
+                        <div class="p-4 rounded-4"
+                            style="background-color: #f8f9fa; font-size: 0.95rem; line-height: 1.8; color: #444; white-space: pre-wrap;">
+                            {{ tcle.conteudo }}</div>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4"
+                            data-bs-dismiss="modal">Fechar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <!-- Estado vazio -->
+    <div class="text-center py-5">
+        <div class="mb-4" style="font-size: 4rem;">📄</div>
+        <h4 class="fw-bold" style="color: var(--somnus-blue-deep);">Nenhum TCLE cadastrado</h4>
+        <p class="text-muted mx-auto" style="max-width: 400px;">
+            Ainda não existe nenhuma versão do Termo de Consentimento Livre e Esclarecido registrada no sistema.
+        </p>
+        <a href="{% url 'nova_versao_tcle' %}" class="btn rounded-pill fw-bold text-white px-5 py-3 mt-2 shadow-sm"
+            style="background-color: var(--somnus-blue-deep); border: none;">
+            Criar Primeira Versão
+        </a>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .tcle-card {
+        background-color: #ffffff;
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+        transition: all 0.35s cubic-bezier(0.165, 0.84, 0.44, 1);
+    }
+
+    .tcle-card:hover {
+        box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.10) !important;
+        transform: translateY(-3px);
+    }
+
+    .tcle-stat-card {
+        transition: all 0.3s ease;
+    }
+
+    .tcle-stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .tcle-preview {
+        font-size: 0.875rem;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+</style>
+{% endblock %}

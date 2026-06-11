@@ -1,0 +1,104 @@
+<style>
+/* ── Premium Modal (Global) ───────────────────────────────── */
+.premium-modal-content {
+    border: none;
+    border-radius: 1.25rem;
+    box-shadow: 0 20px 40px -10px rgba(37, 55, 134, 0.15), 0 0 0 1px rgba(37, 55, 134, 0.05);
+    overflow: hidden;
+}
+
+.premium-modal-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: 50%;
+    background-color: #fee2e2;
+    color: #dc2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 1.5rem auto 1rem;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.premium-modal-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--somnus-blue-deep);
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.premium-modal-text {
+    font-size: 0.95rem;
+    color: #64748b;
+    text-align: center;
+    margin-bottom: 1.5rem;
+    line-height: 1.5;
+    padding: 0 1rem;
+}
+
+.premium-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem;
+}
+
+.premium-modal-actions .btn {
+    flex: 1;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 0.75rem;
+    transition: all 0.2s;
+}
+
+.btn-premium-cancel {
+    background-color: #f8fafc;
+    color: #475569;
+    border: 1.5px solid #e2e8f0;
+}
+
+.btn-premium-cancel:hover {
+    background-color: #f1f5f9;
+    border-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.btn-premium-danger {
+    background-color: #dc2626;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+.btn-premium-danger:hover {
+    background-color: #b91c1c;
+    box-shadow: 0 6px 16px rgba(220, 38, 38, 0.35);
+    transform: translateY(-1px);
+}
+</style>
+
+<div class="modal fade" id="{{ modal_id|default:'modalConfirmacao' }}" tabindex="-1" aria-labelledby="{{ modal_id|default:'modalConfirmacao' }}Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content premium-modal-content">
+            <div class="premium-modal-icon" id="{{ modal_id|default:'modalConfirmacao' }}-icon">
+                <svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+            </div>
+            
+            <h5 class="premium-modal-title" id="{{ modal_id|default:'modalConfirmacao' }}Label">
+                {{ modal_title|default:'Confirmar ação' }}
+            </h5>
+            
+            <p class="premium-modal-text" id="{{ modal_text_id|default:'modalConfirmacaoTexto' }}">
+                {{ modal_text|default:'Tem certeza que deseja continuar?' }}
+            </p>
+            
+            <div class="premium-modal-actions">
+                <button type="button" class="btn btn-premium-cancel" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-premium-danger" id="{{ btn_confirm_id|default:'btnModalConfirmar' }}">{{ btn_text|default:'Sim, remover' }}</button>
+            </div>
+        </div>
+    </div>
+</div>

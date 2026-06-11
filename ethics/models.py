@@ -26,4 +26,4 @@ class AceiteTCLE(models.Model):
 
     def __str__(self):
         # Agora identificamos pelo nome do paciente gravado na resposta
-        return f"Consentimento: {self.resposta_questionario.paciente_nome} - v{self.tcle.versao}"
+        return f"Consentimento: {self.resposta_questionario.codigo_paciente} - v{self.tcle.versao}"

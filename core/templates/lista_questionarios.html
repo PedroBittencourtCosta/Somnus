@@ -2,7 +2,7 @@
 {% load static %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container py-3 py-lg-5">
     <div class="text-center mb-5">
         <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Avaliações Disponíveis</h1>
         <p class="text-muted mx-auto" style="max-width: 600px;">
@@ -14,14 +14,10 @@
     <div class="row g-4 justify-content-center">
         {% for quest in questionarios %}
         <div class="col-md-6 col-lg-5">
-            <div class="card h-100 shadow rounded-4 hover-shadow transition p-4 border-light-subtle">
+            <div class="card h-100 shadow rounded-4 hover-shadow transition p-3 p-md-4 border-light-subtle">
                 <div class="card-body d-flex flex-column text-center">
                     <div class="mb-4">
-                        {% if quest.id in respondidos %}
-                            <span class="fs-1">✅</span>
-                        {% else %}
-                            <span class="fs-1">📋</span>
-                        {% endif %}
+                        <span class="fs-1">📋</span>
                     </div>
                     <h3 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">{{ quest.titulo }}</h3>
                     <p class="text-muted flex-grow-1 mb-4 small">
@@ -29,26 +25,13 @@
                     </p>
                     
                     <div class="d-grid">
-                        {% if quest.id in respondidos %}
-                            <button class="btn btn-secondary rounded-pill fw-bold py-2 shadow-sm" disabled>
-                                <i class="bi bi-check-circle-fill me-2"></i>Avaliação Concluída
-                            </button>
-                        {% else %}
-                            <a href="{% url 'responder_questionario' pk=quest.id %}" 
-                               class="btn btn-primary rounded-pill fw-bold py-2 shadow-sm"
-                               style="background-color: var(--somnus-blue-inst); border: none;">
-                                Iniciar Avaliação
-                            </a>
-                        {% endif %}
-                    </div>
-                    {% if user.is_staff or user.groups.all.0.name == 'Pesquisador' %}
-                    <div class="mt-3 d-flex justify-content-center gap-2">
-                        <a href="{% url 'editar_avaliacao' pk=quest.id %}" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill px-3">
-                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                            Editar Questionário
+                        <a href="{% url 'responder_questionario' pk=quest.id %}" 
+                           class="btn btn-primary rounded-pill fw-bold py-2 shadow-sm"
+                           style="background-color: var(--somnus-blue-inst); border: none;">
+                            Iniciar Avaliação
                         </a>
                     </div>
-                    {% endif %}
+
                 </div>
             </div>
         </div>
@@ -64,20 +47,14 @@
     /* Estilo para dar mais presença ao Card no estado normal */
     .card {
         background-color: #ffffff;
-        border: 1px solid rgba(0,0,0,0.05); /* Borda quase invisível apenas para contorno */
+        border: 1px solid rgba(0,0,0,0.05);
     }
 
-    /* Sombra mais robusta no Hover para destacar o card selecionado */
+    /* Borda de destaque no hover */
     .hover-shadow:hover {
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12) !important;
-        transform: translateY(-8px);
-        border-color: var(--somnus-blue-inst); /* Realce na borda ao passar o mouse */
+        border-color: var(--somnus-blue-inst);
     }
 
-    .transition { 
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1); 
-    }
-    
     .btn-secondary:disabled {
         background-color: #e9ecef;
         border-color: #dee2e6;

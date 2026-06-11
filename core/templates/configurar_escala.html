@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'gerenciar_questionarios' %}"
+                class="text-secondary text-decoration-none me-4 hover-primary">
+                <svg width="38" height="38" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24" class="transition">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 8 8 12 12 16"></polyline>
+                    <line x1="16" y1="12" x2="8" y2="12"></line>
+                </svg>
+            </a>
+            <h2 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Motor de Cálculo: {{ questionario.titulo }}
+            </h2>
+        </div>
+        <p class="text-muted mt-2" style="margin-left: 4.2rem;">Defina como o sistema deve processar os resultados dessa
+            avaliação.</p>
+    </div>
+
+    <!-- Container para as mensagens de sucesso/erro estilo Bootstrap -->
+    <div id="alertContainer"></div>
+
+    <div id="viewList" class="mb-4">
+
+        <!-- Cabeçalho da seção -->
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h4 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">Escalas Cadastradas</h4>
+                <p class="text-muted mb-0" style="font-size: 0.88rem;">Vincule ou edite as escalas de cálculo deste
+                    questionário.</p>
+            </div>
+            <button id="btnNovaEscala"
+                class="btn fw-bold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2"
+                style="background-color: var(--somnus-blue-inst); color: white; border: none; white-space: nowrap;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                Nova Escala
+            </button>
+        </div>
+
+        <!-- Filtro de busca -->
+        <div class="card border-0 shadow-sm rounded-4 p-3 mb-3">
+            <div class="input-group" id="filtro-escala-group">
+                <span class="input-group-text bg-white border-end-0 rounded-start-4 text-muted">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                    </svg>
+                </span>
+                <input type="text" id="filtro-nome-escala"
+                    class="form-control border-start-0 rounded-end-4 shadow-none"
+                    placeholder="Buscar escala pelo nome…"
+                    style="font-size: 0.9rem; border-color: #dee2e6;">
+            </div>
+        </div>
+
+        <!-- Tabela -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tabelaEscalas">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="fw-semibold py-3 ps-4 text-black">Nome da Escala</th>
+                            <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell">Motor</th>
+                            <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 14%;">Vínculo</th>
+                            <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 8%;">Editar</th>
+                            <th class="fw-semibold py-3 pe-4 text-black text-center" style="width: 8%;">Excluir</th>
+                        </tr>
+                    </thead>
+                    <tbody id="templateCardsContainer">
+                        <!-- Preenchido via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    {% include 'partials/_escala_builder.html' %}
+</div>
+
+{% include 'partials/_modal_confirmacao.html' with modal_id="modalConfirmarExcluirEscala" modal_text_id="modal-escala-mensagem" btn_confirm_id="btn-confirmar-excluir-escala" btn_text="Excluir" %}
+
+<script id="configData" type="application/json">
+    {{ config_json|safe }}
+</script>
+<script id="perguntasData" type="application/json">
+    {{ perguntas_json|safe }}
+</script>
+<script id="escalasTemplatesData" type="application/json">
+    {{ escalas_templates_json|safe }}
+</script>
+<script>
+    const configAtual = JSON.parse(document.getElementById('configData').textContent);
+    const perguntas = JSON.parse(document.getElementById('perguntasData').textContent);
+    const escalasTemplates = JSON.parse(document.getElementById('escalasTemplatesData').textContent);
+
+    const select = document.getElementById('strategySelect');
+    const builder = document.getElementById('dynamicBuilder');
+    const editor = document.getElementById('jsonEditor');
+    const btnSalvar = document.getElementById('btnSalvar');
+    const jsonError = document.getElementById('jsonError');
+
+    const viewList = document.getElementById('viewList');
+    const viewBuilder = document.getElementById('viewBuilder');
+
+    let currentEscalaId = null;
+
+    function showBuilder() {
+        viewList.style.display = 'none';
+        viewBuilder.style.display = 'block';
+    }
+
+    function showList() {
+        viewBuilder.style.display = 'none';
+        viewList.style.display = 'block';
+        currentEscalaId = null;
+    }
+
+    document.getElementById('btnNovaEscala').addEventListener('click', () => {
+        currentEscalaId = null;
+        document.getElementById('nomeEscala').value = 'Nova Escala';
+        loadJsonIntoBuilder({ operacao: 'SUM', variaveis: [], limiares: [] });
+        showBuilder();
+    });
+
+    document.getElementById('btnVoltarLista').addEventListener('click', showList);
+
+    // Carrega templates na lista
+    const container = document.getElementById('templateCardsContainer');
+
+    function renderizarLista() {
+        const termo = (document.getElementById('filtro-nome-escala')?.value || '').toLowerCase().trim();
+        const lista = termo
+            ? escalasTemplates.filter(t => t.nome.toLowerCase().includes(termo))
+            : escalasTemplates;
+
+        container.innerHTML = '';
+        if (escalasTemplates.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p class="mb-0" style="font-size: 0.9rem;">Nenhuma escala cadastrada no sistema ainda.</p>
+                        </div>
+                    </td>
+                </tr>`;
+        } else if (lista.length === 0) {
+            container.innerHTML = `
+                <tr>
+                    <td colspan="5" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                            <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                            </svg>
+                            <p class="mb-0" style="font-size: 0.88rem;">Nenhuma escala encontrada para "<strong>${termo}</strong>".</p>
+                        </div>
+                    </td>
+                </tr>`;
+        } else {
+            lista.forEach(t => {
+                const isLinked = t.is_linked;
+                const row = document.createElement('tr');
+                row.className = 'align-middle transition-row' + (isLinked ? '' : ' row-nao-vinculada');
+
+                // Badge de vínculo
+                const badgeStyle = isLinked
+                    ? 'background-color: #d1fae5; color: #065f46;'
+                    : 'background-color: #f3f4f6; color: #6b7280;';
+                const badgeLabel = isLinked ? '● Vinculada' : '○ Não vinculada';
+
+                // Botão texto Vincular / Desvincular
+                const btnVincularStyle = isLinked
+                    ? 'border: 1.5px solid #dc2626; color: #dc2626; background: transparent; font-size: 0.8rem;'
+                    : 'border: 1.5px solid #059669; color: #059669; background: transparent; font-size: 0.8rem;';
+                const btnVincularLabel = isLinked ? 'Desvincular' : 'Vincular';
+
+                row.innerHTML = `
+                    <td class="ps-4">
+                        <span class="fw-semibold" style="color: var(--somnus-blue-deep); font-size: 0.95rem;">${t.nome}</span>
+                    </td>
+                    <td class="px-3 text-muted d-none d-md-table-cell" style="font-size: 0.85rem;">${t.strategy_class}</td>
+
+                    <td class="px-3 text-center">
+                        <button class="btn btn-sm rounded-pill fw-semibold px-3 btn-vincular"
+                            style="${btnVincularStyle}"
+                            onclick="toggleVincular(${t.id}, ${isLinked})">
+                            ${btnVincularLabel}
+                        </button>
+                    </td>
+
+                    <td class="px-3 text-center">
+                        <button class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center btn-editar"
+                            style="border: 1.5px solid var(--somnus-blue-inst); color: var(--somnus-blue-inst); background: transparent;"
+                            title="Editar regras"
+                            onclick="editarEscala(${t.id})">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                        </button>
+                    </td>
+
+                    <td class="pe-4 text-center">
+                        <button class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center btn-lixeira"
+                            style="border: 1.5px solid #dc2626; color: #dc2626; background: transparent;"
+                            title="Excluir escala"
+                            onclick="desativarEscala(${t.id}, '${t.nome.replace(/'/g, "\\'")}')">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                        </button>
+                    </td>
+                `;
+                container.appendChild(row);
+            });
+        }
+    }
+
+    renderizarLista();
+
+    // Filtro de busca em tempo real
+    document.getElementById('filtro-nome-escala').addEventListener('input', renderizarLista);
+
+    window.toggleVincular = function (id, currentlyLinked) {
+        const acao = currentlyLinked ? 'desvincular' : 'vincular';
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ acao: acao, escala_id: id })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const t = escalasTemplates.find(t => t.id === id);
+                    if (t) t.is_linked = !currentlyLinked;
+                    renderizarLista();
+                    showAlert(`Escala ${acao === 'vincular' ? 'vinculada' : 'desvinculada'} com sucesso!`, 'success');
+                } else {
+                    showAlert('Erro: ' + data.message, 'danger');
+                }
+            });
+    }
+
+    // ── Wiring do modal de exclusão de escala ──
+    let pendingDesativarId = null;
+
+    window.desativarEscala = function (id, nome) {
+        pendingDesativarId = id;
+        document.getElementById('modal-escala-mensagem').textContent =
+            `"${nome}" será excluída permanentemente e não aparecerá mais para nenhum questionário.`;
+        bootstrap.Modal.getOrCreateInstance(
+            document.getElementById('modalConfirmarExcluirEscala')
+        ).show();
+    }
+
+    document.getElementById('btn-confirmar-excluir-escala').addEventListener('click', function () {
+        if (!pendingDesativarId) return;
+        const id = pendingDesativarId;
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ acao: 'desativar', escala_id: id })
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const idx = escalasTemplates.findIndex(t => t.id === id);
+                    if (idx !== -1) escalasTemplates.splice(idx, 1);
+                    renderizarLista();
+                    showAlert('Escala excluída com sucesso.', 'success');
+                } else {
+                    showAlert('Erro ao excluir: ' + data.message, 'danger');
+                }
+            })
+            .finally(() => {
+                bootstrap.Modal.getInstance(
+                    document.getElementById('modalConfirmarExcluirEscala')
+                )?.hide();
+                pendingDesativarId = null;
+            });
+    });
+
+
+    window.editarEscala = function (id) {
+        const template = escalasTemplates.find(t => t.id === id);
+        if (template) {
+            currentEscalaId = template.id;
+            document.getElementById('nomeEscala').value = template.nome;
+            select.value = template.strategy_class;
+            select.dispatchEvent(new Event('change'));
+            if (template.strategy_class === 'DYNAMIC') {
+                loadJsonIntoBuilder(template.config);
+            }
+            showBuilder();
+        }
+    };
+
+    function loadJsonIntoBuilder(config) {
+        // Reset visual builder
+        simplesTagInput.clear();
+        document.getElementById('simplesLimiaresContainer').innerHTML = '';
+        document.getElementById('subescalasContainer').innerHTML = '';
+
+        if (!config || !config.operacao) {
+            document.getElementById('opType').value = 'SUM';
+            document.getElementById('opType').dispatchEvent(new Event('change'));
+            editor.value = "{\n  \"operacao\": \"SUM\",\n  \"variaveis\": [],\n  \"limiares\": []\n}";
+            return;
+        }
+
+        document.getElementById('opType').value = config.operacao;
+        document.getElementById('opType').dispatchEvent(new Event('change'));
+
+        if (config.operacao === 'SUM' || config.operacao === 'AVERAGE') {
+            if (config.variaveis) {
+                simplesTagInput.setTags(config.variaveis);
+            }
+            if (config.limiares) {
+                config.limiares.forEach(lim => {
+                    document.getElementById('btnAddLimiarSimples').click();
+                    const items = document.querySelectorAll('#simplesLimiaresContainer .limiar-item');
+                    if (items.length > 0) {
+                        const lastItem = items[items.length - 1];
+                        const inputs = lastItem.querySelectorAll('input');
+                        inputs[0].value = lim.max;
+                        inputs[1].value = lim.status;
+                    }
+                });
+            }
+        } else if (config.operacao === 'SUM_BY_SUBSCALE') {
+            if (config.subescalas) {
+                for (const [nome, vars] of Object.entries(config.subescalas)) {
+                    const card = window.buildSubescalaCard();
+                    document.getElementById('subescalasContainer').appendChild(card);
+                    card.querySelector('.sub-nome').value = nome;
+                    window.setSubVarTags(card, vars);
+
+                    if (config.limiares && config.limiares[nome]) {
+                        const btnLimiar = card.querySelector('button[onclick="window.addSubLimiar(this)"]');
+                        config.limiares[nome].forEach(lim => {
+                            window.addSubLimiar(btnLimiar);
+                            const limItems = card.querySelectorAll('.sub-limiar-item');
+                            if (limItems.length > 0) {
+                                const lastLimItem = limItems[limItems.length - 1];
+                                const inputs = lastLimItem.querySelectorAll('input');
+                                inputs[0].value = lim.max;
+                                inputs[1].value = lim.status;
+                            }
+                        });
+                    }
+                }
+            }
+        }
+
+        // Atualiza JSON editor
+        editor.value = JSON.stringify(config, null, 2);
+    }
+
+    // Inicializa
+    select.value = 'DYNAMIC';
+    showList();
+
+    // Toggle builder
+    select.addEventListener('change', (e) => {
+        if (e.target.value === 'DYNAMIC') {
+            builder.style.display = 'block';
+        } else {
+            builder.style.display = 'none';
+        }
+    });
+
+    select.dispatchEvent(new Event('change'));
+
+    // Assistente Visual Lógica
+    const opType = document.getElementById('opType');
+    const uiSimples = document.getElementById('uiSimples');
+    const uiSubescala = document.getElementById('uiSubescala');
+
+    opType.addEventListener('change', () => {
+        if (opType.value === 'SUM_BY_SUBSCALE') {
+            uiSimples.style.display = 'none';
+            uiSubescala.style.display = 'block';
+        } else {
+            uiSimples.style.display = 'block';
+            uiSubescala.style.display = 'none';
+        }
+    });
+
+    // Limiares Simples
+    const simplesLimiaresContainer = document.getElementById('simplesLimiaresContainer');
+    document.getElementById('btnAddLimiarSimples').addEventListener('click', () => {
+        const div = document.createElement('div');
+        div.className = 'd-flex gap-2 mb-2 limiar-item';
+        div.innerHTML = `
+            <input type="number" step="0.1" class="form-control form-control-sm" placeholder="Valor Máx (ex: 10)">
+            <input type="text" class="form-control form-control-sm" placeholder="Status (ex: Baixo)">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+        `;
+        simplesLimiaresContainer.appendChild(div);
+    });
+
+    // Sub-escalas
+    const subescalasContainer = document.getElementById('subescalasContainer');
+    document.getElementById('btnAddSubescala').addEventListener('click', () => {
+        const card = window.buildSubescalaCard();
+        subescalasContainer.appendChild(card);
+    });
+
+    window.addSubLimiar = function (btn) {
+        const container = btn.previousElementSibling;
+        const div = document.createElement('div');
+        div.className = 'd-flex gap-2 mt-2 sub-limiar-item';
+        div.innerHTML = `
+            <input type="number" step="0.1" class="form-control form-control-sm" placeholder="Máx">
+            <input type="text" class="form-control form-control-sm" placeholder="Status">
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">X</button>
+        `;
+        container.appendChild(div);
+    };
+
+    document.getElementById('btnGerarJson').addEventListener('click', () => {
+        const op = opType.value;
+        let result = { operacao: op };
+
+        if (op === 'SUM' || op === 'AVERAGE') {
+            // Lê as tags do tag-input (+ qualquer texto ainda no input)
+            const pendingText = document.getElementById('simplesVarsInput').value.trim();
+            if (pendingText) simplesTagInput.setTags([...simplesTagInput.getTags(), ...pendingText.split(',').map(v => v.trim()).filter(v => v)]);
+            result.variaveis = simplesTagInput.getTags();
+
+            const limiares = [];
+            document.querySelectorAll('#simplesLimiaresContainer .limiar-item').forEach(item => {
+                const inputs = item.querySelectorAll('input');
+                const maxVal = parseFloat(inputs[0].value);
+                const statusVal = inputs[1].value.trim();
+                if (!isNaN(maxVal) && statusVal) {
+                    limiares.push({ max: maxVal, status: statusVal });
+                }
+            });
+            if (limiares.length > 0) result.limiares = limiares;
+
+        } else if (op === 'SUM_BY_SUBSCALE') {
+            result.subescalas = {};
+            result.limiares = {};
+
+            document.querySelectorAll('#subescalasContainer .subescala-item').forEach(item => {
+                const nome = item.querySelector('.sub-nome').value.trim();
+                // Flush texto pendente antes de ler
+                const pendingInput = item.querySelector('.sub-vars-input');
+                if (pendingInput && pendingInput.value.trim()) {
+                    pendingInput.dispatchEvent(new Event('blur'));
+                }
+                const vars = window.getSubVarTags(item);
+
+                if (nome && vars.length > 0) {
+                    result.subescalas[nome] = vars;
+
+                    const limiares = [];
+                    item.querySelectorAll('.sub-limiar-item').forEach(limItem => {
+                        const inputs = limItem.querySelectorAll('input');
+                        const maxVal = parseFloat(inputs[0].value);
+                        const statusVal = inputs[1].value.trim();
+                        if (!isNaN(maxVal) && statusVal) {
+                            limiares.push({ max: maxVal, status: statusVal });
+                        }
+                    });
+
+                    if (limiares.length > 0) {
+                        result.limiares[nome] = limiares;
+                    }
+                }
+            });
+
+            if (Object.keys(result.limiares).length === 0) {
+                delete result.limiares;
+            }
+        }
+
+        editor.value = JSON.stringify(result, null, 2);
+    });
+
+    // Save
+    btnSalvar.addEventListener('click', () => {
+        let payload = {
+            strategy_class: select.value,
+            escala_id: currentEscalaId,
+            nome: document.getElementById('nomeEscala').value
+        };
+
+        if (select.value === 'DYNAMIC') {
+            try {
+                payload.config_dinamica = JSON.parse(editor.value);
+                jsonError.style.display = 'none';
+            } catch (err) {
+                jsonError.style.display = 'block';
+                return;
+            }
+        }
+
+        btnSalvar.disabled = true;
+        btnSalvar.innerText = "Salvando...";
+
+        fetch(window.location.href, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showAlert('Regras de cálculo salvas com sucesso!', 'success');
+                    currentEscalaId = data.escala_id;
+
+                    // Update templates array and re-render
+                    let existing = escalasTemplates.find(t => t.id === currentEscalaId);
+                    if (existing) {
+                        existing.nome = data.nome;
+                        existing.config = payload.config_dinamica;
+                    } else {
+                        escalasTemplates.push({
+                            id: currentEscalaId,
+                            nome: data.nome,
+                            strategy_class: payload.strategy_class,
+                            is_linked: true,
+                            config: payload.config_dinamica || {}
+                        });
+                    }
+                    renderizarLista();
+                } else {
+                    showAlert('Erro ao salvar: ' + data.message, 'danger');
+                }
+            })
+            .catch(err => {
+                showAlert('Falha na requisição.', 'danger');
+            })
+            .finally(() => {
+                btnSalvar.disabled = false;
+                btnSalvar.innerText = "Salvar Configurações";
+                window.scrollTo({ top: 0, behavior: 'smooth' }); // Sobe a página para o usuário ver o alerta
+            });
+    });
+
+    // Helper CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Custom Alert
+    function showAlert(message, type) {
+        const container = document.getElementById('alertContainer');
+        container.innerHTML = `
+            <div class="alert alert-${type} alert-dismissible fade show d-flex align-items-center shadow-sm" role="alert">
+                <i class="bi bi-${type === 'success' ? 'check-circle-fill' : 'exclamation-circle-fill'} me-2"></i>
+                <div>${message}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `;
+
+        setTimeout(() => {
+            const alertNode = container.querySelector('.alert');
+            if (alertNode) {
+                const bsAlert = new bootstrap.Alert(alertNode);
+                bsAlert.close();
+            }
+        }, 5000);
+    }
+</script>
+
+<style>
+    .transition-row {
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+    }
+
+    .row-nao-vinculada {
+        opacity: 0.6;
+    }
+
+    .table> :not(caption)>*>* {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    .btn-acao:hover,
+    .btn-editar:hover {
+        filter: brightness(1.05);
+        opacity: 0.85;
+    }
+</style>
+{% endblock %}

@@ -307,3 +307,86 @@ class SafeParser:
         if match:
             return int(match.group(1)), int(match.group(2))
         return None
+
+class EscalaEngine:
+    """
+    Ponto de entrada central para cálculo de resultados de questionários.
+    Roteia para as classes especializadas ou para o interpretador dinâmico.
+    """
+    @staticmethod
+    def processar(answers_map: dict, config) -> dict:
+        # 1. Padrão Strategy: Roteia para cálculos complexos via código nativo
+        if config.strategy_class != "DYNAMIC":
+            strategy_factory = {
+                "PSQI": PSQICalculator,
+                "IMC": IMCCalculator,
+                "DASS21": DASS21Calculator,
+                "K10": K10Calculator,
+                "SRQ20": SRQ20Calculator,
+                "ESE": ESECalculator,
+                "AUDIT": AUDITCalculator,
+                "EMSSP": EMSSPCalculator,
+            }
+            strategy = strategy_factory.get(config.strategy_class)
+            if not strategy:
+                return {"erro": f"Strategy '{config.strategy_class}' não mapeada no backend."}
+            return strategy.calculate(answers_map)
+        
+        # 2. Padrão Interpreter: Processa metadados gerados pelo Pesquisador
+        if not config.config_dinamica:
+            return {"erro": "Configuração da escala está vazia. Salve as regras no Construtor Visual."}
+            
+        return DynamicResolver.resolve(answers_map, config.config_dinamica)
+
+class DynamicResolver:
+    """
+    Lê o JSON estruturado do banco de dados e executa matemática simples 
+    sem necessidade de criar novas classes Python.
+    """
+    @staticmethod
+    def resolve(answers_map: dict, json_config: dict) -> dict:
+        resultados = {}
+        op = json_config.get("operacao")
+        
+        try:
+            if op == "SUM":
+                vars_keys = json_config.get("variaveis", [])
+                total = sum(SafeParser.to_float(answers_map.get(v, 0)) for v in vars_keys)
+                resultados["total"] = total
+                resultados["status"] = DynamicResolver._aplicar_limiares(total, json_config.get("limiares", []))
+                
+            elif op == "SUM_BY_SUBSCALE":
+                subescalas = json_config.get("subescalas", {})
+                for sub_nome, vars_keys in subescalas.items():
+                    total = sum(SafeParser.to_float(answers_map.get(v, 0)) for v in vars_keys)
+                    resultados[f"{sub_nome}_total"] = total
+                    
+                    limiares_sub = json_config.get("limiares", {}).get(sub_nome, [])
+                    if limiares_sub:
+                        resultados[f"{sub_nome}_status"] = DynamicResolver._aplicar_limiares(total, limiares_sub)
+                        
+            elif op == "AVERAGE":
+                vars_keys = json_config.get("variaveis", [])
+                if vars_keys:
+                    total = sum(SafeParser.to_float(answers_map.get(v, 0)) for v in vars_keys)
+                    media = total / len(vars_keys)
+                    resultados["media"] = round(media, 2)
+                    resultados["status"] = DynamicResolver._aplicar_limiares(media, json_config.get("limiares", []))
+            else:
+                resultados["erro"] = f"Operação '{op}' não suportada pelo construtor dinâmico."
+        except Exception as e:
+            resultados["erro"] = f"Falha no processamento dinâmico: {str(e)}"
+                
+        return resultados
+
+    @staticmethod
+    def _aplicar_limiares(valor: float, limiares: list) -> str:
+        if not limiares:
+            return "Sem classificação"
+            
+        # Ordena ascendente pelo valor máximo da regra (max)
+        for regra in sorted(limiares, key=lambda x: x.get("max", float('inf'))):
+            if valor <= regra.get("max", float('inf')):
+                return regra.get("status", "Indefinido")
+                
+        return "Indefinido"

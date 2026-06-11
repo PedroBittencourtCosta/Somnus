@@ -1,0 +1,418 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestão de Questionários — Somnus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between mb-5 gap-3">
+        <div>
+            <h1 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">
+                <svg width="34" height="34" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Gestão de Questionários
+            </h1>
+            <p class="text-muted mb-0" style="font-size: 0.92rem;">
+                Crie, edite, configure escalas e gerencie o status dos questionários.
+            </p>
+        </div>
+        <a href="{% url 'nova_avaliacao' %}" id="btn-novo-questionario"
+            class="btn fw-bold rounded-pill px-4 py-2 shadow-sm d-flex align-items-center gap-2 align-self-start align-self-md-center"
+            style="background-color: var(--somnus-blue-inst); color: white; border: none; white-space: nowrap;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+            </svg>
+            Novo Questionário
+        </a>
+    </div>
+
+    <!-- Barra de Filtros -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-body px-4 py-3">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-8">
+                    <label class="filter-label" for="filtro-nome">
+                        <i class="bi bi-search me-1"></i>Nome do questionário
+                    </label>
+                    <input type="text" id="filtro-nome" class="form-control filter-input"
+                        placeholder="Buscar questionário pelo nome…">
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="filter-label" for="filtro-status">
+                        <i class="bi bi-toggle-on me-1"></i>Status
+                    </label>
+                    <select id="filtro-status" class="form-select filter-input">
+                        <option value="">Todos</option>
+                        <option value="true">Ativos</option>
+                        <option value="false">Inativos</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Contador de resultados -->
+            <div class="mt-3 d-flex align-items-center justify-content-between">
+                <small id="resultado-contador" class="text-muted"><span id="contador-visivel">{{ questionarios|length }}</span> questionário(s) exibido(s)</small>
+                <button id="btn-limpar-filtros" class="btn btn-link btn-sm text-decoration-none text-muted d-none p-0">
+                    <i class="bi bi-x-circle me-1"></i>Limpar filtros
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <table class="table table-hover align-middle mb-0" id="tabela-questionarios">
+            <thead class="table-light">
+                <tr>
+                    <th class="fw-semibold py-3 px-4 text-black" style="width: 5%;">#</th>
+                    <th class="fw-semibold py-3 px-3 text-black">Nome do Questionário</th>
+                    <th class="fw-semibold py-3 px-3 text-black text-center d-none d-md-table-cell" style="width: 12%;">
+                        Status</th>
+                    <th class="fw-semibold py-3 px-3 text-black d-none d-md-table-cell" style="width: 14%;">Criado em
+                    </th>
+                    <th class="fw-semibold py-3 px-3 text-black text-center" style="width: 26%;">Ações</th>
+                </tr>
+            </thead>
+            <tbody id="tbody-questionarios">
+                {% for quest in questionarios %}
+                <tr class="linha-questionario transition-row {% if not quest.ativo %}row-inativa{% endif %}"
+                    data-nome="{{ quest.titulo|lower }}" data-id="{{ quest.id }}"
+                    data-ativo="{{ quest.ativo|yesno:'true,false' }}" id="row-quest-{{ quest.id }}">
+
+                    <td class="px-4 text-muted" style="font-size: 0.85rem;">{{ forloop.counter }}</td>
+
+                    <td class="px-3">
+                        <span class="fw-semibold nome-quest"
+                            style="color: var(--somnus-blue-deep); font-size: 0.95rem;">
+                            {{ quest.titulo }}
+                        </span>
+                    </td>
+
+                    {# ── Badge de status ── #}
+                    <td class="px-3 text-center d-none d-md-table-cell">
+                        <span id="badge-status-{{ quest.id }}" class="badge rounded-pill px-3 py-2 badge-status"
+                            style="font-size: 0.75rem; font-weight: 600; letter-spacing: 0.3px;
+                                   {% if quest.ativo %}background-color: #d1fae5; color: #065f46;{% else %}background-color: #fee2e2; color: #991b1b;{% endif %}">
+                            {% if quest.ativo %}● Ativo{% else %}○ Inativo{% endif %}
+                        </span>
+                    </td>
+
+                    <td class="px-3 text-muted d-none d-md-table-cell" style="font-size: 0.85rem;">
+                        {{ quest.data_criacao|date:"d/m/Y" }}
+                    </td>
+
+                    {# ── Coluna de ações ── #}
+                    <td class="px-3">
+                        <div class="d-flex justify-content-center gap-2 flex-wrap">
+                            {# Editar #}
+                            <a href="{% url 'editar_avaliacao' pk=quest.id %}" id="btn-editar-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
+                                style="border: 1.5px solid var(--somnus-blue-inst); color: var(--somnus-blue-inst); background: transparent; font-size: 0.8rem;"
+                                title="Editar questionário">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                                Editar
+                            </a>
+
+                            {# Escalas #}
+                            <a href="{% url 'configurar_escala' pk=quest.id %}" id="btn-escala-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-3 d-flex align-items-center gap-1"
+                                style="border: 1.5px solid var(--somnus-green-dark); color: var(--somnus-green-dark); background: transparent; font-size: 0.8rem;"
+                                title="Configurar escalas">
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Escalas
+                            </a>
+
+                            {# Lixeira — Desativar / Reativar #}
+                            <button type="button" id="btn-desativar-{{ quest.id }}"
+                                class="btn btn-sm rounded-pill fw-semibold px-2 d-flex align-items-center gap-1 btn-lixeira"
+                                data-id="{{ quest.id }}" data-ativo="{{ quest.ativo|yesno:'true,false' }}"
+                                data-nome="{{ quest.titulo }}" data-url="{% url 'desativar_questionario' pk=quest.id %}"
+                                title="{% if quest.ativo %}Desativar questionário{% else %}Reativar questionário{% endif %}"
+                                style="border: 1.5px solid {% if quest.ativo %}#dc2626{% else %}#059669{% endif %};
+                                       color: {% if quest.ativo %}#dc2626{% else %}#059669{% endif %};
+                                       background: transparent; font-size: 0.8rem;">
+                                {% if quest.ativo %}
+                                {# Ícone cadeado (desativar) #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                                {% else %}
+                                {# Ícone reativar (refresh) #}
+                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                </svg>
+                                {% endif %}
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr id="linha-vazia-inicial">
+                    <td colspan="5" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                            <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                style="opacity: 0.35;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                            </svg>
+                            <p class="mb-0" style="font-size: 0.9rem;">Nenhum questionário cadastrado.</p>
+                            <a href="{% url 'nova_avaliacao' %}"
+                                class="btn btn-sm btn-somnus rounded-pill px-3 mt-1">Criar o primeiro</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div id="sem-resultado" class="text-center py-5 d-none">
+            <div class="d-flex flex-column align-items-center gap-2 text-muted">
+                <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:0.35;">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                        d="M21 21l-4.35-4.35M17 11A6 6 0 115 11a6 6 0 0112 0z" />
+                </svg>
+                <p class="mb-0" style="font-size: 0.88rem;">Nenhum questionário encontrado para "<strong
+                        id="termo-buscado"></strong>".</p>
+            </div>
+        </div>
+    </div>
+
+
+
+</div>
+
+{% include 'partials/_modal_confirmacao.html' with modal_id="modalConfirmarDesativar" modal_text_id="modal-mensagem" btn_confirm_id="btn-confirmar-acao" btn_text="Confirmar" %}
+
+<style>
+    .transition-row {
+        transition: background-color 0.2s ease, opacity 0.3s ease;
+    }
+
+    .row-inativa {
+        opacity: 0.55;
+    }
+
+    .table> :not(caption)>*>* {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .table-hover>tbody>tr:hover>* {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+        display: block;
+    }
+
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+        padding: 0.55rem 0.9rem;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .filter-input:focus {
+        border-color: var(--somnus-blue-inst) !important;
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
+        background-color: #fff;
+    }
+
+    .form-select.filter-input {
+        padding-right: 2rem;
+    }
+
+    .btn[style*="somnus-blue-inst"]:hover {
+        background-color: var(--somnus-blue-inst) !important;
+        color: white !important;
+    }
+
+    .btn[style*="somnus-green-dark"]:hover {
+        background-color: var(--somnus-green-dark) !important;
+        color: white !important;
+    }
+
+    .btn-lixeira:hover {
+        filter: brightness(1.1);
+        background-color: rgba(220, 38, 38, 0.06) !important;
+    }
+</style>
+
+<script>
+    /* ── Filtro de busca ── */
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('filtro-nome');
+        const linhas = document.querySelectorAll('.linha-questionario');
+        const semResultado = document.getElementById('sem-resultado');
+        const contador = document.getElementById('contador-visivel');
+        const termoBuscado = document.getElementById('termo-buscado');
+
+        const selectStatus = document.getElementById('filtro-status');
+        const btnLimpar = document.getElementById('btn-limpar-filtros');
+
+        function filtrar() {
+            const termo = input.value.toLowerCase().trim();
+            const status = selectStatus.value;
+            let visiveis = 0;
+
+            linhas.forEach(function (linha) {
+                const nome = linha.getAttribute('data-nome');
+                const ativo = linha.getAttribute('data-ativo');
+                
+                const nomeOk = !termo || nome.includes(termo);
+                const statusOk = !status || ativo === status;
+
+                if (nomeOk && statusOk) {
+                    linha.style.display = '';
+                    visiveis++;
+                } else {
+                    linha.style.display = 'none';
+                }
+            });
+
+            if (termoBuscado) termoBuscado.textContent = termo;
+            contador.textContent = visiveis;
+
+            if (visiveis === 0 && (termo.length > 0 || status)) {
+                semResultado.classList.remove('d-none');
+            } else {
+                semResultado.classList.add('d-none');
+            }
+
+            const filtroAtivo = termo || status;
+            btnLimpar.classList.toggle('d-none', !filtroAtivo);
+        }
+
+        input.addEventListener('input', filtrar);
+        selectStatus.addEventListener('change', filtrar);
+
+        btnLimpar.addEventListener('click', function () {
+            input.value = '';
+            selectStatus.value = '';
+            filtrar();
+        });
+
+        /* ── Soft-delete: lixeira ── */
+        const modal = new bootstrap.Modal(document.getElementById('modalConfirmarDesativar'));
+        const modalMensagem = document.getElementById('modal-mensagem');
+        const btnConfirmar = document.getElementById('btn-confirmar-acao');
+
+        let pendingUrl = null;
+        let pendingId = null;
+        let pendingAtivo = null;
+
+        document.querySelectorAll('.btn-lixeira').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                pendingUrl = this.dataset.url;
+                pendingId = this.dataset.id;
+                pendingAtivo = this.dataset.ativo === 'true';
+                const nome = this.dataset.nome;
+                
+                const modalIcon = document.getElementById('modalConfirmarDesativar-icon');
+
+                if (pendingAtivo) {
+                    modalMensagem.textContent =
+                        `"${nome}" será desativado e não aparecerá mais para coleta. ` +
+                        `O registro e todas as respostas serão preservados no banco de dados.`;
+                    btnConfirmar.style.backgroundColor = '#dc2626';
+                    btnConfirmar.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.25)';
+                    btnConfirmar.textContent = 'Desativar';
+                    if (modalIcon) {
+                        modalIcon.style.backgroundColor = '#fee2e2';
+                        modalIcon.style.color = '#dc2626';
+                        modalIcon.innerHTML = `<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`;
+                    }
+                } else {
+                    modalMensagem.textContent =
+                        `"${nome}" será reativado e voltará a aparecer para coleta.`;
+                    btnConfirmar.style.backgroundColor = '#059669';
+                    btnConfirmar.style.boxShadow = '0 4px 12px rgba(5, 150, 105, 0.25)';
+                    btnConfirmar.textContent = 'Reativar';
+                    if (modalIcon) {
+                        modalIcon.style.backgroundColor = '#d1fae5';
+                        modalIcon.style.color = '#059669';
+                        modalIcon.innerHTML = `<svg width="28" height="28" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`;
+                    }
+                }
+
+                modal.show();
+            });
+        });
+
+        btnConfirmar.addEventListener('click', function () {
+            if (!pendingUrl) return;
+
+            fetch(pendingUrl, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({}),
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        const novoAtivo = data.ativo;
+                        const row = document.getElementById(`row-quest-${pendingId}`);
+                        const badge = document.getElementById(`badge-status-${pendingId}`);
+                        const btnLix = document.getElementById(`btn-desativar-${pendingId}`);
+
+                        /* Atualiza badge */
+                        if (novoAtivo) {
+                            badge.style.backgroundColor = '#d1fae5';
+                            badge.style.color = '#065f46';
+                            badge.textContent = '● Ativo';
+                            row.classList.remove('row-inativa');
+                        } else {
+                            badge.style.backgroundColor = '#fee2e2';
+                            badge.style.color = '#991b1b';
+                            badge.textContent = '○ Inativo';
+                            row.classList.add('row-inativa');
+                        }
+
+                        /* Atualiza botão lixeira */
+                        btnLix.dataset.ativo = novoAtivo ? 'true' : 'false';
+                        row.dataset.ativo = novoAtivo ? 'true' : 'false';
+
+                        const corBotao = novoAtivo ? '#dc2626' : '#059669';
+                        btnLix.style.borderColor = corBotao;
+                        btnLix.style.color = corBotao;
+                        btnLix.title = novoAtivo ? 'Desativar questionário' : 'Reativar questionário';
+                        btnLix.innerHTML = novoAtivo
+                            ? `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                           </svg>`
+                            : `<svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                           </svg>`;
+                    }
+                    modal.hide();
+                    pendingUrl = pendingId = pendingAtivo = null;
+                })
+                .catch(() => {
+                    modal.hide();
+                });
+        });
+    });
+</script>
+{% endblock %}

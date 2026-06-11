@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Nova Versão de TCLE · Somnus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-8">
+
+            <!-- Cabeçalho -->
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="{% url 'lista_tcle' %}"
+                   class="btn btn-sm rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm back-btn"
+                   style="width:40px; height:40px; background-color: #f0f4ff;"
+                   title="Voltar para a lista">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="fw-bold mb-0" style="color: var(--somnus-blue-deep); font-size: 1.6rem;">Nova Versão de TCLE</h1>
+                    <p class="text-muted mb-0 small">Registre uma nova versão do Termo de Consentimento Livre e Esclarecido.</p>
+                </div>
+            </div>
+
+            <!-- Linha decorativa -->
+            <div class="rounded-pill mb-5" style="height: 4px; width: 60px; background-color: var(--somnus-green-dark);"></div>
+
+            <!-- Formulário -->
+            <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="card-body p-4 p-md-5 bg-white">
+                    <form method="post" id="form-nova-versao-tcle" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Campo: Versão -->
+                        <div class="mb-4">
+                            <label for="id_versao" class="form-label fw-semibold" style="color: var(--somnus-blue-deep); font-size:0.875rem;">
+                                Número da Versão
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0 rounded-start-3" style="border-right:none;">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                                    </svg>
+                                </span>
+                                <input type="number"
+                                       id="id_versao"
+                                       name="versao"
+                                       class="form-control border-start-0 rounded-end-3"
+                                       placeholder="Ex: 1.0"
+                                       step="0.1"
+                                       min="0.1"
+                                       value="{{ versao }}"
+                                       required>
+                            </div>
+                            <div class="form-text text-muted mt-1">
+                                Use notação decimal (ex: 1.0, 1.1, 2.0). Cada versão deve ser única no sistema.
+                            </div>
+                        </div>
+
+                        <!-- Divisor -->
+                        <hr class="my-4" style="border-color: #eee;">
+
+                        <!-- Campo: Conteúdo -->
+                        <div class="mb-2">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <label for="id_conteudo" class="form-label fw-semibold mb-0" style="color: var(--somnus-blue-deep); font-size:0.875rem;">
+                                    Texto do TCLE
+                                </label>
+                                <div class="d-flex gap-2">
+                                    <button type="button" id="btn-preview-tcle"
+                                            class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                            style="font-size: 0.8rem;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        Pré-visualizar
+                                    </button>
+                                </div>
+                            </div>
+                            <textarea id="id_conteudo"
+                                      name="conteudo"
+                                      class="form-control rounded-3"
+                                      rows="16"
+                                      placeholder="Cole ou redija aqui o texto completo do Termo de Consentimento Livre e Esclarecido..."
+                                      required>{{ conteudo }}</textarea>
+                            <div class="d-flex justify-content-between align-items-center mt-1">
+                                <div class="form-text text-muted">
+                                    Escreva o texto completo. Quebras de linha serão preservadas.
+                                </div>
+                                <small id="char-counter" class="text-muted" style="font-size: 0.75rem;">0 caracteres</small>
+                            </div>
+                        </div>
+
+                        <!-- Aviso legal -->
+                        <div class="alert border-0 rounded-3 mt-4 d-flex gap-3 align-items-start"
+                             style="background-color: #fff8e1;">
+                            <svg width="20" height="20" fill="none" stroke="#e6a817" viewBox="0 0 24 24" class="flex-shrink-0 mt-1">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div>
+                                <p class="fw-semibold mb-1" style="color: #b7791f; font-size: 0.875rem;">Atenção</p>
+                                <p class="text-muted mb-0" style="font-size: 0.82rem;">
+                                    Esta versão ficará disponível imediatamente para novos atendimentos. Versões anteriores são preservadas para fins de auditoria. Certifique-se que o texto foi aprovado pelo Comitê de Ética antes de publicar.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Botões de ação -->
+                        <div class="d-flex flex-column flex-sm-row gap-3 mt-5">
+                            <button type="submit"
+                                    id="btn-salvar-tcle"
+                                    class="btn btn-lg rounded-pill fw-bold text-white px-5 py-3 shadow-sm flex-grow-1"
+                                    style="background-color: var(--somnus-blue-deep); border: none;">
+                                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Publicar Versão
+                            </button>
+                            <a href="{% url 'lista_tcle' %}"
+                               class="btn btn-lg btn-outline-secondary rounded-pill fw-semibold px-5 py-3">
+                                Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Pré-visualização -->
+<div class="modal fade" id="modalPreviewNovo" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow-lg rounded-4">
+            <div class="modal-header border-0 px-4 pt-4">
+                <div>
+                    <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Pré-visualização do TCLE</h5>
+                    <p class="text-muted small mb-0">Como o documento será exibido ao paciente.</p>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body px-4">
+                <div class="p-4 rounded-4" id="preview-content"
+                     style="background-color: #f8f9fa; font-size: 0.95rem; line-height: 1.8; color: #444; white-space: pre-wrap; min-height: 200px;">
+                </div>
+            </div>
+            <div class="modal-footer border-0 px-4 pb-4">
+                <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control, .form-select, .input-group-text {
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #eee;
+    }
+    .form-control:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.12);
+        background-color: #fff;
+    }
+    label.form-label {
+        font-weight: 600;
+        font-size: 0.85rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+    }
+    .input-group .form-control {
+        border-left: none;
+        border-radius: 0 0.75rem 0.75rem 0 !important;
+    }
+    .input-group .input-group-text {
+        border-radius: 0.75rem 0 0 0.75rem !important;
+    }
+    .back-btn {
+        transition: all 0.25s ease;
+        color: var(--somnus-blue-deep);
+    }
+    .back-btn:hover {
+        background-color: var(--somnus-blue-deep) !important;
+        color: white;
+    }
+    textarea#id_conteudo {
+        resize: vertical;
+        min-height: 280px;
+        font-family: 'Segoe UI', sans-serif;
+        font-size: 0.9rem;
+        line-height: 1.7;
+        padding: 1rem;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const textarea = document.getElementById('id_conteudo');
+        const counter = document.getElementById('char-counter');
+
+        // Contador de caracteres
+        function updateCounter() {
+            const count = textarea.value.length;
+            counter.textContent = count.toLocaleString('pt-BR') + ' caractere' + (count !== 1 ? 's' : '');
+        }
+        textarea.addEventListener('input', updateCounter);
+        updateCounter();
+
+        // Pré-visualização
+        document.getElementById('btn-preview-tcle').addEventListener('click', function () {
+            const content = textarea.value.trim();
+            const previewEl = document.getElementById('preview-content');
+            if (content) {
+                previewEl.textContent = content;
+            } else {
+                previewEl.textContent = '(Nenhum conteúdo para pré-visualizar.)';
+                previewEl.style.color = '#aaa';
+            }
+            const modal = new bootstrap.Modal(document.getElementById('modalPreviewNovo'));
+            modal.show();
+        });
+    });
+</script>
+{% endblock %}
