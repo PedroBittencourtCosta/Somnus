@@ -13,9 +13,9 @@
 
         <div class="d-flex align-items-center gap-3 ms-auto order-lg-last pe-2 pe-sm-0">
             {% if not user.is_authenticated %}
-            <button type="button" class="btn btn-primary rounded-pill px-4 py-2 fw-semibold shadow-sm"
+            <button type="button" class="btn rounded-pill px-4 py-2 fw-semibold shadow-sm text-white"
                 data-bs-toggle="modal" data-bs-target="#loginModal"
-                style="background-color: var(--somnus-blue-deep); border: none; font-size: 0.85rem;">
+                style="background: linear-gradient(90deg, #253786 0%, #0067B1 100%); border: none; font-size: 0.85rem;">
                 Entrar
             </button>
             {% endif %}
@@ -31,6 +31,24 @@
         <div class="collapse navbar-collapse" id="mobileMenu">
 
             <ul class="navbar-nav align-items-lg-center gap-lg-3 mt-3 mt-lg-0 me-lg-4">
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-secondary fw-semibold" style="font-size: 0.9rem;">
+                        Bem-estar
+                    </a>
+                </li>
+                
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-secondary fw-semibold" style="font-size: 0.9rem;">
+                        Sono
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <a href="#" class="nav-link text-secondary fw-semibold" style="font-size: 0.9rem;">
+                        Sobre nós
+                    </a>
+                </li>
 
                 <li class="nav-item">
                     <a href="{% url 'lista_questionarios' %}"
