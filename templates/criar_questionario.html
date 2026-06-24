@@ -508,6 +508,158 @@
         flex-direction: column;
         gap: 0.6rem;
     }
+
+    /* ── Bloco de Condição de Exibição ────────────────── */
+    .dep-wrapper {
+        margin-top: 0.75rem;
+        border-top: 1px solid #eef1f7;
+        padding-top: 0.75rem;
+    }
+
+    .dep-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #94a3b8;
+        background: none;
+        border: none;
+        padding: 0.25rem 0;
+        cursor: pointer;
+        transition: color 0.15s;
+    }
+
+    .dep-toggle-btn:hover {
+        color: var(--somnus-blue-inst);
+    }
+
+    .dep-toggle-btn.dep-ativa {
+        color: var(--somnus-blue-inst);
+    }
+
+    .dep-body {
+        margin-top: 0.6rem;
+        padding: 0.85rem 1rem;
+        background: #f8faff;
+        border: 1.5px solid #e0e8f5;
+        border-radius: 0.6rem;
+    }
+
+    .dep-body label.dep-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.35rem;
+        display: block;
+    }
+
+    .dep-select {
+        font-size: 0.82rem;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.7rem;
+        background: #fff;
+        color: var(--somnus-blue-deep);
+        font-weight: 500;
+        width: 100%;
+        transition: border-color 0.15s;
+    }
+
+    .dep-select:focus {
+        outline: none;
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 2px rgba(0, 103, 177, 0.1);
+    }
+
+    .dep-tree {
+        margin-top: 0.6rem;
+        max-height: 220px;
+        overflow-y: auto;
+        padding: 0.6rem;
+        background: #fff;
+        border: 1.5px solid #e8edf5;
+        border-radius: 0.5rem;
+    }
+
+    .dep-tree::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .dep-tree::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .dep-tree-secao {
+        margin-bottom: 0.5rem;
+    }
+
+    .dep-tree-secao-titulo {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--somnus-blue-deep);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0.2rem 0;
+        border-bottom: 1px solid #eef1f7;
+        margin-bottom: 0.3rem;
+    }
+
+    .dep-tree-pergunta {
+        margin-left: 0.5rem;
+        margin-bottom: 0.35rem;
+    }
+
+    .dep-tree-pergunta-titulo {
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: #475569;
+        padding: 0.15rem 0;
+    }
+
+    .dep-tree-alt {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        margin-left: 1rem;
+        padding: 0.15rem 0;
+    }
+
+    .dep-tree-alt input[type="checkbox"] {
+        accent-color: var(--somnus-blue-inst);
+        width: 14px;
+        height: 14px;
+        cursor: pointer;
+    }
+
+    .dep-tree-alt label {
+        font-size: 0.78rem;
+        color: #64748b;
+        cursor: pointer;
+        margin: 0;
+    }
+
+    .dep-tree-alt label .dep-alt-valor {
+        font-size: 0.68rem;
+        color: #94a3b8;
+        margin-left: 0.3rem;
+    }
+
+    .dep-info-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+        font-size: 0.72rem;
+        font-weight: 600;
+        color: var(--somnus-blue-inst);
+        background: rgba(0, 103, 177, 0.08);
+        padding: 0.2rem 0.6rem;
+        border-radius: 0.4rem;
+        margin-top: 0.3rem;
+    }
 </style>
 
 <div class="builder-wrapper">
@@ -743,6 +895,40 @@
                     </button>
                 </div>
 
+                {# Bloco de Condição de Exibição (Dependência) #}
+                <div class="dep-wrapper">
+                    <button type="button" class="dep-toggle-btn">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
+                        </svg>
+                        <span class="dep-toggle-texto">Condição de Exibição</span>
+                    </button>
+
+                    <div class="dep-body d-none">
+                        <label class="dep-label">Esta pergunta só aparece se:</label>
+                        <select class="dep-select dep-modo">
+                            <option value="NENHUMA">Sem condição (sempre visível)</option>
+                            <option value="ALTERNATIVA">Uma alternativa específica for selecionada</option>
+                            <option value="TEXTO">Uma pergunta de texto tiver sido preenchida</option>
+                        </select>
+
+                        <div class="dep-alts-panel d-none">
+                            <label class="dep-label" style="margin-top:0.5rem;">Selecione a(s) alternativa(s) gatilho:</label>
+                            <div class="dep-tree">
+                                <!-- JS popula aqui -->
+                            </div>
+                        </div>
+
+                        <div class="dep-texto-panel d-none">
+                            <label class="dep-label" style="margin-top:0.5rem;">Qual pergunta?</label>
+                            <select class="dep-select dep-texto-select">
+                                <option value="">Selecione...</option>
+                                <!-- JS popula aqui -->
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
             </div> <!-- End pergunta-body -->
         </div> <!-- End pergunta-block-inner -->
     </div>
@@ -954,6 +1140,12 @@
             containerSecoes.appendChild(secEl);
         }
 
+        // Contador global para IDs temporários
+        let tempIdCounter = 0;
+        function gerarTempId(prefix) {
+            return `temp_${prefix}_${++tempIdCounter}`;
+        }
+
         function renderPergunta(dados, container) {
             const node = tplPergunta.content.cloneNode(true);
             const pEl = node.querySelector('.pergunta-block');
@@ -963,7 +1155,10 @@
             const configContainer = pEl.querySelector('.p-config-container');
             const mascContainer = pEl.querySelector('.p-mascara-container');
 
-            pEl.querySelector('.p-id').value = dados.id || '';
+            // Atribuir ID (real ou temporário)
+            const pergId = dados.id || gerarTempId('p');
+            pEl.querySelector('.p-id').value = pergId;
+            pEl.dataset.pergId = pergId;
             pEl.querySelector('.p-conteudo').value = dados.conteudo || '';
             tipoSelect.value = dados.tipo || 'MC';
             pEl.querySelector('.p-identificador').value = dados.identificador || '';
@@ -971,6 +1166,12 @@
 
             if (dados.config_mista) pEl.querySelector('.p-config').value = dados.config_mista;
             if (dados.mascara) pEl.querySelector('.p-mascara').value = dados.mascara;
+
+            // Guardar dados de dependência para restaurar após renderização
+            pEl._depDados = {
+                altIds: dados.depende_de_alternativa_ids || [],
+                textoDeId: dados.depende_de_texto_de_id || null
+            };
 
             function updateTipos() {
                 const v = tipoSelect.value;
@@ -1007,26 +1208,304 @@
             });
 
             // Eventos Pergunta
-            pEl.querySelector('.btn-remove-pergunta').addEventListener('click', () => pEl.remove());
-            pEl.querySelector('.btn-add-alternativa').addEventListener('click', () => renderAlternativa({}, containerAlt));
+            pEl.querySelector('.btn-remove-pergunta').addEventListener('click', () => {
+                pEl.remove();
+                atualizarTodosSeletoresDependencia();
+            });
+            pEl.querySelector('.btn-add-alternativa').addEventListener('click', () => {
+                renderAlternativa({}, containerAlt);
+                atualizarTodosSeletoresDependencia();
+            });
+
+            // ── Dependência: eventos do bloco ──
+            const depToggleBtn = pEl.querySelector('.dep-toggle-btn');
+            const depBody = pEl.querySelector('.dep-body');
+            const depModo = pEl.querySelector('.dep-modo');
+            const depAltsPanel = pEl.querySelector('.dep-alts-panel');
+            const depTextoPanel = pEl.querySelector('.dep-texto-panel');
+            const depToggleTexto = pEl.querySelector('.dep-toggle-texto');
+
+            depToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                depBody.classList.toggle('d-none');
+                if (!depBody.classList.contains('d-none')) {
+                    atualizarSeletorDependencia(pEl);
+                }
+            });
+
+            depModo.addEventListener('change', () => {
+                const modo = depModo.value;
+                depAltsPanel.classList.toggle('d-none', modo !== 'ALTERNATIVA');
+                depTextoPanel.classList.toggle('d-none', modo !== 'TEXTO');
+
+                // Atualizar visual do botão toggle
+                depToggleBtn.classList.toggle('dep-ativa', modo !== 'NENHUMA');
+                depToggleTexto.textContent = modo !== 'NENHUMA' ? 'Condição de Exibição ●' : 'Condição de Exibição';
+
+                if (modo === 'ALTERNATIVA') {
+                    atualizarSeletorDependencia(pEl);
+                } else if (modo === 'TEXTO') {
+                    atualizarSeletorDependencia(pEl);
+                }
+            });
 
             container.appendChild(pEl);
+
+            // Restaurar dependências salvas após inserir no DOM
+            requestAnimationFrame(() => restaurarDependencia(pEl));
         }
 
         function renderAlternativa(dados, container) {
             const node = tplAlternativa.content.cloneNode(true);
             const aEl = node.querySelector('.alternativa-block');
 
-            aEl.querySelector('.a-id').value = dados.id || '';
+            // Atribuir ID (real ou temporário)
+            const altId = dados.id || gerarTempId('a');
+            aEl.querySelector('.a-id').value = altId;
+            aEl.dataset.altId = altId;
             aEl.querySelector('.a-conteudo').value = dados.conteudo || '';
             aEl.querySelector('.a-valor').value = dados.valor !== undefined ? dados.valor : '';
 
-            aEl.querySelector('.btn-remove-alternativa').addEventListener('click', () => aEl.remove());
+            aEl.querySelector('.btn-remove-alternativa').addEventListener('click', () => {
+                aEl.remove();
+                atualizarTodosSeletoresDependencia();
+            });
+
+            // Atualizar seletores quando texto ou valor mudam
+            aEl.querySelector('.a-conteudo').addEventListener('input', () => atualizarTodosSeletoresDependencia());
 
             // Habilitar DnD da Alternativa
             bindDraggable(aEl, '.drag-handle-a');
 
             container.appendChild(aEl);
+        }
+
+        // ══════════════════════════════════════════════════
+        // ══ LÓGICA DE DEPENDÊNCIA ENTRE PERGUNTAS ═══════
+        // ══════════════════════════════════════════════════
+
+        /**
+         * Coleta a árvore completa do questionário do DOM:
+         * [{ secaoTitulo, secaoIndex, perguntas: [{ pergId, conteudo, tipo, alternativas: [{ altId, conteudo, valor }] }] }]
+         */
+        function coletarArvoreDom() {
+            const arvore = [];
+            const secoesDOM = containerSecoes.querySelectorAll('.secao-block');
+            secoesDOM.forEach((secEl, secIdx) => {
+                const secTitulo = secEl.querySelector('.s-titulo')?.value?.trim() || `Seção ${secIdx + 1}`;
+                const perguntas = [];
+                const pergsDOM = secEl.querySelectorAll('.pergunta-block');
+                pergsDOM.forEach((pEl, pIdx) => {
+                    const pergId = pEl.dataset.pergId || pEl.querySelector('.p-id')?.value;
+                    const conteudo = pEl.querySelector('.p-conteudo')?.value?.trim() || `Pergunta ${pIdx + 1}`;
+                    const tipo = pEl.querySelector('.p-tipo')?.value || 'MC';
+                    const alternativas = [];
+                    const altsDOM = pEl.querySelectorAll('.alternativa-block');
+                    altsDOM.forEach(aEl => {
+                        const altId = aEl.dataset.altId || aEl.querySelector('.a-id')?.value;
+                        const altConteudo = aEl.querySelector('.a-conteudo')?.value?.trim() || '(sem texto)';
+                        const altValor = aEl.querySelector('.a-valor')?.value || '0';
+                        if (altId) {
+                            alternativas.push({ altId, conteudo: altConteudo, valor: altValor });
+                        }
+                    });
+                    if (pergId) {
+                        perguntas.push({ pergId, conteudo, tipo, alternativas, element: pEl, secaoIndex: secIdx, pergIndex: pIdx });
+                    }
+                });
+                arvore.push({ secaoTitulo: secTitulo, secaoIndex: secIdx, perguntas });
+            });
+            return arvore;
+        }
+
+        /**
+         * Atualiza o seletor de dependência de uma pergunta específica.
+         * Filtra: apenas seções anteriores e mesma seção (perguntas anteriores).
+         */
+        function atualizarSeletorDependencia(pEl) {
+            const arvore = coletarArvoreDom();
+            const meuPergId = pEl.dataset.pergId || pEl.querySelector('.p-id')?.value;
+
+            // Encontrar posição desta pergunta
+            let meuSecIdx = -1, meuPergIdx = -1;
+            for (const sec of arvore) {
+                for (const p of sec.perguntas) {
+                    if (p.pergId === meuPergId) {
+                        meuSecIdx = sec.secaoIndex;
+                        meuPergIdx = p.pergIndex;
+                        break;
+                    }
+                }
+                if (meuSecIdx >= 0) break;
+            }
+
+            const depModo = pEl.querySelector('.dep-modo');
+            const depTree = pEl.querySelector('.dep-tree');
+            const depTextoSelect = pEl.querySelector('.dep-texto-select');
+
+            // ── Painel de alternativas ──
+            depTree.innerHTML = '';
+            let temAlternativas = false;
+
+            for (const sec of arvore) {
+                // Apenas a MESMA seção
+                if (sec.secaoIndex !== meuSecIdx) continue;
+
+                const perguntasValidas = sec.perguntas.filter(p => {
+                    // Excluir a própria pergunta
+                    if (p.pergId === meuPergId) return false;
+                    // Na mesma seção, apenas perguntas anteriores
+                    if (sec.secaoIndex === meuSecIdx && p.pergIndex >= meuPergIdx) return false;
+                    // Só perguntas que têm alternativas
+                    return p.alternativas.length > 0;
+                });
+
+                if (perguntasValidas.length === 0) continue;
+                temAlternativas = true;
+
+                const secDiv = document.createElement('div');
+                secDiv.className = 'dep-tree-secao';
+                secDiv.innerHTML = `<div class="dep-tree-secao-titulo">${sec.secaoTitulo}</div>`;
+
+                for (const p of perguntasValidas) {
+                    const pDiv = document.createElement('div');
+                    pDiv.className = 'dep-tree-pergunta';
+                    const textoResumido = p.conteudo.length > 60 ? p.conteudo.substring(0, 57) + '...' : p.conteudo;
+                    pDiv.innerHTML = `<div class="dep-tree-pergunta-titulo">"${textoResumido}"</div>`;
+
+                    for (const alt of p.alternativas) {
+                        const altDiv = document.createElement('div');
+                        altDiv.className = 'dep-tree-alt';
+                        const cbId = `dep_cb_${meuPergId}_${alt.altId}`;
+                        altDiv.innerHTML = `
+                            <input type="checkbox" id="${cbId}" value="${alt.altId}" class="dep-alt-checkbox">
+                            <label for="${cbId}">${alt.conteudo} <span class="dep-alt-valor">(valor: ${alt.valor})</span></label>
+                        `;
+                        pDiv.appendChild(altDiv);
+                    }
+                    secDiv.appendChild(pDiv);
+                }
+                depTree.appendChild(secDiv);
+            }
+
+            if (!temAlternativas) {
+                depTree.innerHTML = '<p style="font-size:0.78rem; color:#94a3b8; margin:0.3rem 0;">Nenhuma pergunta anterior nesta seção possui alternativas.</p>';
+            }
+
+            // ── Painel de texto ──
+            depTextoSelect.innerHTML = '<option value="">Selecione...</option>';
+            for (const sec of arvore) {
+                // Apenas a MESMA seção
+                if (sec.secaoIndex !== meuSecIdx) continue;
+
+                const perguntasTexto = sec.perguntas.filter(p => {
+                    if (p.pergId === meuPergId) return false;
+                    if (sec.secaoIndex === meuSecIdx && p.pergIndex >= meuPergIdx) return false;
+                    return p.tipo === 'TX' || p.tipo === 'MX';
+                });
+
+                for (const p of perguntasTexto) {
+                    const textoResumido = p.conteudo.length > 50 ? p.conteudo.substring(0, 47) + '...' : p.conteudo;
+                    const opt = document.createElement('option');
+                    opt.value = p.pergId;
+                    opt.textContent = `${sec.secaoTitulo} → "${textoResumido}"`;
+                    depTextoSelect.appendChild(opt);
+                }
+            }
+
+            // Restaurar seleções atuais
+            restaurarSelecoesDependencia(pEl);
+        }
+
+        /**
+         * Restaurar valores de dependência no bloco de uma pergunta
+         * (chamado após renderização ou após atualizar seletores).
+         */
+        function restaurarDependencia(pEl) {
+            const depDados = pEl._depDados;
+            if (!depDados) return;
+
+            const depModo = pEl.querySelector('.dep-modo');
+            const depAltsPanel = pEl.querySelector('.dep-alts-panel');
+            const depTextoPanel = pEl.querySelector('.dep-texto-panel');
+            const depToggleBtn = pEl.querySelector('.dep-toggle-btn');
+            const depToggleTexto = pEl.querySelector('.dep-toggle-texto');
+
+            if (depDados.altIds && depDados.altIds.length > 0) {
+                depModo.value = 'ALTERNATIVA';
+                depAltsPanel.classList.remove('d-none');
+                depTextoPanel.classList.add('d-none');
+                depToggleBtn.classList.add('dep-ativa');
+                depToggleTexto.textContent = 'Condição de Exibição ●';
+                atualizarSeletorDependencia(pEl);
+            } else if (depDados.textoDeId) {
+                depModo.value = 'TEXTO';
+                depAltsPanel.classList.add('d-none');
+                depTextoPanel.classList.remove('d-none');
+                depToggleBtn.classList.add('dep-ativa');
+                depToggleTexto.textContent = 'Condição de Exibição ●';
+                atualizarSeletorDependencia(pEl);
+            }
+        }
+
+        /**
+         * Restaura checkboxes/select marcados com base nos dados salvos.
+         */
+        function restaurarSelecoesDependencia(pEl) {
+            const depDados = pEl._depDados;
+            if (!depDados) return;
+
+            // Checkboxes de alternativas
+            if (depDados.altIds && depDados.altIds.length > 0) {
+                const checkboxes = pEl.querySelectorAll('.dep-alt-checkbox');
+                checkboxes.forEach(cb => {
+                    if (depDados.altIds.map(String).includes(cb.value)) {
+                        cb.checked = true;
+                    }
+                });
+            }
+
+            // Select de texto
+            if (depDados.textoDeId) {
+                const depTextoSelect = pEl.querySelector('.dep-texto-select');
+                depTextoSelect.value = String(depDados.textoDeId);
+            }
+        }
+
+        /**
+         * Atualiza os seletores de dependência de TODAS as perguntas.
+         * Chamada quando alternativas são adicionadas, editadas ou removidas.
+         */
+        function atualizarTodosSeletoresDependencia() {
+            document.querySelectorAll('.pergunta-block').forEach(pEl => {
+                const depBody = pEl.querySelector('.dep-body');
+                // Só atualiza se o painel está visível (aberto)
+                if (depBody && !depBody.classList.contains('d-none')) {
+                    // Salvar seleções atuais do DOM antes de recriar
+                    salvarSelecoesDoDom(pEl);
+                    atualizarSeletorDependencia(pEl);
+                }
+            });
+        }
+
+        /**
+         * Salva as seleções atuais do DOM nos dados internos (_depDados).
+         */
+        function salvarSelecoesDoDom(pEl) {
+            const depModo = pEl.querySelector('.dep-modo')?.value;
+            if (!pEl._depDados) pEl._depDados = { altIds: [], textoDeId: null };
+
+            if (depModo === 'ALTERNATIVA') {
+                const checked = pEl.querySelectorAll('.dep-alt-checkbox:checked');
+                pEl._depDados.altIds = Array.from(checked).map(cb => cb.value);
+                pEl._depDados.textoDeId = null;
+            } else if (depModo === 'TEXTO') {
+                pEl._depDados.altIds = [];
+                pEl._depDados.textoDeId = pEl.querySelector('.dep-texto-select')?.value || null;
+            } else {
+                pEl._depDados.altIds = [];
+                pEl._depDados.textoDeId = null;
+            }
         }
 
         // Salvar Questionário (Extrair JSON da UI e Enviar)
@@ -1059,24 +1538,46 @@
 
                 const perguntasDOM = secEl.querySelectorAll('.pergunta-block');
                 perguntasDOM.forEach((pEl) => {
+                    // Salvar seleções atuais do DOM antes de extrair
+                    salvarSelecoesDoDom(pEl);
+
                     const tipo = pEl.querySelector('.p-tipo').value;
+                    const pergIdRaw = pEl.querySelector('.p-id').value || null;
+                    const isTemp = pergIdRaw && String(pergIdRaw).startsWith('temp_');
+
                     const p = {
-                        id: pEl.querySelector('.p-id').value || null,
+                        id: isTemp ? null : pergIdRaw,
+                        temp_id: isTemp ? pergIdRaw : undefined,
                         conteudo: pEl.querySelector('.p-conteudo').value.trim(),
                         tipo: tipo,
                         mascara: pEl.querySelector('.p-mascara').value,
                         config_mista: pEl.querySelector('.p-config').value,
                         obrigatoria: pEl.querySelector('.p-obrigatoria').checked,
                         identificador: pEl.querySelector('.p-identificador').value.trim(),
-                        alternativas: []
+                        alternativas: [],
+                        depende_de_alternativa_ids: [],
+                        depende_de_texto_de_id: null
                     };
+
+                    // Extrair dependências
+                    const depModo = pEl.querySelector('.dep-modo')?.value;
+                    if (depModo === 'ALTERNATIVA') {
+                        const checked = pEl.querySelectorAll('.dep-alt-checkbox:checked');
+                        p.depende_de_alternativa_ids = Array.from(checked).map(cb => cb.value);
+                    } else if (depModo === 'TEXTO') {
+                        const textoVal = pEl.querySelector('.dep-texto-select')?.value;
+                        p.depende_de_texto_de_id = textoVal || null;
+                    }
 
                     if (['MC', 'MX'].includes(tipo)) {
                         const altsDOM = pEl.querySelectorAll('.alternativa-block');
                         altsDOM.forEach((aEl) => {
                             const conteudo = aEl.querySelector('.a-conteudo').value.trim();
+                            const altIdRaw = aEl.querySelector('.a-id').value || null;
+                            const altIsTemp = altIdRaw && String(altIdRaw).startsWith('temp_');
                             p.alternativas.push({
-                                id: aEl.querySelector('.a-id').value || null,
+                                id: altIsTemp ? null : altIdRaw,
+                                temp_id: altIsTemp ? altIdRaw : undefined,
                                 conteudo: conteudo,
                                 valor: aEl.querySelector('.a-valor').value
                             });

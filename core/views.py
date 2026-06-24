@@ -373,6 +373,10 @@ def editar_questionario_view(request, pk=None):
                     "obrigatoria": perg.obrigatoria,
                     "identificador": perg.identificador,
                     "ordem": perg.ordem,
+                    "depende_de_alternativa_ids": list(
+                        perg.depende_de_alternativa.values_list('id', flat=True)
+                    ),
+                    "depende_de_texto_de_id": perg.depende_de_texto_de_id,
                     "alternativas": []
                 }
                 for alt in perg.alternativas.all():
@@ -413,6 +417,12 @@ def salvar_questionario_api(request):
             perguntas_ids = []
             alternativas_ids = []
             
+            # Mapeamentos para resolver dependências (temp_id → real_id)
+            alt_id_map = {}       # "temp_xyz" ou "123" → real_id da alternativa
+            perg_id_map = {}      # "temp_xyz" ou "123" → real_id da pergunta
+            perguntas_com_deps = []  # [(pergunta_obj, perg_data_dict), ...]
+            
+            # ── PASSADA 1: Criar/Atualizar todas as seções, perguntas e alternativas ──
             for index_secao, sec_data in enumerate(data.get('secoes', [])):
                 sec_id = sec_data.get('id')
                 if sec_id and str(sec_id).isdigit():
@@ -434,8 +444,11 @@ def salvar_questionario_api(request):
                 
                 for index_perg, perg_data in enumerate(sec_data.get('perguntas', [])):
                     perg_id = perg_data.get('id')
+                    perg_temp_id = perg_data.get('temp_id')  # ID temporário do frontend
+                    
                     if perg_id and str(perg_id).isdigit():
-                        perg = Pergunta.objects.get(pk=perg_id, secao=secao)
+                        perg = Pergunta.objects.get(pk=perg_id, secao__questionario=quest)
+                        perg.secao = secao
                         perg.conteudo = perg_data.get('conteudo', '')
                         perg.tipo = perg_data.get('tipo', 'MC')
                         perg.mascara = perg_data.get('mascara', 'NENHUMA')
@@ -457,8 +470,19 @@ def salvar_questionario_api(request):
                         )
                     perguntas_ids.append(perg.id)
                     
+                    # Registrar mapeamento de IDs de perguntas
+                    if perg_id and str(perg_id).isdigit():
+                        perg_id_map[str(perg_id)] = perg.id
+                    if perg_temp_id:
+                        perg_id_map[str(perg_temp_id)] = perg.id
+                    
+                    # Guardar para processar dependências na passada 2
+                    perguntas_com_deps.append((perg, perg_data))
+                    
                     for index_alt, alt_data in enumerate(perg_data.get('alternativas', [])):
                         alt_id = alt_data.get('id')
+                        alt_temp_id = alt_data.get('temp_id')  # ID temporário do frontend
+                        
                         try:
                             valor_int = int(alt_data.get('valor', 0))
                         except ValueError:
@@ -476,10 +500,45 @@ def salvar_questionario_api(request):
                                 valor=valor_int
                             )
                         alternativas_ids.append(alt.id)
+                        
+                        # Registrar mapeamento de IDs de alternativas
+                        if alt_id and str(alt_id).isdigit():
+                            alt_id_map[str(alt_id)] = alt.id
+                        if alt_temp_id:
+                            alt_id_map[str(alt_temp_id)] = alt.id
             
+            # Limpar registros removidos
             Alternativa.objects.filter(pergunta__secao__questionario=quest).exclude(id__in=alternativas_ids).delete()
             Pergunta.objects.filter(secao__questionario=quest).exclude(id__in=perguntas_ids).delete()
             Secao.objects.filter(questionario=quest).exclude(id__in=secoes_ids).delete()
+            
+            # ── PASSADA 2: Resolver e salvar dependências ──
+            for perg, perg_data in perguntas_com_deps:
+                # Dependência por alternativa(s) selecionada(s)
+                dep_alt_ids_raw = perg_data.get('depende_de_alternativa_ids', [])
+                real_alt_ids = []
+                for raw_id in dep_alt_ids_raw:
+                    real_id = alt_id_map.get(str(raw_id))
+                    if real_id:
+                        real_alt_ids.append(real_id)
+                    elif str(raw_id).isdigit():
+                        # ID numérico que já existia no banco
+                        real_alt_ids.append(int(raw_id))
+                perg.depende_de_alternativa.set(real_alt_ids)
+                
+                # Dependência por texto de outra pergunta
+                dep_texto_raw = perg_data.get('depende_de_texto_de_id')
+                if dep_texto_raw:
+                    real_perg_id = perg_id_map.get(str(dep_texto_raw))
+                    if real_perg_id:
+                        perg.depende_de_texto_de_id = real_perg_id
+                    elif str(dep_texto_raw).isdigit():
+                        perg.depende_de_texto_de_id = int(dep_texto_raw)
+                    else:
+                        perg.depende_de_texto_de_id = None
+                else:
+                    perg.depende_de_texto_de_id = None
+                perg.save(update_fields=['depende_de_texto_de'])
             
         return JsonResponse({'status': 'success', 'questionario_id': quest.id})
         
