@@ -1,3 +1,70 @@
+# ==========================================
+# Variáveis de Ambiente e Segredos
+# ==========================================
 .env
-venv
-.venv
+.env.*
+*.env
+
+# ==========================================
+# Ambientes Virtuais (Python)
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+
+# ==========================================
+# Python (Byte-compiled / Otimizações)
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# ==========================================
+# Django e Banco de Dados Local
+# ==========================================
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# ==========================================
+# Arquivos de Mídia e Estáticos (Uploads/Build)
+# ==========================================
+# Ignorar a pasta de mídia onde os uploads dos usuários vão localmente
+/media/
+
+# Ignorar a pasta onde o Django junta os arquivos estáticos para produção
+# (Ajuste o nome se seu STATIC_ROOT for diferente)
+/staticfiles/
+/static_root/
+
+# ==========================================
+# IDEs e Ferramentas Locais
+# ==========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ==========================================
+# Sistema Operacional
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# ==========================================
+# Arquivos Locais Específicos do seu Projeto
+# ==========================================
+# Backups de banco de dados
+*.sql
+backup_somnus.sql
+
+# Scripts de teste/rascunho que não devem ir pro repo
+scratch_*.py
