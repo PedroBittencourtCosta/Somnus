@@ -21,6 +21,12 @@ __pycache__/
 *$py.class
 *.so
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
 # ==========================================
 # Django e Banco de Dados Local
 # ==========================================
