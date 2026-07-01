@@ -39,7 +39,7 @@
                 {% endif %}
 
                 {% if not user.is_authenticated %}
-                <li class="nav-item d-md-none d-lg-block">
+                <li class="nav-item">
                     <a href="{% url 'bem_estar' %}" class="nav-link text-secondary fw-semibold"
                         style="font-size: 0.9rem;">
                         Bem-estar
@@ -52,14 +52,12 @@
                     </a>
                 </li>
 
-                <li class="nav-item d-md-none d-lg-block">
+                <li class="nav-item">
                     <a href="{% url 'sobre' %}" class="nav-link text-secondary fw-semibold" style="font-size: 0.9rem;">
                         Sobre nós
                     </a>
                 </li>
                 {% endif %}
-
-
 
                 <li class="nav-item">
                     <a href="{% url 'lista_questionarios' %}"
