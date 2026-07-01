@@ -69,6 +69,55 @@
 }
 
 /* ══════════════════════════════════════════════════
+   NAVBAR — BREAKPOINT CUSTOMIZADO (≤ 1199px / xl)
+   Garante que o menu hambúrguer apareça e o
+   conteúdo não quebre a largura da tela.
+   ══════════════════════════════════════════════════ */
+@media (max-width: 1199.98px) {
+    /* Impede overflow horizontal causado pelos itens da navbar */
+    .navbar .navbar-collapse {
+        overflow: hidden;
+    }
+
+    /* Menu mobile: fundo branco, borda superior, padding adequado */
+    .navbar-collapse.collapse.show,
+    .navbar-collapse.collapsing {
+        background-color: #fff;
+        border-top: 1px solid #e9ecef;
+        padding: 0.5rem 0 1rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Links do menu mobile em coluna, com padding confortável */
+    .navbar-collapse .navbar-nav {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 0 !important;
+        margin: 0 !important;
+    }
+
+    .navbar-collapse .navbar-nav .nav-link {
+        padding: 0.65rem 0.5rem;
+        width: 100%;
+        border-radius: 0.5rem;
+    }
+
+    .navbar-collapse .navbar-nav .nav-link:hover {
+        background-color: #f8f9fa;
+    }
+
+    /* Esconde o botão de Sair estilo desktop */
+    .navbar-collapse .btn.d-xl-flex {
+        display: none !important;
+    }
+}
+
+/* Impede que a navbar quebre em duas linhas em telas intermediárias */
+.navbar .container {
+    flex-wrap: nowrap;
+}
+
+/* ══════════════════════════════════════════════════
    RESPONSIVIDADE — MOBILE (≤576px)
    ══════════════════════════════════════════════════ */
 @media (max-width: 576px) {
