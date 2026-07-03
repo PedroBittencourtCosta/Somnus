@@ -1,85 +1,484 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Bem-estar — Somnus{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Saúde Mental e Bem-Estar</h1>
-        <p class="text-muted mx-auto" style="max-width: 800px;">
-            O bem-estar psíquico é fundamental para a qualidade de vida, influenciando diretamente a memória, a cognição e o desempenho nas atividades diárias.
-        </p>
-        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
-    </div>
 
-    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-inst);">Transtornos Mentais Comuns (TMC)</h3>
-                <p class="text-muted leading-relaxed">
-                    Os TMC abrangem manifestações clínicas não psicóticas, compreendidas principalmente por sintomas de <strong>ansiedade e depressão</strong>. 
-                    Embora muitas vezes subdiagnosticados, eles impactam negativamente o bem-estar pessoal, as relações sociais e o ambiente de trabalho.
-                </p>
-                <div class="d-flex flex-wrap gap-2 mt-3">
-                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Fadiga</span>
-                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Irritabilidade</span>
-                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Insônia</span>
-                    <span class="badge bg-light text-primary border px-3 py-2 rounded-pill">Dificuldade de Concentração</span>
-                </div>
-            </div>
-            <div class="col-md-4 text-center d-none d-md-block">
-                <div style="font-size: 5rem; color: rgba(0, 103, 177, 0.1);">🧠</div>
-            </div>
-        </div>
-    </div>
+<!-- ══════════════════════════════════════════════
+     HERO — Imagem de yoga +  botõe verde
+     ══════════════════════════════════════════════ -->
+<div class="bem-hero-wrapper">
+    <div class="bem-hero-img-container">
+        <img src="{% static 'img/bem_estar/yoga_hero.png' %}" alt="Pessoas praticando yoga juntas" class="bem-hero-img">
 
-    <div class="row g-4 mb-5">
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
-                <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">O Impacto da Mente no Sono</h4>
-                <p class="small text-muted mb-3">
-                    Transtornos mentais podem desregular o ciclo vigília-sono de diversas formas:
-                </p>
-                <ul class="small text-muted ps-3">
-                    <li class="mb-2"><strong>Ansiedade:</strong> Causa hiperatividade do sistema nervoso, dificultando o início do sono e gerando despertares noturnos.</li>
-                    <li><strong>Depressão:</strong> Frequentemente associada a episódios de insônia ou hipersonia, afetando a regulação emocional.</li>
-                </ul>
-            </div>
+        <!-- Textos sobre a imagem (canto inferior esquerdo) -->
+        <div class="bem-hero-text">
+            <h1 class="bem-hero-title">Saúde Mental<br>e Bem-Estar</h1>
+            <p class="bem-hero-subtitle">O bem-estar psíquico é fundamental para a qualidade de vida,<br>influenciando diretamente a memória, a cognição e o<br>desempenho nas atividades diárias.</p>
         </div>
-        <div class="col-lg-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 p-4">
-                <h4 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">O Impacto do Sono na Mente</h4>
-                <p class="small text-muted mb-3">
-                    A privação crônica de sono atua como um fator de risco para problemas psíquicos:
-                </p>
-                <ul class="small text-muted ps-3">
-                    <li class="mb-2"><strong>Resposta ao Estresse:</strong> Noites mal dormidas reduzem a capacidade do cérebro de modular o estresse e o medo.</li>
-                    <li><strong>Neurotransmissores:</strong> Distúrbios do sono podem reduzir níveis de serotonina, contribuindo para sentimentos de tristeza profunda.</li>
-                </ul>
-            </div>
-        </div>
-    </div>
 
-    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-5" style="background-color: var(--somnus-blue-deep); color: white;">
-        <div class="text-center">
-            <h3 class="fw-bold mb-3">A Importância do Suporte Social</h3>
-            <p class="mx-auto opacity-75 small" style="max-width: 700px;">
-                O apoio recebido de familiares, amigos e pessoas próximas é um fator protetor fundamental para a saúde mental. 
-                O suporte emocional adequado auxilia na tomada de decisões e no enfrentamento de desafios cotidianos.
-            </p>
-        </div>
-    </div>
-
-    <div class="alert border-0 rounded-4 p-4 text-center" style="background-color: rgba(40, 167, 69, 0.05);">
-        <p class="small text-muted mb-0">
-            <strong>Nota Importante:</strong> Este sistema utiliza escalas validadas academicamente para triagem e pesquisa. 
-            A avaliação automática não substitui a consulta médica ou psicológica. Se você estiver sentindo desconforto intenso, procure um profissional de saúde mental.
-        </p>
+        <!-- Botão direito (canto inferior direito) -->
+        <a href="{% url 'lista_questionarios' %}" class="bem-btn-green bem-btn-right">
+            Iniciar avaliação
+        </a>
     </div>
 </div>
 
+<!-- ══════════════════════════════════════════════
+     CONTEÚDO PRINCIPAL
+     ══════════════════════════════════════════════ -->
+<div class="bem-content-wrapper">
+
+    <!-- Transtornos Mentais Comuns -->
+    <section class="bem-tmc-section">
+        <div class="bem-tmc-text">
+            <h2 class="bem-heading-blue-inst">Transtornos Mentais Comuns (TMC)</h2>
+            <p class="bem-body-text">
+                Os TMC abrangem manifestações clínicas não psicóticas, compreendidas principalmente por sintomas de
+                <strong>ansiedade e depressão</strong>. Embora muitas vezes subdiagnosticados, eles impactam
+                negativamente o bem-estar pessoal, as relações sociais e o ambiente de trabalho.
+            </p>
+            <div class="bem-badges">
+                <span class="bem-badge">Fadiga</span>
+                <span class="bem-badge">Irritabilidade</span>
+                <span class="bem-badge">Insônia</span>
+                <span class="bem-badge">Dificuldade de Concentração</span>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- Divider verde (fiel ao Figma) -->
+    <div class="bem-divider"></div>
+
+    <!-- Cards duplos: Mente × Sono e Sono × Mente -->
+    <div class="bem-cards-row">
+        <div class="bem-card hover-shadow">
+            <h3 class="bem-card-title">O Impacto da Mente no Sono</h3>
+            <p class="bem-card-intro">
+                Transtornos mentais podem desregular o ciclo vigília-sono de diversas formas:
+            </p>
+            <ul class="bem-card-list">
+                <li>
+                    <strong>Ansiedade:</strong> Causa hiperatividade do sistema nervoso, dificultando o
+                    início do sono e gerando despertares noturnos.
+                </li>
+                <li>
+                    <strong>Depressão:</strong> Frequentemente associada a episódios de insônia ou
+                    hipersonia, afetando a regulação emocional.
+                </li>
+            </ul>
+        </div>
+
+        <div class="bem-card hover-shadow">
+            <h3 class="bem-card-title">O Impacto do Sono na Mente</h3>
+            <p class="bem-card-intro">
+                A privação crônica de sono atua como um fator de risco para problemas psíquicos:
+            </p>
+            <ul class="bem-card-list">
+                <li>
+                    <strong>Resposta ao Estresse:</strong> Noites mal dormidas reduzem a capacidade do
+                    cérebro de modular o estresse e o medo.
+                </li>
+                <li>
+                    <strong>Neurotransmissores:</strong> Distúrbios do sono podem reduzir níveis de
+                    serotonina, contribuindo para sentimentos de tristeza profunda.
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Suporte Social (centralizado, sem card) -->
+    <section class="bem-social-section">
+        <h2 class="bem-social-title">A Importância do Suporte Social</h2>
+        <p class="bem-social-body">
+            O apoio recebido de familiares, amigos e pessoas próximas é um fator protetor fundamental para
+            a saúde mental. O suporte emocional adequado auxilia na tomada de decisões e no
+            enfrentamento de desafios cotidianos.
+        </p>
+    </section>
+
+</div><!-- /bem-content-wrapper -->
+
+<!-- ══════════════════════════════════════════════
+     NOTA IMPORTANTE — card gradiente verde
+     ══════════════════════════════════════════════ -->
+<div class="bem-nota-wrapper">
+    <div class="bem-nota-card">
+        <div class="bem-nota-text">
+            <p class="bem-nota-label">Nota Importante:</p>
+            <p class="bem-nota-body">
+                Este sistema utiliza escalas validadas academicamente para triagem e pesquisa. A avaliação
+                automática não substitui a consulta médica ou psicológica. Se você estiver sentindo
+                desconforto intenso, procure um profissional de saúde mental.
+            </p>
+        </div>
+        <img src="{% static 'img/bem_estar/icone_seguranca.png' %}" alt="Ícone de segurança" class="bem-nota-icon">
+    </div>
+
+    <p class="bem-nota-subtexto">
+        A sua segurança e o sigilo das suas informações são prioridades absolutas no projeto Somnus.<br>
+        Seguimos rigorosos protocolos éticos e técnicos para proteger os seus dados.
+    </p>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     ESTILOS ESCOPADOS — bem_estar
+     ══════════════════════════════════════════════ -->
 <style>
-    .leading-relaxed {
+    /* ─── Tokens locais ─── */
+    .bem-hero-wrapper,
+    .bem-content-wrapper,
+    .bem-nota-wrapper {
+        --be-blue: #253786;
+        --be-blue-inst: #0067B1;
+        --be-green-light: #76B82A;
+        --be-green-dark: #009640;
+        --be-grad-green: linear-gradient(90deg, #76B82A 0%, #009640 54%);
+        --be-radius: 16px;
+    }
+
+    /* ─── HERO TEXTOS ─── */
+    .bem-hero-text {
+        position: absolute;
+        left: 48px;
+        bottom: 32px;
+        z-index: 2;
+        max-width: 545px;
+        pointer-events: none;
+    }
+
+    .bem-hero-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 48px;
+        font-weight: 700;
+        color: #253786;
+        line-height: 1.2;
+        margin-bottom: 16px;
+    }
+
+    .bem-hero-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-size: 20px;
+        font-weight: 400;
+        color: rgba(33, 37, 41, 0.75);
+        line-height: 1.4;
+    }
+
+    /* ─── HERO ─── */
+    .bem-hero-wrapper {
+        position: relative;
+        margin: 24px auto 56px;
+        max-width: 1338px;
+        padding: 0 24px;
+    }
+
+    .bem-hero-img-container {
+        position: relative;
+        border-radius: var(--be-radius);
+        overflow: hidden;
+        box-shadow: 0 4px 4px rgba(0, 0, 0, .25);
+    }
+
+    .bem-hero-img {
+        width: 100%;
+        height: 376px;
+        object-fit: cover;
+        display: block;
+    }
+
+    .bem-btn-green {
+        position: absolute;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 224px;
+        height: 64px;
+        padding: 0 32px;
+        background: var(--be-grad-green);
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        border-radius: 800px;
+        text-decoration: none;
+        box-shadow: 0 16px 48px rgba(0, 0, 0, .18);
+        transition: transform .25s ease, box-shadow .25s ease;
+        white-space: nowrap;
+    }
+
+    .bem-btn-green:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 20px 56px rgba(0, 150, 64, .3);
+        color: #fff;
+    }
+
+    .bem-btn-left {
+        bottom: -24px;
+        left: 48px;
+    }
+
+    .bem-btn-right {
+        bottom: 32px;
+        right: 48px;
+    }
+
+    /* ─── CONTEÚDO ─── */
+    .bem-content-wrapper {
+        max-width: 1296px;
+        margin: 0 auto;
+        padding: 0 24px 48px;
+    }
+
+    /* TMC */
+    .bem-tmc-section {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+        background: #fff;
+        border-radius: var(--be-radius);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .08);
+        padding: 40px 48px;
+        margin-bottom: 32px;
+    }
+
+    .bem-tmc-text {
+        flex: 1;
+    }
+
+    .bem-tmc-emoji {
+        font-size: 5rem;
+        opacity: .12;
+        flex-shrink: 0;
+    }
+
+    .bem-heading-blue-inst {
+        font-family: 'Poppins', sans-serif;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--be-blue-inst);
+        margin-bottom: 14px;
+    }
+
+    .bem-body-text {
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        color: rgba(33, 37, 41, .75);
+        line-height: 1.8;
+        margin-bottom: 16px;
+    }
+
+    .bem-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .bem-badge {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--be-blue-inst);
+        border: 1px solid #dee2e6;
+        background: #f8f9fa;
+        border-radius: 999px;
+        padding: 5px 16px;
+    }
+
+    /* Divider verde */
+    .bem-divider {
+        width: 500px;
+        height: 2px;
+        background: var(--be-grad-green);
+        border-radius: 800px;
+        margin: 0 auto 32px;
+    }
+
+    /* Cards */
+    .bem-cards-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 48px;
+    }
+
+    .bem-card {
+        background: #fff;
+        border-radius: var(--be-radius);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .08);
+        padding: 32px;
+    }
+
+    .bem-card-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--be-blue);
+        margin-bottom: 12px;
+    }
+
+    .bem-card-intro {
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        color: rgba(33, 37, 41, .75);
+        margin-bottom: 10px;
+    }
+
+    .bem-card-list {
+        padding-left: 20px;
+        font-family: 'Poppins', sans-serif;
+        font-size: 13px;
+        color: rgba(33, 37, 41, .75);
+        line-height: 1.75;
+    }
+
+    .bem-card-list li {
+        margin-bottom: 8px;
+    }
+
+    /* Suporte Social */
+    .bem-social-section {
+        padding: 36px 80px;
+        text-align: center;
+    }
+
+    .bem-social-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--be-blue);
+        margin-bottom: 16px;
+    }
+
+    .bem-social-body {
+        font-family: 'Poppins', sans-serif;
+        font-size: 14px;
+        color: rgba(33, 37, 41, .75);
+        line-height: 1.8;
+        max-width: 689px;
+        margin: 0 auto;
+    }
+
+    /* ─── NOTA IMPORTANTE ─── */
+    .bem-nota-wrapper {
+        max-width: 1296px;
+        margin: 0 auto 64px;
+        padding: 0 24px;
+    }
+
+    .bem-nota-card {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: linear-gradient(90deg, #009640 73%, #76B82A 100%);
+        border-radius: var(--be-radius);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, .08);
+        padding: 40px 80px;
+        margin-bottom: 24px;
+        overflow: hidden;
+    }
+
+    .bem-nota-text {
+        flex: 1;
+    }
+
+    .bem-nota-label {
+        font-family: 'Poppins', sans-serif;
+        font-size: 20px;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 10px;
+    }
+
+    .bem-nota-body {
+        font-family: 'Poppins', sans-serif;
+        font-size: 16px;
+        color: #fff;
+        line-height: 1.6;
+        max-width: 835px;
+        margin: 0;
+    }
+
+    .bem-nota-icon {
+        width: 140px;
+        height: auto;
+        flex-shrink: 0;
+        margin-left: 40px;
+        mix-blend-mode: luminosity;
+        opacity: .9;
+    }
+
+    .bem-nota-subtexto {
+        font-family: 'Poppins', sans-serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: rgba(0, 0, 0, .6);
+        text-align: center;
         line-height: 1.8;
     }
+
+    /* ─── RESPONSIVIDADE ─── */
+    @media (max-width: 992px) {
+        .bem-hero-img {
+            height: 240px;
+        }
+
+        .bem-hero-text {
+            display: none;
+        }
+
+        .bem-btn-green {
+            position: static;
+            display: block;
+            width: fit-content;
+            margin: 16px auto 0;
+        }
+
+        .bem-cards-row {
+            grid-template-columns: 1fr;
+        }
+
+        .bem-social-section {
+            padding: 32px 24px;
+        }
+
+        .bem-nota-card {
+            flex-direction: column;
+            padding: 32px 24px;
+        }
+
+        .bem-nota-icon {
+            margin: 24px auto 0;
+            width: 100px;
+        }
+
+        .bem-tmc-section {
+            flex-direction: column;
+            padding: 24px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .bem-hero-img {
+            height: 180px;
+        }
+
+        .bem-btn-green {
+            font-size: 16px;
+            min-width: 180px;
+            height: 52px;
+        }
+
+        .bem-social-title {
+            font-size: 22px;
+        }
+
+        .bem-divider {
+            width: 80%;
+        }
+    }
 </style>
+
 {% endblock %}
