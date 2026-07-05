@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'django_bootstrap5',
     'adminsortable2',
     'encrypted_model_fields',
+    'anymail',
     'core',
     'accounts',
     'ethics',
@@ -242,13 +243,13 @@ CSRF_TRUSTED_ORIGINS = [
     'https://somnus.app.br',
 ]
 
-# ── Configuração de Email (Resend SMTP) ──
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
-EMAIL_PORT = env.int('EMAIL_PORT', default=587)
-EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_USE_TLS = True
+# ── Configuração de Email (Resend via API HTTP — django-anymail) ──
+# Usa a API HTTP do Resend (porta 443) em vez de SMTP (porta 587),
+# pois o Railway bloqueia portas SMTP de saída.
+EMAIL_BACKEND = 'anymail.backends.resend.EmailBackend'
+ANYMAIL = {
+    'RESEND_API_KEY': env('RESEND_API_KEY'),
+}
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Somnus <noreply@somnus.app.br>')
 
 # Criptografia de campos sensíveis (LGPD art. 46)
