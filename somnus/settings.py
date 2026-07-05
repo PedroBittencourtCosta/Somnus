@@ -238,7 +238,14 @@ STORAGES = {
 # Autoriza o domínio do Railway para envio de formulários (CSRF)
 CSRF_TRUSTED_ORIGINS = ['https://somnus-production-0b31.up.railway.app']
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ── Configuração de Email (Resend SMTP) ──
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = env('EMAIL_HOST', default='smtp.resend.com')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='resend')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Somnus <noreply@somnus.app.br>')
 
 # Criptografia de campos sensíveis (LGPD art. 46)
 FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY')
