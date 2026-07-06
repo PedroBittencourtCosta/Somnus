@@ -1,76 +1,210 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Sono — Somnus{% endblock %}
+
 {% block content %}
-<div class="container py-5">
-    <div class="text-center mb-5">
-        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Entendendo o Sono</h1>
-        <p class="text-muted mx-auto" style="max-width: 700px;">
-            O sono é um estado reversível de menor interação com o ambiente, essencial para a manutenção da homeostase corporal e regulação emocional.
-        </p>
-        <div class="mx-auto rounded-pill mt-3" style="height: 5px; width: 80px; background-color: var(--somnus-green-dark);"></div>
+
+<style>
+  /* ══════════════════════════════════════════
+     SONO PAGE — Estilos específicos
+     ══════════════════════════════════════════ */
+
+  /* Hero Banner */
+  .sono-hero {
+    background: linear-gradient(135deg, #daeaf8 0%, #c8dfef 60%, #b8d4e8 100%);
+    border-radius: 1.5rem;
+    overflow: hidden;
+    position: relative;
+    min-height: 280px;
+  }
+
+  /* Imagem posicionada absolutamente na metade direita */
+  .sono-hero-img {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 50%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  /* Corpo de texto — ocupa a metade esquerda */
+  .sono-hero-body {
+    position: relative;
+    z-index: 1;
+    padding: 2.5rem 2rem 2.5rem 2.5rem;
+    max-width: 52%;
+  }
+
+  @media (max-width: 767px) {
+    .sono-hero { min-height: auto; }
+    .sono-hero-img {
+      position: static;
+      width: 100%;
+      height: 220px;
+      display: block;
+    }
+    .sono-hero-body {
+      max-width: 100%;
+      padding: 1.5rem 1.2rem;
+    }
+  }
+
+  .sono-hero-title {
+    font-size: 2.1rem;
+    font-weight: 800;
+    color: var(--somnus-blue-deep);
+    line-height: 1.2;
+  }
+
+  .sono-hero-subtitle {
+    font-size: 0.88rem;
+    color: var(--somnus-blue-inst);
+    text-decoration: underline;
+    text-decoration-color: rgba(0, 103, 177, 0.5);
+    line-height: 1.7;
+  }
+
+  /* Superpoder Section */
+  .superpoder-title {
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--somnus-blue-deep);
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
+  }
+
+  .superpoder-lead {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #222;
+    line-height: 1.55;
+  }
+
+  .superpoder-cite {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #555;
+  }
+
+  /* Botão */
+  .btn-avaliacao {
+    background-color: var(--somnus-green-dark);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 0.7rem 2.5rem;
+    border-radius: 2rem;
+    border: none;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .btn-avaliacao:hover {
+    background-color: #007a33;
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 150, 64, 0.32);
+  }
+
+  /* ── Mobile ── */
+  @media (max-width: 767px) {
+    .sono-hero-title { font-size: 1.5rem; }
+    .superpoder-title { font-size: 1.35rem; }
+    .superpoder-lead { font-size: 0.9rem; }
+  }
+</style>
+
+<div class="container py-4 py-md-5">
+
+  <!-- ═══════════════════════
+       HERO BANNER
+       ═══════════════════════ -->
+  <div class="sono-hero mb-5">
+    <!-- Imagem cobre toda a metade direita do card -->
+    <img
+      src="{% static 'img/sono/woman-sleeping 2.png' %}"
+      alt="Mulher dormindo bem"
+      class="sono-hero-img"
+    >
+    <!-- Texto da metade esquerda -->
+    <div class="sono-hero-body">
+      <h1 class="sono-hero-title mb-3">
+        Como o sono<br>influencia a sua saúde
+      </h1>
+      <p class="sono-hero-subtitle mb-0">
+        O sono é um estado reversível de menor
+        interação com o ambiente, essencial para a
+        manutenção da homeostase corporal e
+        regulação emocional.
+      </p>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════
+       SUPERPODER
+       ═══════════════════════ -->
+  <div class="text-center mb-5 px-2">
+    <p class="superpoder-title mb-3">O Sono é seu Superpoder!</p>
+    <p class="superpoder-lead mb-2">
+      Dormir bem é cuidar da sua mente, corpo e da sua vida.<br>
+      Entenda como você reage de acordo com a qualidade do seu sono.
+    </p>
+    <p class="superpoder-cite mb-0">
+      Baseado em estudos de Matthew Walker, cientista referência em estudos sobre o sono.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════
+       TABELA COMPARATIVA
+       ═══════════════════════ -->
+  <div class="row g-3 mb-4">
+
+    <!-- Boa noite de sono -->
+    <div class="col-md-6">
+      <img
+        src="{% static 'img/sono/Boa noite de sono.png' %}"
+        alt="Boa noite de sono — lista de benefícios"
+        class="img-fluid w-100"
+        style="border-radius: 1rem;"
+      >
     </div>
 
-    <div class="row g-4 mb-5">
-        <div class="col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 border-top border-4" style="border-color: var(--somnus-blue-inst) !important;">
-                <h3 class="fw-bold mb-3" style="color: var(--somnus-blue-inst);">Sono Não-REM</h3>
-                <p class="small text-muted">
-                    É a fase de ondas lentas, onde o indivíduo transita entre o estágio mais leve até o mais profundo.
-                </p>
-                <ul class="small text-muted ps-3">
-                    <li class="mb-2"><strong>Reparo Físico:</strong> Período em que o corpo prioriza o crescimento e reparo de tecidos.</li>
-                    <li class="mb-2"><strong>Hormônio do Crescimento:</strong> O GH é secretado em níveis consideráveis durante as primeiras horas de sono profundo.</li>
-                    <li><strong>Conservação de Energia:</strong> Redução da atividade encefálica para descanso sistêmico.</li>
-                </ul>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card h-100 border-0 shadow-sm rounded-4 p-4 border-top border-4" style="border-color: var(--somnus-green-dark) !important;">
-                <h3 class="fw-bold mb-3" style="color: var(--somnus-green-dark);">Sono REM</h3>
-                <p class="small text-muted">
-                    Fase de movimentos oculares rápidos, com grande atividade encefálica e ocorrência de sonhos.
-                </p>
-                <ul class="small text-muted ps-3">
-                    <li class="mb-2"><strong>Memória e Aprendizado:</strong> Processo de consolidação, transformando memórias de curto prazo em longo prazo.</li>
-                    <li class="mb-2"><strong>Poda Sináptica:</strong> Remoção de conexões neurais desnecessárias para otimizar o cérebro.</li>
-                    <li><strong>Regulação Emocional:</strong> Modulação de aspectos emocionais ligados à carga de memória.</li>
-                </ul>
-            </div>
-        </div>
+    <!-- Má noite de sono -->
+    <div class="col-md-6">
+      <img
+        src="{% static 'img/sono/ma noite de sono.png' %}"
+        alt="Má noite de sono — lista de malefícios"
+        class="img-fluid w-100"
+        style="border-radius: 1rem;"
+      >
     </div>
 
-    <div class="card border-0 shadow-lg rounded-4 overflow-hidden mb-5">
-        <div class="card-body p-4 p-md-5">
-            <h3 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">Por que a qualidade importa?</h3>
-            <div class="row g-4">
-                <div class="col-md-4 text-center">
-                    <div class="fs-1 mb-3">🧠</div>
-                    <h5 class="fw-bold">Cognição</h5>
-                    <p class="small text-muted">O sono adequado inibe a perda de volume no tecido nervoso e o acúmulo de proteínas neurodegenerativas.</p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <div class="fs-1 mb-3">🫀</div>
-                    <h5 class="fw-bold">Saúde Cardiovascular</h5>
-                    <p class="small text-muted">A má qualidade do sono está ligada a maior incidência de doenças coronarianas e hipertensão.</p>
-                </div>
-                <div class="col-md-4 text-center">
-                    <div class="fs-1 mb-3">🛡️</div>
-                    <h5 class="fw-bold">Sistema Imune</h5>
-                    <p class="small text-muted">Noites inadequadas reduzem a circulação de células de defesa e prejudicam a resposta anti-tumoral.</p>
-                </div>
-            </div>
-        </div>
-    </div>
+  </div>
 
-    <div class="alert border-0 rounded-4 p-4 d-flex align-items-center" style="background-color: rgba(0, 103, 177, 0.05);">
-        <span class="fs-3 me-3">⚠️</span>
-        <div>
-            <h6 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">Atenção à Sonolência Diurna</h6>
-            <p class="small text-muted mb-0">
-                A sonolência excessiva diurna (SED) é a incapacidade de se manter alerta durante o dia, podendo indicar distúrbios crônicos e prejudicar atividades cotidianas.
-            </p>
-        </div>
-    </div>
+  <!-- ═══════════════════════
+       BOTÃO INICIAR AVALIAÇÃO
+       ═══════════════════════ -->
+  <div class="text-center mb-5">
+    <a href="{% url 'nova_avaliacao' %}" class="btn-avaliacao">
+      Iniciar Avaliação
+    </a>
+  </div>
+
+  <!-- ═══════════════════════
+       BANNER SONOLÊNCIA DIURNA
+       ═══════════════════════ -->
+  <img
+    src="{% static 'img/sono/Paragraph+Background+VerticalBorder+Shadow.png' %}"
+    alt="Atenção à Sonolência Diurna"
+    class="img-fluid w-100"
+    style="border-radius: 1rem;"
+  >
+
 </div>
+
 {% endblock %}
