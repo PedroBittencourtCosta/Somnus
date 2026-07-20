@@ -16,11 +16,10 @@
      box-shadow: 0px 4px 4px rgba(0,0,0,0.25)
   */
   .sono-hero {
-    background: linear-gradient(135deg, #daeaf8 0%, #c8dfef 60%, #b8d4e8 100%);
     border-radius: 1rem;
     overflow: hidden;
     position: relative;
-    min-height: 376px;
+    height: 376px;
     box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
   }
 
@@ -34,22 +33,11 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center top;
+    object-position: center 15%;
     display: block;
   }
 
-  /* Overlay gradiente sobre a imagem para legibilidade do texto */
-  .sono-hero::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg,
-        rgba(218, 234, 248, 0.92) 0%,
-        rgba(218, 234, 248, 0.75) 45%,
-        rgba(218, 234, 248, 0.10) 100%);
-    z-index: 1;
-    border-radius: inherit;
-  }
+
 
   /* Corpo de texto — metade esquerda sobre a imagem
      Figma: título começa em left:77px de um card de 1338px ≈ 5.7% de margem
@@ -163,16 +151,16 @@
     padding-right: 0 !important;
   }
 
-  /* Imagem esquerda empurrada para direita — 10px antes da linha */
+  /* Imagem esquerda empurrada para direita — 20px antes da linha */
   .sono-cards-row .col-md-6:first-child {
     justify-content: flex-end;
-    padding-right: 10px !important;
+    padding-right: 20px !important;
   }
 
-  /* Imagem direita empurrada para esquerda — 10px após a linha */
+  /* Imagem direita empurrada para esquerda — 20px após a linha */
   .sono-cards-row .col-md-6:last-child {
     justify-content: flex-start;
-    padding-left: 10px !important;
+    padding-left: 20px !important;
   }
 
   /* Linha divisória vertical — encurtada nas extremidades */
@@ -186,8 +174,8 @@
     right: 0;
     top: 1.5rem;
     bottom: 1.5rem;
-    width: 1.5px;
-    background-color: rgba(0, 0, 0, 0.12);
+    width: 2.5px;
+    background-color: rgba(0, 0, 0, 0.5);
     border-radius: 2px;
   }
 
@@ -219,7 +207,7 @@
      ══════════════════════ */
   @media (max-width: 991px) {
     .sono-hero {
-      min-height: 300px;
+      height: 300px;
     }
 
     .sono-hero-body {
@@ -230,14 +218,7 @@
 
   @media (max-width: 767px) {
     .sono-hero {
-      min-height: 280px;
-    }
-
-    .sono-hero::before {
-      background: linear-gradient(180deg,
-          rgba(218, 234, 248, 0.92) 0%,
-          rgba(218, 234, 248, 0.70) 60%,
-          rgba(218, 234, 248, 0.10) 100%);
+      height: 280px;
     }
 
     .sono-hero-body {
