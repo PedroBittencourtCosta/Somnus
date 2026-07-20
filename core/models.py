@@ -199,3 +199,49 @@ class EscalaConfig(models.Model):
 
     def __str__(self):
         return f"{self.nome} ({self.get_strategy_class_display()})"
+
+
+class ResultadoEscala(models.Model):
+    """
+    Cache materializado dos resultados de escalas clínicas.
+
+    Gerado automaticamente no momento da submissão do questionário via
+    `core.services.calcular_e_salvar_resultados()`. Elimina recálculos
+    repetidos ao exibir o dashboard analítico.
+    """
+    resposta_questionario = models.ForeignKey(
+        RespostaQuestionario,
+        related_name='resultados_escalas',
+        on_delete=models.CASCADE,
+        verbose_name='Resposta do Questionário'
+    )
+    escala_config = models.ForeignKey(
+        EscalaConfig,
+        on_delete=models.CASCADE,
+        verbose_name='Escala Configurada'
+    )
+
+    # Resultado completo serializado — preserva todos os sub-scores
+    resultado_json = models.JSONField(
+        help_text="Dict completo retornado pelo EscalaEngine.processar()"
+    )
+
+    # Campos desnormalizados para queries rápidas no dashboard (sem deserializar JSON)
+    score_principal = models.FloatField(
+        null=True, blank=True,
+        help_text="Score numérico principal (ex: psqi_global, k10_total, ese_total)"
+    )
+    classificacao = models.CharField(
+        max_length=150, blank=True, default='',
+        help_text="Classificação textual principal (ex: 'Qualidade Ruim', 'Baixo Risco')"
+    )
+
+    calculado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('resposta_questionario', 'escala_config')
+        verbose_name = 'Resultado de Escala (Cache)'
+        verbose_name_plural = 'Resultados de Escalas (Cache)'
+
+    def __str__(self):
+        return f"[{self.resposta_questionario.codigo_paciente}] {self.escala_config.nome} → {self.score_principal}"

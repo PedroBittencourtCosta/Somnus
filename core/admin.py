@@ -1,6 +1,6 @@
 from django.contrib import admin
 from adminsortable2.admin import SortableAdminMixin, SortableInlineAdminMixin, SortableAdminBase 
-from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
+from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig, ResultadoEscala
 
 # 1. Inline para Alternativas (Mantido para edição individual da pergunta)
 class AlternativaInline(admin.TabularInline):
@@ -95,3 +95,10 @@ class EscalaConfigAdmin(admin.ModelAdmin):
     def get_questionarios(self, obj):
         return ", ".join([q.titulo for q in obj.questionarios.all()])
     get_questionarios.short_description = 'Questionários'
+
+@admin.register(ResultadoEscala)
+class ResultadoEscalaAdmin(admin.ModelAdmin):
+    list_display = ('resposta_questionario', 'escala_config', 'score_principal', 'classificacao', 'calculado_em')
+    list_filter = ('escala_config__strategy_class', 'escala_config')
+    search_fields = ('resposta_questionario__codigo_paciente',)
+    readonly_fields = ('resposta_questionario', 'escala_config', 'resultado_json', 'score_principal', 'classificacao', 'calculado_em')

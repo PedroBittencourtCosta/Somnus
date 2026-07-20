@@ -9,6 +9,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
 from core.Scaleprocessor import EscalaEngine, SafeParser
+from core.services import calcular_e_salvar_resultados
 
 from ethics.models import TCLE, AceiteTCLE
 from .models import Questionario, Secao, Pergunta, Alternativa, RespostaQuestionario, RespostaPergunta, EscalaConfig
@@ -114,7 +115,10 @@ def responder_questionario(request, pk):
                     resposta_texto=valores.get('texto')
                 )
             
-            # 5. Limpeza da sessão para o próximo atendimento
+            # 5. Calcula e persiste os resultados das escalas (cache para o dashboard)
+            calcular_e_salvar_resultados(res_quest)
+
+            # 6. Limpeza da sessão para o próximo atendimento
             del request.session['respostas_temp']
             request.session['tcle_aceito'] = False
             request.session.modified = True
@@ -168,32 +172,112 @@ def desativar_questionario(request, pk):
 
 @login_required
 def dashboard_respostas(request):
-    # --- Filtros via GET ---
+    from collections import Counter, defaultdict
+    from .models import ResultadoEscala, RespostaPergunta
+    import json as _json
+
+    # ── Filtro por questionário ──────────────────────────────────────────────
     questionario_id = request.GET.get('questionario', '')
-    ordem = request.GET.get('ordem', 'desc')  # 'desc' = mais recente | 'asc' = mais antigo
+    ordem = request.GET.get('ordem', 'desc')
 
-    qs = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all()
+    questionarios = Questionario.objects.filter(ativo=True).order_by('titulo')
 
+    # Queryset base de respostas
+    qs_respostas = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all()
     if questionario_id:
-        qs = qs.filter(questionario_id=questionario_id)
+        qs_respostas = qs_respostas.filter(questionario_id=questionario_id)
 
-    qs = qs.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
+    total_avaliacoes = qs_respostas.count()
 
-    # Paginação: 10 itens por página
-    paginator = Paginator(qs, 10)
+    # ── KPIs — calculados do cache ResultadoEscala ──────────────────────────
+    def _kpi_prevalencia(strategy_class, classificacao_ruim, ids_respostas=None):
+        """Retorna (n_afetados, percentual) para uma classificação de risco."""
+        qs = ResultadoEscala.objects.filter(escala_config__strategy_class=strategy_class)
+        if ids_respostas is not None:
+            qs = qs.filter(resposta_questionario_id__in=ids_respostas)
+        total = qs.count()
+        if not total:
+            return 0, 0
+        afetados = qs.filter(classificacao__icontains=classificacao_ruim).count()
+        return afetados, round((afetados / total) * 100, 1)
+
+    ids_filtradas = list(qs_respostas.values_list('id', flat=True)) if questionario_id else None
+
+    n_psqi_ruim, pct_psqi_ruim       = _kpi_prevalencia('PSQI',  'Qualidade Ruim', ids_filtradas)
+    n_ese_sed,   pct_ese_sed         = _kpi_prevalencia('ESE',   'Sonolência Diurna', ids_filtradas)
+    n_srq_tmc,   pct_srq_tmc         = _kpi_prevalencia('SRQ20', 'Suspeita de TMC', ids_filtradas)
+    n_k10_risco, pct_k10_risco       = _kpi_prevalencia('K10',   'Provável transtorno', ids_filtradas)
+
+    # ── Dados para gráficos Chart.js ─────────────────────────────────────────
+    def _distribuicao(strategy_class, ids_respostas=None):
+        """Retorna {classificação: contagem} para uma estratégia."""
+        qs = ResultadoEscala.objects.filter(escala_config__strategy_class=strategy_class)
+        if ids_respostas is not None:
+            qs = qs.filter(resposta_questionario_id__in=ids_respostas)
+        dist = Counter(qs.values_list('classificacao', flat=True))
+        return dict(dist)
+
+    dist_psqi  = _distribuicao('PSQI', ids_filtradas)
+    dist_ese   = _distribuicao('ESE',  ids_filtradas)
+    dist_k10   = _distribuicao('K10',  ids_filtradas)
+    dist_srq20 = _distribuicao('SRQ20', ids_filtradas)
+    dist_audit = _distribuicao('AUDIT', ids_filtradas)
+
+    # Dados de correlação PSQI × DASS-21 Depressão (scatter)
+    scatter_psqi_dass = []
+    psqi_resultados = ResultadoEscala.objects.filter(escala_config__strategy_class='PSQI')
+    if ids_filtradas is not None:
+        psqi_resultados = psqi_resultados.filter(resposta_questionario_id__in=ids_filtradas)
+
+    for r in psqi_resultados.select_related('resposta_questionario'):
+        psqi_score = r.score_principal
+        if psqi_score is None:
+            continue
+        dass_obj = ResultadoEscala.objects.filter(
+            resposta_questionario=r.resposta_questionario,
+            escala_config__strategy_class='DASS21'
+        ).first()
+        if dass_obj and dass_obj.score_principal is not None:
+            scatter_psqi_dass.append({
+                'x': psqi_score,
+                'y': dass_obj.score_principal
+            })
+
+    # ── Paginação da tabela de exportação (secundária) ────────────────────────
+    qs_export = qs_respostas.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
+    paginator = Paginator(qs_export, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    # Lista de questionários para popular o select de filtro
-    questionarios = Questionario.objects.order_by('titulo')
-
-    return render(request, 'dashboard_respostas.html', {
-        'respostas': page_obj,
+    context = {
+        # Filtros
         'questionarios': questionarios,
         'filtro_questionario': questionario_id,
         'filtro_ordem': ordem,
-    })
 
+        # KPIs
+        'total_avaliacoes': total_avaliacoes,
+        'pct_psqi_ruim': pct_psqi_ruim,
+        'n_psqi_ruim': n_psqi_ruim,
+        'pct_ese_sed': pct_ese_sed,
+        'n_ese_sed': n_ese_sed,
+        'pct_srq_tmc': pct_srq_tmc,
+        'n_srq_tmc': n_srq_tmc,
+        'pct_k10_risco': pct_k10_risco,
+        'n_k10_risco': n_k10_risco,
+
+        # Dados para gráficos (serializados como JSON)
+        'dist_psqi_json':  _json.dumps(dist_psqi),
+        'dist_ese_json':   _json.dumps(dist_ese),
+        'dist_k10_json':   _json.dumps(dist_k10),
+        'dist_srq20_json': _json.dumps(dist_srq20),
+        'dist_audit_json': _json.dumps(dist_audit),
+        'scatter_psqi_dass_json': _json.dumps(scatter_psqi_dass),
+
+        # Tabela de exportação (secundária)
+        'respostas': page_obj,
+    }
+    return render(request, 'dashboard_respostas.html', context)
 
 
 def get_answers_by_section(respostas_queryset, section_id):
