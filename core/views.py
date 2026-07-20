@@ -190,28 +190,37 @@ def dashboard_respostas(request):
     total_avaliacoes = qs_respostas.count()
 
     # ── KPIs — calculados do cache ResultadoEscala ──────────────────────────
-    def _kpi_prevalencia(strategy_class, classificacao_ruim, ids_respostas=None):
+    def _kpi_prevalencia(escala_nome_contains, classificacoes_ruins, ids_respostas=None):
         """Retorna (n_afetados, percentual) para uma classificação de risco."""
-        qs = ResultadoEscala.objects.filter(escala_config__strategy_class=strategy_class)
+        from django.db.models import Q
+        qs = ResultadoEscala.objects.filter(escala_config__nome__icontains=escala_nome_contains)
         if ids_respostas is not None:
             qs = qs.filter(resposta_questionario_id__in=ids_respostas)
         total = qs.count()
         if not total:
             return 0, 0
-        afetados = qs.filter(classificacao__icontains=classificacao_ruim).count()
+            
+        if isinstance(classificacoes_ruins, str):
+            classificacoes_ruins = [classificacoes_ruins]
+            
+        query = Q()
+        for c in classificacoes_ruins:
+            query |= Q(classificacao__icontains=c)
+            
+        afetados = qs.filter(query).count()
         return afetados, round((afetados / total) * 100, 1)
 
     ids_filtradas = list(qs_respostas.values_list('id', flat=True)) if questionario_id else None
 
     n_psqi_ruim, pct_psqi_ruim       = _kpi_prevalencia('PSQI',  'Qualidade Ruim', ids_filtradas)
-    n_ese_sed,   pct_ese_sed         = _kpi_prevalencia('ESE',   'Sonolência Diurna', ids_filtradas)
-    n_srq_tmc,   pct_srq_tmc         = _kpi_prevalencia('SRQ20', 'Suspeita de TMC', ids_filtradas)
+    n_ese_sed,   pct_ese_sed         = _kpi_prevalencia('ESE',   'Sonolência Diurna Excessiva', ids_filtradas)
+    n_srq_tmc,   pct_srq_tmc         = _kpi_prevalencia('SRQ-20', ['Sofrimento mental moderado', 'Sofrimento mental grave'], ids_filtradas)
     n_k10_risco, pct_k10_risco       = _kpi_prevalencia('K10',   'Provável transtorno', ids_filtradas)
 
     # ── Dados para gráficos Chart.js ─────────────────────────────────────────
-    def _distribuicao(strategy_class, ids_respostas=None):
+    def _distribuicao(escala_nome_contains, ids_respostas=None):
         """Retorna {classificação: contagem} para uma estratégia."""
-        qs = ResultadoEscala.objects.filter(escala_config__strategy_class=strategy_class)
+        qs = ResultadoEscala.objects.filter(escala_config__nome__icontains=escala_nome_contains)
         if ids_respostas is not None:
             qs = qs.filter(resposta_questionario_id__in=ids_respostas)
         dist = Counter(qs.values_list('classificacao', flat=True))
@@ -220,12 +229,12 @@ def dashboard_respostas(request):
     dist_psqi  = _distribuicao('PSQI', ids_filtradas)
     dist_ese   = _distribuicao('ESE',  ids_filtradas)
     dist_k10   = _distribuicao('K10',  ids_filtradas)
-    dist_srq20 = _distribuicao('SRQ20', ids_filtradas)
+    dist_srq20 = _distribuicao('SRQ-20', ids_filtradas)
     dist_audit = _distribuicao('AUDIT', ids_filtradas)
 
     # Dados de correlação PSQI × DASS-21 Depressão (scatter)
     scatter_psqi_dass = []
-    psqi_resultados = ResultadoEscala.objects.filter(escala_config__strategy_class='PSQI')
+    psqi_resultados = ResultadoEscala.objects.filter(escala_config__nome__icontains='PSQI')
     if ids_filtradas is not None:
         psqi_resultados = psqi_resultados.filter(resposta_questionario_id__in=ids_filtradas)
 
@@ -235,7 +244,7 @@ def dashboard_respostas(request):
             continue
         dass_obj = ResultadoEscala.objects.filter(
             resposta_questionario=r.resposta_questionario,
-            escala_config__strategy_class='DASS21'
+            escala_config__nome__icontains='DASS-21'
         ).first()
         if dass_obj and dass_obj.score_principal is not None:
             scatter_psqi_dass.append({
