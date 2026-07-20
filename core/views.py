@@ -178,7 +178,6 @@ def dashboard_respostas(request):
 
     # ── Filtro por questionário ──────────────────────────────────────────────
     questionario_id = request.GET.get('questionario', '')
-    ordem = request.GET.get('ordem', 'desc')
 
     questionarios = Questionario.objects.filter(ativo=True).order_by('titulo')
 
@@ -254,17 +253,12 @@ def dashboard_respostas(request):
                     'y': depressao_score
                 })
 
-    # ── Paginação da tabela de exportação (secundária) ────────────────────────
-    qs_export = qs_respostas.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
-    paginator = Paginator(qs_export, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
+
 
     context = {
         # Filtros
         'questionarios': questionarios,
         'filtro_questionario': questionario_id,
-        'filtro_ordem': ordem,
 
         # KPIs
         'total_avaliacoes': total_avaliacoes,
@@ -284,9 +278,6 @@ def dashboard_respostas(request):
         'dist_srq20_json': _json.dumps(dist_srq20),
         'dist_audit_json': _json.dumps(dist_audit),
         'scatter_psqi_dass_json': _json.dumps(scatter_psqi_dass),
-
-        # Tabela de exportação (secundária)
-        'respostas': page_obj,
     }
     return render(request, 'dashboard_respostas.html', context)
 

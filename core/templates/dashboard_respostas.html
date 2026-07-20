@@ -6,7 +6,7 @@
 <div class="container-fluid px-3 px-lg-4 py-4">
 
 
-  <div class="row align-items-center mb-4 g-3">
+  <div class="row align-items-start mb-4 g-3">
     <div class="col-md-6">
       <h2 class="fw-bold mb-0 dashboard-title">
         <svg width="26" height="26" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2"
@@ -18,11 +18,11 @@
         </svg>
         Dashboard de Pesquisa
       </h2>
-      <p class="text-muted mb-0 ms-1" style="font-size:.88rem;">
+      <p class="text-muted mb-0 ms-1 mt-1" style="font-size:.88rem;">
         Análise epidemiológica — qualidade do sono e transtornos mentais comuns
       </p>
     </div>
-    <div class="col-md-6">
+    <div class="col-md-6 pt-1">
       <form method="get" id="filtro-form" class="d-flex align-items-center gap-2 justify-content-md-end">
         <label class="filter-label mb-0 flex-shrink-0" for="filtro-questionario">
           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"
@@ -42,14 +42,6 @@
           </option>
           {% endfor %}
         </select>
-        {% if filtro_questionario %}
-        <a href="{% url 'dashboard_respostas' %}"
-          class="btn btn-outline-secondary btn-sm rounded-pill px-3 flex-shrink-0" title="Limpar filtro">
-          <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </a>
-        {% endif %}
       </form>
     </div>
   </div>
@@ -290,157 +282,7 @@
   </div>
 
 
-  <div class="section-header mb-3 d-flex align-items-center justify-content-between">
-    <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">
-      <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-2"
-        style="vertical-align:-2px;">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1
-                 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-      </svg>
-      Exportar Relatórios Individuais
-    </h5>
-    <button class="btn btn-link btn-sm text-muted text-decoration-none p-0 d-flex align-items-center gap-1"
-      type="button" data-bs-toggle="collapse" data-bs-target="#secao-exportacao" aria-expanded="false"
-      aria-controls="secao-exportacao" id="btn-toggle-exportacao">
-      <span class="toggle-label">Expandir</span>
-      <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="toggle-chevron">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
-  </div>
 
-  <div class="collapse" id="secao-exportacao">
-
-    <div class="card border-0 shadow-sm rounded-4 mb-3">
-      <div class="card-body px-4 py-3 d-flex align-items-center gap-3 flex-wrap">
-        <span class="filter-label mb-0">
-          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="me-1"
-            style="vertical-align:-1px;">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2
-                     0 00-2 2v12a2 2 0 002 2z" />
-          </svg>
-          Ordenar por data
-        </span>
-        <a href="?questionario={{ filtro_questionario }}&ordem=desc" id="btn-ordem-desc" class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 btn-ordenar
-               {% if filtro_ordem == 'desc' %}btn-ativo{% endif %}">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M19 9l-7 7-7-7" />
-          </svg>
-          Mais recente
-        </a>
-        <a href="?questionario={{ filtro_questionario }}&ordem=asc" id="btn-ordem-asc" class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 btn-ordenar
-               {% if filtro_ordem == 'asc' %}btn-ativo{% endif %}">
-          <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M5 15l7-7 7 7" />
-          </svg>
-          Mais antigo
-        </a>
-      </div>
-    </div>
-
-
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="fw-semibold py-3 ps-4 text-black">Código</th>
-              <th class="fw-semibold py-3 px-3 text-black">Questionário</th>
-              <th class="fw-semibold py-3 px-3 text-black">
-                <span class="d-inline-flex align-items-center gap-1">
-                  Data
-                  {% if filtro_ordem == 'asc' %}
-                  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 15l7-7 7 7" />
-                  </svg>
-                  {% else %}
-                  <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.5;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
-                  </svg>
-                  {% endif %}
-                </span>
-              </th>
-              <th class="fw-semibold py-3 pe-4 text-black text-center">Exportar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for resposta in respostas %}
-            <tr>
-              <td class="ps-4 py-3">
-                <div class="fw-bold text-dark" style="font-size:.88rem;">
-                  <i class="bi bi-shield-lock-fill text-success me-1" style="font-size:.8rem;"></i>
-                  {{ resposta.codigo_paciente }}
-                </div>
-              </td>
-              <td class="px-3 py-3">
-                <span class="badge rounded-pill bg-light text-primary border px-3 d-none d-lg-inline-block">
-                  {{ resposta.questionario.titulo }}
-                </span>
-                <span class="badge rounded-pill bg-light text-primary border px-3 d-lg-none">
-                  {{ resposta.questionario.titulo|truncatewords:3 }}
-                </span>
-              </td>
-              <td class="text-muted py-3" style="font-size:.88rem;">
-                {{ resposta.data_submissao|date:"d/m/Y H:i" }}
-              </td>
-              <td class="pe-4 text-center py-3">
-                <a href="{% url 'exportar_respostas_excel' resposta.pk %}"
-                  class="btn btn-sm rounded-pill fw-semibold px-2 d-inline-flex align-items-center gap-1 btn-exportar"
-                  title="Exportar para Excel"
-                  style="border:1.5px solid #059669; color:#059669; background:transparent;">
-                  <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
-                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                  </svg>
-                </a>
-              </td>
-            </tr>
-            {% empty %}
-            <tr>
-              <td colspan="4" class="text-center py-5">
-                <div class="d-flex flex-column align-items-center gap-2 text-muted">
-                  <svg width="36" height="36" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="opacity:.3;">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2
-                             0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0
-                             012-2h2a2 2 0 012 2" />
-                  </svg>
-                  <p class="mb-0" style="font-size:.9rem;">Nenhuma resposta encontrada.</p>
-                </div>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-
-    {% if respostas.has_other_pages %}
-    <nav class="mb-5">
-      <ul class="pagination justify-content-center">
-        {% if respostas.has_previous %}
-        <li class="page-item">
-          <a class="page-link rounded-pill me-2"
-            href="?questionario={{ filtro_questionario }}&ordem={{ filtro_ordem }}&page={{ respostas.previous_page_number }}">
-            Anterior
-          </a>
-        </li>
-        {% endif %}
-        <li class="page-item active">
-          <span class="page-link rounded-pill shadow-sm">{{ respostas.number }}</span>
-        </li>
-        {% if respostas.has_next %}
-        <li class="page-item">
-          <a class="page-link rounded-pill ms-2"
-            href="?questionario={{ filtro_questionario }}&ordem={{ filtro_ordem }}&page={{ respostas.next_page_number }}">
-            Próxima
-          </a>
-        </li>
-        {% endif %}
-      </ul>
-    </nav>
-    {% endif %}
-  </div>
 
 </div>
 
@@ -586,69 +428,7 @@
     padding: 1rem;
   }
 
-  /* Botão toggle exportação */
-  .toggle-chevron {
-    transition: transform .2s ease;
-  }
 
-  #btn-toggle-exportacao[aria-expanded="true"] .toggle-chevron {
-    transform: rotate(180deg);
-  }
-
-  #btn-toggle-exportacao[aria-expanded="true"] .toggle-label::before {
-    content: "Recolher";
-  }
-
-  #btn-toggle-exportacao[aria-expanded="false"] .toggle-label::before {
-    content: "Expandir";
-  }
-
-  .toggle-label {
-    font-size: .82rem;
-  }
-
-  /* Tabela de exportação */
-  .btn-exportar {
-    transition: all 0.2s;
-  }
-
-  .btn-exportar:hover {
-    background-color: rgba(5, 150, 105, .08) !important;
-    filter: brightness(1.1);
-  }
-
-  .btn-ordenar {
-    border: 1.5px solid #dee2e6;
-    color: #6b7280;
-    background: transparent;
-    font-size: 0.82rem;
-    transition: all 0.18s ease;
-  }
-
-  .btn-ordenar:hover {
-    border-color: var(--somnus-blue-inst);
-    color: var(--somnus-blue-inst);
-    background: rgba(0, 103, 177, .05);
-  }
-
-  .btn-ordenar.btn-ativo {
-    background-color: var(--somnus-blue-inst);
-    border-color: var(--somnus-blue-inst);
-    color: #fff;
-  }
-
-  .btn-ordenar.btn-ativo:hover {
-    filter: brightness(1.08);
-    color: #fff;
-  }
-
-  .table> :not(caption)>*>* {
-    border-color: rgba(0, 0, 0, .05);
-  }
-
-  .table-hover>tbody>tr:hover>* {
-    background-color: rgba(0, 103, 177, .04);
-  }
 
   @media (max-width: 576px) {
     .kpi-value {
