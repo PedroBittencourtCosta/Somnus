@@ -280,6 +280,44 @@ def dashboard_respostas(request):
     return render(request, 'dashboard_respostas.html', context)
 
 
+@login_required
+@require_POST
+def recalcular_escalas(request):
+    """
+    Força o recálculo e atualização de todos os ResultadoEscala.
+
+    Aceita POST com campo opcional 'questionario' (ID) para limitar o
+    recálculo às respostas de um questionário específico.
+
+    Retorna JSON: { sucesso, falhas, total }
+    """
+    questionario_id = request.POST.get('questionario', '').strip()
+
+    qs = RespostaQuestionario.objects.select_related('questionario').all()
+    if questionario_id:
+        qs = qs.filter(questionario_id=questionario_id)
+
+    total = qs.count()
+    sucesso = 0
+    falhas = 0
+    erros = []
+
+    for resposta in qs.iterator():
+        try:
+            calcular_e_salvar_resultados(resposta)
+            sucesso += 1
+        except Exception as e:
+            falhas += 1
+            erros.append(f"[{resposta.codigo_paciente}] {e}")
+
+    return JsonResponse({
+        'sucesso': sucesso,
+        'falhas': falhas,
+        'total': total,
+        'erros': erros,
+    })
+
+
 def get_answers_by_section(respostas_queryset, section_id):
     """Filtra respostas de uma seção e mapeia pela posição relativa."""
     respostas_secao = respostas_queryset.filter(

@@ -54,6 +54,35 @@
     </div>
   </div>
 
+  <!-- Botão recalcular escalas -->
+  <div class="d-flex justify-content-end mb-3">
+    <button id="btn-recalcular" type="button"
+      class="btn btn-sm d-inline-flex align-items-center gap-2"
+      style="background:rgba(37,55,134,.07); color:var(--somnus-blue-deep); border:1.5px solid rgba(37,55,134,.18); border-radius:0.75rem; font-weight:600; font-size:.82rem; padding:.45rem 1rem; transition:all .2s;"
+      title="Recalcula todos os ResultadoEscala com base nas configurações atuais">
+      <svg id="btn-recalcular-icon" width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+      </svg>
+      <span id="btn-recalcular-label">Recalcular Escalas</span>
+    </button>
+  </div>
+
+  <!-- Toast de feedback -->
+  <div id="recalc-toast" role="alert" aria-live="assertive" aria-atomic="true"
+    style="position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999; min-width:280px; display:none;">
+    <div id="recalc-toast-inner" class="rounded-4 shadow-lg px-4 py-3 d-flex align-items-start gap-3"
+      style="background:#fff; border-left:4px solid var(--somnus-blue-deep);">
+      <svg id="recalc-toast-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="flex-shrink-0 mt-1">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <div id="recalc-toast-title" class="fw-bold" style="font-size:.85rem;"></div>
+        <div id="recalc-toast-body" class="text-muted" style="font-size:.8rem;"></div>
+      </div>
+    </div>
+  </div>
+
 
   <div class="row g-3 mb-4">
 
@@ -698,7 +727,7 @@
           labels: labels || Object.keys(data),
           datasets: [{
             data: labels ? labels.map(l => data[l] || 0) : Object.values(data),
-            backgroundColor: (colors || PALETTE).slice(0, Object.keys(data).length),
+            backgroundColor: (colors || PALETTE).slice(0, labels ? labels.length : Object.keys(data).length),
             borderWidth: 2,
             borderColor: '#fff',
             hoverOffset: 6,
@@ -853,6 +882,67 @@
         // O aria-expanded ainda não foi atualizado pelo Bootstrap neste momento,
         // então usamos o valor inverso
         label.textContent = expanded ? 'Expandir' : 'Recolher';
+      });
+    }
+    /* ── Recalcular Escalas ── */
+    const btnRecalcular = document.getElementById('btn-recalcular');
+    if (btnRecalcular) {
+      btnRecalcular.addEventListener('click', async function () {
+        const icon = document.getElementById('btn-recalcular-icon');
+        const label = document.getElementById('btn-recalcular-label');
+        const toast = document.getElementById('recalc-toast');
+        const toastInner = document.getElementById('recalc-toast-inner');
+        const toastTitle = document.getElementById('recalc-toast-title');
+        const toastBody = document.getElementById('recalc-toast-body');
+        const toastIcon = document.getElementById('recalc-toast-icon');
+
+        // Estado de carregamento
+        btnRecalcular.disabled = true;
+        label.textContent = 'Recalculando...';
+        icon.innerHTML = `<circle cx="12" cy="12" r="10" stroke-width="2" stroke-dasharray="31.4" stroke-dashoffset="10" style="animation:spin 1s linear infinite; transform-origin:center">`;
+
+        // Monta o corpo do POST com CSRF e questionario (se filtrado)
+        const csrfToken = document.cookie.match(/csrftoken=([^;]+)/);
+        const formData = new FormData();
+        if (csrfToken) formData.append('csrfmiddlewaretoken', csrfToken[1]);
+
+        const selectQ = document.getElementById('filtro-questionario');
+        if (selectQ && selectQ.value) formData.append('questionario', selectQ.value);
+
+        try {
+          const resp = await fetch('{% url "recalcular_escalas" %}', {
+            method: 'POST',
+            body: formData,
+          });
+          const data = await resp.json();
+
+          if (resp.ok) {
+            // Sucesso
+            toastInner.style.borderLeftColor = '#009640';
+            toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+            toastIcon.style.color = '#009640';
+            toastTitle.textContent = `Recalculo concluído`;
+            toastBody.textContent = `${data.sucesso} de ${data.total} resposta(s) atualizadas.${
+              data.falhas > 0 ? ` ${data.falhas} com falha.` : ''
+            }`;
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; location.reload(); }, 2500);
+          } else {
+            throw new Error('Resposta inesperada do servidor.');
+          }
+        } catch (err) {
+          toastInner.style.borderLeftColor = '#dc2626';
+          toastIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />`;
+          toastIcon.style.color = '#dc2626';
+          toastTitle.textContent = 'Erro ao recalcular';
+          toastBody.textContent = err.message;
+          toast.style.display = 'block';
+          setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        } finally {
+          btnRecalcular.disabled = false;
+          label.textContent = 'Recalcular Escalas';
+          icon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />`;
+        }
       });
     }
   });

@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import exportar_respostas_excel, responder_questionario, lista_questionarios, dashboard_respostas, editar_questionario_view, salvar_questionario_api, configurar_escala_view, gerenciar_questionarios, desativar_questionario
+from .views import exportar_respostas_excel, responder_questionario, lista_questionarios, dashboard_respostas, editar_questionario_view, salvar_questionario_api, configurar_escala_view, gerenciar_questionarios, desativar_questionario, recalcular_escalas
 
 
 urlpatterns = [
@@ -12,5 +12,6 @@ urlpatterns = [
     path('avaliacoes/<int:pk>/desativar/', desativar_questionario, name='desativar_questionario'),
     path('api/avaliacoes/salvar/', salvar_questionario_api, name='salvar_avaliacao_api'),
     path('dashboard/', dashboard_respostas, name='dashboard_respostas'),
+    path('dashboard/recalcular/', recalcular_escalas, name='recalcular_escalas'),
     path('exportar-excel/<int:pk>/', exportar_respostas_excel, name='exportar_respostas_excel'),
 ]
