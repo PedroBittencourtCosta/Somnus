@@ -212,10 +212,10 @@ def dashboard_respostas(request):
 
     ids_filtradas = list(qs_respostas.values_list('id', flat=True)) if questionario_id else None
 
-    n_psqi_ruim, pct_psqi_ruim       = _kpi_prevalencia('PSQI',  'Qualidade Ruim', ids_filtradas)
-    n_ese_sed,   pct_ese_sed         = _kpi_prevalencia('ESE',   'Sonolência Diurna Excessiva', ids_filtradas)
-    n_srq_tmc,   pct_srq_tmc         = _kpi_prevalencia('SRQ-20', ['Sofrimento mental moderado', 'Sofrimento mental grave'], ids_filtradas)
-    n_k10_risco, pct_k10_risco       = _kpi_prevalencia('K10',   'Provável transtorno', ids_filtradas)
+    n_psqi_ruim, pct_psqi_ruim       = _kpi_prevalencia('PSQI',  ['Qualidade Ruim'], ids_filtradas)
+    n_ese_sed,   pct_ese_sed         = _kpi_prevalencia('ESE',   ['Sonolência Diurna Excessiva', 'Sonolência Diurna'], ids_filtradas)
+    n_srq_tmc,   pct_srq_tmc         = _kpi_prevalencia('SRQ-20', ['Sofrimento mental moderado', 'Sofrimento mental grave', 'Suspeita de TMC'], ids_filtradas)
+    n_k10_risco, pct_k10_risco       = _kpi_prevalencia('K10',   ['Provável transtorno'], ids_filtradas)
 
     # ── Dados para gráficos Chart.js ─────────────────────────────────────────
     def _distribuicao(escala_nome_contains, ids_respostas=None):
