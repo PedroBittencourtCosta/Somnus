@@ -33,12 +33,12 @@
           </svg>
           Questionário
         </label>
-        <select id="filtro-questionario" name="questionario" class="form-select filter-input flex-grow-1"
+        <select id="filtro-questionario" name="questionario" class="form-select filter-input flex-grow-1 text-truncate"
           style="max-width:340px;" onchange="this.form.submit()">
           <option value="">Todos os questionários</option>
           {% for q in questionarios %}
-          <option value="{{ q.pk }}" {% if filtro_questionario == q.pk|stringformat:"s" %}selected{% endif %}>
-            {{ q.titulo }}
+          <option value="{{ q.pk }}" title="{{ q.titulo }}" {% if filtro_questionario == q.pk|stringformat:"s" %}selected{% endif %}>
+            {{ q.titulo|truncatechars:60 }}
           </option>
           {% endfor %}
         </select>
@@ -811,7 +811,7 @@
       ['Normal', 'Sonolência Diurna Excessiva'], [GREEN_DARK, AMBER]);
 
     criarDonut('chart-srq20', 'chart-srq20-empty', distSrq20,
-      ['Sem indícios de TMC', 'Suspeita de TMC'], [GREEN_DARK, PURPLE]);
+      ['Sofrimento mental leve ou não identificado', 'Sofrimento mental moderado', 'Sofrimento mental grave'], [GREEN_DARK, AMBER, RED]);
 
     /* ── K10 — barras horizontais ── */
     criarBarrasH('chart-k10', 'chart-k10-empty', distK10,

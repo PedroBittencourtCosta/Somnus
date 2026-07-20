@@ -246,11 +246,13 @@ def dashboard_respostas(request):
             resposta_questionario=r.resposta_questionario,
             escala_config__nome__icontains='DASS-21'
         ).first()
-        if dass_obj and dass_obj.score_principal is not None:
-            scatter_psqi_dass.append({
-                'x': psqi_score,
-                'y': dass_obj.score_principal
-            })
+        if dass_obj and dass_obj.resultado_json:
+            depressao_score = dass_obj.resultado_json.get('dass_depressao_total')
+            if depressao_score is not None:
+                scatter_psqi_dass.append({
+                    'x': psqi_score,
+                    'y': depressao_score
+                })
 
     # ── Paginação da tabela de exportação (secundária) ────────────────────────
     qs_export = qs_respostas.order_by('data_submissao' if ordem == 'asc' else '-data_submissao')
