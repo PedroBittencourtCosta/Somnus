@@ -4,109 +4,455 @@
 {% block content %}
 <script src="https://unpkg.com/imask"></script>
 
-<div class="container py-3 py-lg-5">
-    <div class="mb-4 mb-lg-5">
-        <div class="progress" style="height: 8px; border-radius: 10px;">
-            <div class="progress-bar" role="progressbar" style="width: {{ progresso }}%; background-color: var(--somnus-green-dark);"></div>
-        </div>
+<style>
+  /* ── QUESTIONÁRIO – Design System (Figma-fiel) ── */
+
+  /* Garante Poppins em tudo dentro do questionário */
+  .qr-wrapper {
+    font-family: 'Poppins', sans-serif;
+    background-color: #FFFFFF;
+    min-height: 100%;
+  }
+
+  /* ── Barra de progresso ── */
+  .qr-progress-track {
+    height: 8px;
+    background-color: #E7E7E7;
+    border-radius: 37px;
+    overflow: hidden;
+    box-shadow: 6px 8px 11px 0px rgba(0,0,0,0.19);
+  }
+  .qr-progress-fill {
+    height: 100%;
+    background-color: #253786;
+    border-radius: 37px;
+    transition: width 0.5s ease;
+  }
+
+  /* ── Banner de seção ── */
+  .qr-section-banner {
+    background-color: #253786;
+    border-radius: 16px;
+    padding: 28px 36px;
+    box-shadow: 2px 7px 15px 3px rgba(0,0,0,0.2);
+    border: 1px solid #000;
+  }
+  .qr-section-banner h2 {
+    font-family: 'Poppins', sans-serif;
+    font-size: clamp(1.5rem, 4vw, 2.6rem);
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  /* ── Card de instrução ── */
+  .qr-instrucao-card {
+    background-color: #F3F5F6;
+    border: 1px solid #E5E7EB;
+    border-radius: 16px;
+    padding: 24px 28px;
+    box-shadow: 0px 8px 8px 0px rgba(0,0,0,0.25);
+  }
+  .qr-instrucao-card p {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #253786;
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* ── Card de pergunta ── */
+  .pergunta-card {
+    background-color: #F3F5F6;
+    border: 1px solid #E5E7EB !important;
+    border-radius: 16px !important;
+    box-shadow: 0px 8px 8px 0px rgba(0,0,0,0.25);
+    overflow: visible;
+    transition: box-shadow 0.2s ease;
+  }
+  .pergunta-card.border-danger {
+    border-color: #ef4444 !important;
+  }
+
+  /* Título da pergunta */
+  .qr-question-title {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.875rem;      /* 14px */
+    font-weight: 600;
+    color: #111827;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .qr-question-title .qr-required {
+    color: #ef4444;
+    margin-left: 2px;
+  }
+
+  /* ── RadioOption (pill card) ── */
+  .qr-options-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .qr-radio-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: #F9FAFB;
+    border: 2px solid #E5E7EB;
+    border-radius: 14px;
+    padding: 11px 18px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+    min-width: 0;
+  }
+  .qr-radio-option:hover {
+    border-color: #253786;
+    background-color: #EEF1FB;
+  }
+  .qr-radio-option input[type="radio"] {
+    display: none;
+  }
+  /* Círculo custom */
+  .qr-radio-circle {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    border-radius: 50%;
+    border: 2px solid #D1D5DB;
+    background-color: transparent;
+    transition: background-color 0.15s, border-color 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .qr-radio-circle::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: transparent;
+    transition: background-color 0.15s;
+  }
+  /* Selecionado */
+  .qr-radio-option.is-selected {
+    border-color: #85C739;
+    background-color: #F0FAE6;
+  }
+  .qr-radio-option.is-selected .qr-radio-circle {
+    background-color: #85C739;
+    border-color: #85C739;
+  }
+  .qr-radio-option.is-selected .qr-radio-circle::after {
+    background-color: #FFFFFF;
+  }
+
+  /* Texto da opção */
+  .qr-radio-label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.875rem;
+    color: #374151;
+    line-height: 1.4;
+    white-space: nowrap;
+  }
+
+  /* ── Input de texto ── */
+  .qr-text-input-wrap label {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.78rem;
+    color: #6B7280;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .qr-text-input-wrap input[type="text"] {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    color: #111827;
+    background-color: #F9FAFB;
+    border: 2px solid #E5E7EB;
+    border-radius: 12px;
+    padding: 12px 16px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .qr-text-input-wrap input[type="text"]:focus {
+    border-color: #253786;
+    box-shadow: 0 0 0 3px rgba(37,55,134,0.12);
+    background-color: #fff;
+  }
+
+  /* ── Botões de navegação ── */
+  .qr-nav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 40px;
+  }
+  /* Botão Voltar */
+  .qr-btn-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #F3F4F6;
+    color: #364153;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    border: none;
+    border-radius: 9999px;
+    padding: 14px 36px;
+    cursor: pointer;
+    transition: background-color 0.15s, transform 0.1s;
+    text-decoration: none;
+  }
+  .qr-btn-back:hover {
+    background-color: #E5E7EB;
+    transform: translateX(-2px);
+  }
+  .qr-btn-back svg {
+    width: 18px;
+    height: 18px;
+  }
+  /* Botão Próximo / Finalizar */
+  .qr-btn-next {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(90deg, #253786 0%, #0067B1 100%);
+    color: #FFFFFF;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    border: none;
+    border-radius: 9999px;
+    padding: 14px 44px;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s, box-shadow 0.15s;
+    box-shadow: 0 4px 14px rgba(37,55,134,0.35);
+    text-decoration: none;
+  }
+  .qr-btn-next:hover {
+    opacity: 0.93;
+    transform: translateX(2px);
+    box-shadow: 0 6px 20px rgba(37,55,134,0.45);
+  }
+  .qr-btn-next svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* ── Responsivo – tablet 820px ── */
+  @media (max-width: 900px) {
+    .qr-section-banner {
+      padding: 20px 22px;
+      border-radius: 14px;
+    }
+    .qr-section-banner h2 {
+      font-size: clamp(1.25rem, 5vw, 1.75rem);
+    }
+    .qr-radio-label {
+      white-space: normal;
+    }
+    .qr-btn-back,
+    .qr-btn-next {
+      font-size: 0.9rem;
+      padding: 12px 24px;
+    }
+  }
+
+  /* ── Responsivo – mobile ── */
+  @media (max-width: 575px) {
+    .qr-options-wrap {
+      flex-direction: column;
+      gap: 8px;
+    }
+    .qr-radio-option {
+      width: 100%;
+    }
+    .qr-btn-back {
+      padding: 11px 20px;
+    }
+    .qr-btn-next {
+      padding: 11px 28px;
+    }
+  }
+</style>
+
+<div class="qr-wrapper py-3 py-lg-5">
+  <div class="container">
+
+    <!-- Barra de progresso -->
+    <div class="mb-4">
+      <div class="qr-progress-track">
+        <div class="qr-progress-fill" style="width: {{ progresso }}%;"></div>
+      </div>
+    </div>
+
+    <!-- Banner de seção -->
+    <div class="qr-section-banner mb-4">
+      <h2>{{ secao.titulo }}</h2>
     </div>
 
     <form method="post" id="form-questionario" novalidate>
-        {% csrf_token %}
-        
-        <h2 class="fw-bold mb-4" style="color: var(--somnus-blue-deep);">{{ secao.titulo }}</h2>
-        
-        {% if secao.instrucao %}
-            <div class="card border-0 shadow-sm mb-4 rounded-4 border-light-subtle" style="background-color: #fcfcfc;">
-                <div class="card-body p-4">
-                    <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep); line-height: 1.5;">
-                        {{ secao.instrucao|linebreaksbr }} 
-                    </h5>
-                </div>
-            </div>
+      {% csrf_token %}
+
+      <!-- Card de instrução (se existir) -->
+      {% if secao.instrucao %}
+        <div class="qr-instrucao-card mb-4">
+          <p>{{ secao.instrucao|linebreaksbr }}</p>
+        </div>
+      {% endif %}
+
+      <!-- Perguntas -->
+      {% for pergunta in secao.perguntas.all %}
+        <div class="pergunta-card border-0 mb-4"
+             id="card_pergunta_{{ pergunta.id }}"
+             data-pergunta-id="{{ pergunta.id }}"
+             data-tipo="{{ pergunta.tipo }}"
+             data-obrigatoria="{{ pergunta.obrigatoria|yesno:'true,false' }}"
+             data-config-mista="{{ pergunta.config_mista }}"
+             data-depende-alts="{% for alt in pergunta.depende_de_alternativa.all %}{{ alt.id }}{% if not forloop.last %},{% endif %}{% endfor %}"
+             data-depende-texto-id="{{ pergunta.depende_de_texto_de.id|default:'' }}"
+             {% if pergunta.depende_de_alternativa.exists or pergunta.depende_de_texto_de %}
+               style="display: none;"
+             {% endif %}>
+
+          <div class="card-body p-3 p-md-4">
+
+            <!-- Título da pergunta -->
+            <p class="qr-question-title">
+              {{ pergunta.conteudo }}
+              {% if pergunta.obrigatoria %}
+                <span class="qr-required" title="Obrigatório">*</span>
+              {% endif %}
+            </p>
+
+            <!-- Campo de texto (TX / MX) -->
+            {% if pergunta.tipo == 'TX' or pergunta.tipo == 'MX' %}
+              <div class="qr-text-input-wrap mb-3">
+                <label>Especifique ou complete se necessário:</label>
+                <input type="text"
+                       name="pergunta_{{ pergunta.id }}_texto"
+                       class="input-pergunta input-texto-mista"
+                       data-mascara="{{ pergunta.mascara|default:'NENHUMA' }}"
+                       value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}">
+              </div>
+            {% endif %}
+
+            <!-- Opções de múltipla escolha (MC / MX) -->
+            {% if pergunta.tipo == 'MC' or pergunta.tipo == 'MX' %}
+              <div class="qr-options-wrap">
+                {% for alternativa in pergunta.alternativas.all %}
+                  <label class="qr-radio-option {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:'s' %}is-selected{% endif %}"
+                         id="label_alt_{{ alternativa.id }}">
+                    <input class="alternativa-radio"
+                           type="radio"
+                           name="pergunta_{{ pergunta.id }}"
+                           id="alt_{{ alternativa.id }}"
+                           value="{{ alternativa.id }}"
+                           {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:"s" %}checked{% endif %}>
+                    <span class="qr-radio-circle"></span>
+                    <span class="qr-radio-label">{{ alternativa.conteudo }}</span>
+                  </label>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+          </div>
+        </div>
+      {% endfor %}
+
+      <!-- Barra de navegação -->
+      <div class="qr-nav-bar">
+        {% if page_obj.has_previous %}
+          <button type="submit" name="acao" value="anterior" class="qr-btn-back">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5"/>
+            </svg>
+            Voltar
+          </button>
+        {% else %}
+          <div></div>
         {% endif %}
 
-        {% for pergunta in secao.perguntas.all %}
-            <div class="card border-0 shadow-sm mb-4 rounded-4 pergunta-card border-light-subtle" 
-                 id="card_pergunta_{{ pergunta.id }}"
-                 data-pergunta-id="{{ pergunta.id }}"
-                 data-tipo="{{ pergunta.tipo }}"
-                 data-obrigatoria="{{ pergunta.obrigatoria|yesno:'true,false' }}"
-                 data-config-mista="{{ pergunta.config_mista }}"
-                 
-                 data-depende-alts="{% for alt in pergunta.depende_de_alternativa.all %}{{ alt.id }}{% if not forloop.last %},{% endif %}{% endfor %}" 
-                 
-                 data-depende-texto-id="{{ pergunta.depende_de_texto_de.id|default:'' }}"
-                 
-                 {% if pergunta.depende_de_alternativa.exists or pergunta.depende_de_texto_de %}
-                    style="display: none;" 
-                 {% endif %}>
-                
-                <div class="card-body p-3 p-md-4">
-                    <h5 class="fw-bold mb-3">
-                        {{ pergunta.conteudo }}
-                        {% if pergunta.obrigatoria %}
-                            <span class="text-danger" title="Obrigatório">*</span>
-                        {% endif %}
-                    </h5>
+        {% if page_obj.has_next %}
+          <button type="submit" name="acao" value="proximo" class="qr-btn-next">
+            Próximo
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5"/>
+            </svg>
+          </button>
+        {% else %}
+          <button type="submit" name="acao" value="finalizar" class="qr-btn-next">
+            Finalizar
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+            </svg>
+          </button>
+        {% endif %}
+      </div>
 
-                    {% if pergunta.tipo == 'TX' or pergunta.tipo == 'MX' %}
-                        <div class="mb-3">
-                            <label class="small text-muted mb-1">Especifique ou complete se necessário:</label>
-                            <input type="text" 
-                                   name="pergunta_{{ pergunta.id }}_texto" 
-                                   class="form-control bg-light border-0 rounded-3 p-3 input-pergunta input-texto-mista"
-                                   data-mascara="{{ pergunta.mascara|default:'NENHUMA' }}"
-                                   value="{{ respostas_preenchidas|get_item_key:pergunta.id|get_val:'texto'|default:'' }}">
-                        </div>
-                    {% endif %}
-
-                    {% if pergunta.tipo == 'MC' or pergunta.tipo == 'MX' %}
-                        <div class="d-flex flex-wrap gap-2 gap-md-3">
-                            {% for alternativa in pergunta.alternativas.all %}
-                                <div class="form-check">
-                                    <input class="form-check-input alternativa-radio" 
-                                           type="radio" 
-                                           name="pergunta_{{ pergunta.id }}" 
-                                           id="alt_{{ alternativa.id }}"
-                                           value="{{ alternativa.id }}"
-                                           {% if respostas_preenchidas|get_item_key:pergunta.id|get_val:'alternativa' == alternativa.id|stringformat:"s" %}checked{% endif %}>
-                                    <label class="form-check-label" for="alt_{{ alternativa.id }}">
-                                        {{ alternativa.conteudo }}
-                                    </label>
-                                </div>
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-        {% endfor %}
-
-        <div class="d-flex justify-content-between mt-4 mt-lg-5 gap-2">
-            {% if page_obj.has_previous %}
-                <button type="submit" name="acao" value="anterior" class="btn btn-outline-secondary rounded-pill px-3 px-md-4 fw-bold">Voltar</button>
-            {% else %}
-                <div></div>
-            {% endif %}
-
-            {% if page_obj.has_next %}
-                <button type="submit" name="acao" value="proximo" class="btn btn-primary rounded-pill px-3 px-md-5 fw-bold shadow-sm" style="background-color: var(--somnus-blue-deep); border: none;">Próximo</button>
-            {% else %}
-                <button type="submit" name="acao" value="finalizar" class="btn btn-success rounded-pill px-3 px-md-5 fw-bold shadow-sm" style="background-color: var(--somnus-green-dark); border: none;">Finalizar</button>
-            {% endif %}
-        </div>
     </form>
-</div>
+  </div><!-- /.container -->
+</div><!-- /.qr-wrapper -->
 
 {% include 'modal_tcle.html' %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('form-questionario');
-    const radios = document.querySelectorAll('.alternativa-radio');
     const inputsTexto = document.querySelectorAll('.input-pergunta');
 
-    // --- LÓGICA DE MÁSCARAS DE INPUT (IMask) ---
+    // ── Sincroniza estado visual dos radio buttons ──
+    function sincronizarRadios() {
+        document.querySelectorAll('.qr-radio-option').forEach(label => {
+            const radio = label.querySelector('input[type="radio"]');
+            if (radio) {
+                if (radio.checked) {
+                    label.classList.add('is-selected');
+                } else {
+                    label.classList.remove('is-selected');
+                }
+            }
+        });
+    }
+
+    // Delegação de evento: clique em qualquer radio-option
+    document.querySelectorAll('.qr-radio-option').forEach(label => {
+        label.addEventListener('mousedown', function() {
+            const radio = this.querySelector('input[type="radio"]');
+            if (radio) radio.dataset.wasChecked = radio.checked ? 'true' : 'false';
+        });
+
+        label.addEventListener('click', function(e) {
+            const radio = this.querySelector('input[type="radio"]');
+            if (!radio) return;
+
+            if (radio.dataset.wasChecked === 'true') {
+                // Toggle: desmarcar
+                radio.checked = false;
+                radio.dataset.wasChecked = 'false';
+                sincronizarRadios();
+                atualizarVisibilidade();
+            } else {
+                // Desmarca todos do mesmo grupo primeiro
+                const name = radio.name;
+                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                    r.dataset.wasChecked = 'false';
+                });
+                radio.checked = true;
+                sincronizarRadios();
+                atualizarVisibilidade();
+            }
+        });
+    });
+
+    // ── Máscaras de input (IMask) ──
     function aplicarMascaras() {
         document.querySelectorAll('input[data-mascara]').forEach(input => {
             const tipo = input.dataset.mascara;
@@ -120,13 +466,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
             } else if (tipo === 'ALTURA') {
                 IMask(input, {
-                    mask: '0,00 m',   // Define o formato fixo: Digito,VírgulaDigitoDigito m
-                    lazy: false,      // Mostra a estrutura (_,__ m) imediatamente
-                    placeholderChar: '_', // Caractere de preenchimento
-                    // Validação opcional para garantir que o primeiro dígito não seja absurdo (ex: 0, 1, 2 ou 3)
-                    // blocks: {
-                    //    '0': { mask: IMask.MaskedRange, from: 0, to: 3 } // Limita o primeiro número de 0 a 3
-                    // }
+                    mask: '0,00 m',
+                    lazy: false,
+                    placeholderChar: '_',
                 });
             } else if (tipo === 'PESO') {
                 IMask(input, {
@@ -149,21 +491,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- LÓGICA PARA DESMARCAR RÁDIO (TOGGLE) ---
-    radios.forEach(radio => {
-        radio.addEventListener('mousedown', function() {
-            this.wasChecked = this.checked;
-        });
-        radio.addEventListener('click', function() {
-            if (this.wasChecked) {
-                this.checked = false;
-                this.wasChecked = false;
-                atualizarVisibilidade();
-            }
-        });
-    });
-
-    // --- LÓGICA DE VISIBILIDADE AVANÇADA ---
+    // ── Visibilidade condicional ──
     function atualizarVisibilidade() {
         const selecionados = Array.from(document.querySelectorAll('.alternativa-radio:checked')).map(r => r.value);
         const textosPreenchidos = {};
@@ -187,7 +515,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- VALIDAÇÃO DE SUBMIT COM SCROLL ---
+    // ── Validação de submit ──
     form.addEventListener('submit', function(e) {
         if (e.submitter && e.submitter.value === 'anterior') return;
         let valido = true;
@@ -198,7 +526,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const tipo = card.dataset.tipo;
             const obrigatoria = card.dataset.obrigatoria === 'true';
             const config = card.dataset.configMista;
-            
+
             if (obrigatoria) {
                 const radioMarcado = card.querySelector('input[type="radio"]:checked');
                 const textoInput = card.querySelector('input[type="text"]');
@@ -215,10 +543,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 if (erro) {
                     valido = false;
-                    card.classList.add('border', 'border-danger');
+                    card.classList.add('border-danger');
                     if (!primeiraPerguntaErro) primeiraPerguntaErro = card;
                 } else {
-                    card.classList.remove('border', 'border-danger');
+                    card.classList.remove('border-danger');
                 }
             }
         });
@@ -229,11 +557,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    radios.forEach(r => r.addEventListener('change', atualizarVisibilidade));
+    // Listeners
+    document.querySelectorAll('.alternativa-radio').forEach(r => r.addEventListener('change', () => {
+        sincronizarRadios();
+        atualizarVisibilidade();
+    }));
     inputsTexto.forEach(i => i.addEventListener('input', atualizarVisibilidade));
 
     // Inicialização
     aplicarMascaras();
+    sincronizarRadios();
     atualizarVisibilidade();
 });
 </script>
