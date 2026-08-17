@@ -5,69 +5,72 @@
 <div class="home-wrapper pb-5">
 
     <!-- Hero Section -->
-    <section class="container mt-4 mb-5">
-        <div class="hero-section position-relative rounded-4 overflow-hidden shadow-sm"
-            style="min-height: 400px; display: flex; align-items: center; background-image: url('{% static 'images/hero_image.png' %}'); background-size: cover; background-position: center;">
-            <div class="position-absolute top-0 start-0 w-100 h-100" style="background: rgba(0,0,0,0.3);"></div>
+    <section class="hero-outer-section container mt-4 mb-0">
 
-            <div
-                class="position-relative z-1 p-4 p-md-5 w-100 d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between gap-4">
-                <div style="max-width: 600px;">
-                    <h1 class="display-4 fw-bold text-white mb-3" style="font-family: 'Poppins', sans-serif;">
-                        Avaliação da<br>
-                        Qualidade do Sono
-                    </h1>
+        <!-- Imagem hero com título, subtítulo e botão sobrepostos (tudo dentro da imagem) -->
+        <div class="hero-image-wrapper position-relative rounded-4 overflow-hidden">
+            <img src="{% static 'images/hero_image.png' %}" alt="Avaliação da Qualidade do Sono"
+                class="hero-bg-img w-100">
 
-                    <p class="fs-5 text-white mb-0" style="font-family: 'Poppins', sans-serif;">
+            <!-- Overlay escuro gradiente -->
+            <div class="position-absolute top-0 start-0 w-100 h-100 hero-overlay"></div>
+
+            <!-- Conteúdo sobreposto: título no topo/meio, subtítulo+botão na parte inferior -->
+            <div class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column justify-content-between p-4 p-md-5">
+                <!-- Título -->
+                <h1 class="hero-title text-white fw-bold mb-0">
+                    Avaliação da<br>Qualidade do Sono
+                </h1>
+
+                <!-- Subtítulo + Botão na parte inferior da imagem -->
+                <div class="d-flex flex-column flex-md-row align-items-md-end justify-content-md-between gap-3">
+                    <p class="hero-subtitle text-white mb-0">
                         Utilizamos protocolos validados para analisar sua saúde noturna e fornecer um prognóstico
                         personalizado sobre sua saúde e bem-estar.
                     </p>
-                </div>
-
-                <div class="text-start text-lg-end">
-                    <a href="{% url 'lista_questionarios'%}"
-                        class="btn rounded-pill px-4 px-md-5 py-3 fw-bold text-white btn-evaluate d-inline-block text-nowrap"
-                        style="background: linear-gradient(90deg, #76B82A 0%, #009640 54%); box-shadow: 0px 16px 48px 0px rgba(0, 0, 0, 0.18); font-size: 1.1rem; border: none; transition: all 0.2s;">
-                        Iniciar avaliação
-                    </a>
+                    <div class="flex-shrink-0">
+                        <a href="{% url 'lista_questionarios' %}"
+                            class="btn rounded-pill px-4 px-md-5 py-3 fw-bold text-white btn-evaluate d-inline-block text-nowrap"
+                            style="background: linear-gradient(90deg, #76B82A 0%, #009640 54%); box-shadow: 0px 16px 48px 0px rgba(0, 0, 0, 0.18); font-size: 1.05rem; border: none;">
+                            Iniciar avaliação
+                        </a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Como Funciona Section -->
-    <section id="como-funciona" class="py-5 w-100 mt-md-5">
+    <section id="como-funciona" class="py-5 w-100 mt-md-4">
         <div class="container">
             <div class="text-center mb-5">
-                <h2 class="fw-bold mb-4" style="color: #253786; font-family: 'Poppins', sans-serif;">Como funciona a
+                <h2 class="fw-bold mb-4 como-funciona-titulo" style="color: #253786; font-family: 'Poppins', sans-serif;">Como funciona a
                     nossa avaliação</h2>
             </div>
 
             <div class="row g-4 mt-2 justify-content-center">
                 <!-- Card 1 -->
                 <div class="col-12 col-md-4">
-                    <div
-                        class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
+                    <div class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
                         <div class="icon-box d-flex align-items-center justify-content-center mb-4">
                             📋
                         </div>
                         <h3 class="h5 fw-bold mb-3" style="color: #253786; font-family: 'Poppins', sans-serif;">
                             Questionário</h3>
-                        <p class="text-muted small" style="font-family: 'Poppins', sans-serif;">
+                        <p class="card-text-body small" style="font-family: 'Poppins', sans-serif;">
                             Responda perguntas sobre sua rotina, hábitos de sono e sintomas de forma segura.
                         </p>
                     </div>
                 </div>
                 <!-- Card 2 -->
                 <div class="col-12 col-md-4">
-                    <div
-                        class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
+                    <div class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
                         <div class="icon-box d-flex align-items-center justify-content-center mb-4">
                             🧠
                         </div>
                         <h3 class="h5 fw-bold mb-3" style="color: #253786; font-family: 'Poppins', sans-serif;">
                             Processamento</h3>
-                        <p class="text-muted small" style="font-family: 'Poppins', sans-serif;">
+                        <p class="card-text-body small" style="font-family: 'Poppins', sans-serif;">
                             Nossa ferramenta processa suas respostas cruzando dados de qualidade de sono com indicadores
                             de saúde.
                         </p>
@@ -75,14 +78,13 @@
                 </div>
                 <!-- Card 3 -->
                 <div class="col-12 col-md-4">
-                    <div
-                        class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
+                    <div class="card h-100 border-0 p-4 p-md-5 text-center d-flex flex-column align-items-center custom-card">
                         <div class="icon-box d-flex align-items-center justify-content-center mb-4">
                             📄
                         </div>
                         <h3 class="h5 fw-bold mb-3" style="color: #253786; font-family: 'Poppins', sans-serif;">
                             Resultado</h3>
-                        <p class="text-muted small" style="font-family: 'Poppins', sans-serif;">
+                        <p class="card-text-body small" style="font-family: 'Poppins', sans-serif;">
                             Receba um prognóstico imediato e recomendações personalizadas para melhorar seu bem-estar.
                         </p>
                     </div>
@@ -92,60 +94,104 @@
     </section>
 
     <!-- Protocolos Validados Section -->
-    <section class="container mt-5 mb-5 pb-5">
-        <div class="protocolos-section rounded-4 d-flex flex-column flex-lg-row align-items-center justify-content-between p-4 p-lg-5 text-white position-relative overflow-hidden"
+    <section class="container mt-4 mb-5 pb-5">
+        <div class="protocolos-section rounded-4 position-relative overflow-hidden"
             style="background: linear-gradient(90deg, #009640 73%, #76B82A 100%); box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.08);">
 
-            <div
-                class="d-flex flex-column flex-md-row gap-4 gap-md-5 w-100 z-1 align-items-center align-items-lg-start position-relative">
+            <!-- Conteúdo (restrito para não sobrepor o ícone de segurança no desktop) -->
+            <div class="d-flex flex-column flex-md-row gap-4 gap-md-5 z-1 position-relative align-items-center protocolos-inner">
 
                 <!-- Benefit 1 -->
-                <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3"
-                    style="flex: 1;">
+                <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3" style="flex: 1;">
                     <img src="{% static 'images/icon_verificado_1.png' %}" alt="Verificado"
-                        style="width: 80px; height: 80px; object-fit: contain;">
-                    <div style="font-family: 'Poppins', sans-serif; font-size: 1.1rem; line-height: 1.3;">
+                        class="proto-icon">
+                    <div style="font-family: 'Poppins', sans-serif; font-size: 1.05rem; line-height: 1.4; color: #F9FAFB;">
                         <span class="fw-bold d-block">Protocolos validados</span>
                         Base científica confiável e recomendação personalizada
                     </div>
                 </div>
 
                 <!-- Benefit 2 -->
-                <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3"
-                    style="flex: 1;">
+                <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3" style="flex: 1;">
                     <img src="{% static 'images/icon_verificado_2.png' %}" alt="Protegido"
-                        style="width: 80px; height: 80px; object-fit: contain;">
-                    <div style="font-family: 'Poppins', sans-serif; font-size: 1.1rem; line-height: 1.3;">
+                        class="proto-icon">
+                    <div style="font-family: 'Poppins', sans-serif; font-size: 1.05rem; line-height: 1.4; color: #FFFFFF;">
                         <span class="fw-bold d-block">Dados Protegidos</span>
+                        Sua identidade não será divulgada em publicações
                     </div>
                 </div>
-
             </div>
 
-            <!-- Security Icon (Absolute on Desktop) -->
+            <!-- Ícone de segurança — posição absoluta à direita (desktop) -->
             <img src="{% static 'images/icon_seguranca.png' %}" alt="Segurança"
-                class="d-none d-lg-block position-absolute end-0 top-50 translate-middle-y me-4"
-                style="width: 140px; height: auto; z-index: 0; opacity: 0.9;">
+                class="d-none d-lg-block position-absolute proto-seguranca">
         </div>
     </section>
 
 </div>
 
 <style>
-    .hero-section {
-        background-image: url("{% static 'images/hero_image.png' %}");
+    /* ──────────────────────────────────────────
+       HERO
+    ────────────────────────────────────────── */
+    .hero-image-wrapper {
+        box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+    }
+
+    .hero-bg-img {
+        height: 376px;
+        object-fit: cover;
+        object-position: center top;
+        width: 100%;
+        display: block;
+        border-radius: 16px;
+    }
+
+    .hero-overlay {
+        /* Gradiente de cima para baixo: escuro no topo (onde fica o título) e no fundo (subtítulo/botão) */
+        background: linear-gradient(
+            to bottom,
+            rgba(0,0,0,0.50) 0%,
+            rgba(0,0,0,0.10) 40%,
+            rgba(0,0,0,0.10) 55%,
+            rgba(0,0,0,0.55) 100%
+        );
+    }
+
+    .hero-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(1.8rem, 5.5vw, 74px);
+        font-weight: 700;
+        line-height: 1.08;
+        text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+    }
+
+    .hero-subtitle {
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(0.85rem, 1.4vw, 1.1rem);
+        color: rgba(255, 255, 255, 0.92);
+        max-width: 640px;
+        line-height: 1.5;
+        text-shadow: 0 1px 8px rgba(0,0,0,0.4);
+    }
+
+    /* ──────────────────────────────────────────
+       CARDS COMO FUNCIONA
+    ────────────────────────────────────────── */
+    .como-funciona-titulo {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
     }
 
     .custom-card {
         background-color: #FFFFFF;
-        box-shadow: 3px 2px 11px 0px rgba(0, 0, 0, 0.15);
+        box-shadow: 3px 2px 11px 0px rgba(0, 0, 0, 0.46);
         border-radius: 16px !important;
         transition: transform 0.2s, box-shadow 0.2s;
     }
 
     .custom-card:hover {
         transform: translateY(-5px);
-        box-shadow: 3px 6px 18px 0px rgba(0, 0, 0, 0.2);
+        box-shadow: 3px 6px 20px 0px rgba(0, 0, 0, 0.35);
     }
 
     .icon-box {
@@ -156,9 +202,101 @@
         font-size: 2rem;
     }
 
+    .card-text-body {
+        color: rgba(33, 37, 41, 0.75);
+    }
+
+    /* ──────────────────────────────────────────
+       PROTOCOLOS VALIDADOS
+    ────────────────────────────────────────── */
+    .protocolos-section {
+        min-height: 176px;
+    }
+
+    .protocolos-inner {
+        padding: 32px 40px;
+        padding-right: 200px; /* espaço para o ícone de segurança no desktop */
+    }
+
+    .proto-icon {
+        width: 103px;
+        height: 103px;
+        object-fit: contain;
+        flex-shrink: 0;
+    }
+
+    .proto-seguranca {
+        width: 162px;
+        height: 162px;
+        object-fit: contain;
+        right: 24px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 0;
+        opacity: 0.95;
+    }
+
+    /* ──────────────────────────────────────────
+       BOTÃO AVALIAR
+    ────────────────────────────────────────── */
+    .btn-evaluate {
+        transition: transform 0.2s, opacity 0.2s;
+    }
+
     .btn-evaluate:hover {
         transform: scale(1.02);
         opacity: 0.95;
+    }
+
+    /* ──────────────────────────────────────────
+       RESPONSIVO — Tablet 820px (max-width: 991px)
+    ────────────────────────────────────────── */
+    @media (max-width: 991px) {
+        .hero-bg-img {
+            height: 280px;
+        }
+
+        .protocolos-inner {
+            padding: 28px 24px;
+            padding-right: 24px; /* sem ícone de segurança */
+        }
+
+        .proto-icon {
+            width: 80px;
+            height: 80px;
+        }
+    }
+
+    /* ──────────────────────────────────────────
+       RESPONSIVO — Mobile (max-width: 767px)
+    ────────────────────────────────────────── */
+    @media (max-width: 767px) {
+        .hero-bg-img {
+            height: 340px;
+        }
+
+        .protocolos-inner {
+            padding: 24px 16px;
+        }
+
+        .proto-icon {
+            width: 70px;
+            height: 70px;
+        }
+    }
+
+    /* ──────────────────────────────────────────
+       Desktop grande (min-width: 1200px)
+    ────────────────────────────────────────── */
+    @media (min-width: 1200px) {
+        .hero-bg-img {
+            height: 376px;
+        }
+
+        .hero-title {
+            font-size: 74px;
+            line-height: 79px;
+        }
     }
 </style>
 {% endblock %}
