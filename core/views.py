@@ -42,10 +42,20 @@ def responder_questionario(request, pk):
     paginator = Paginator(secoes_list, 1)
     page_number = request.GET.get('page', 1)
     page_obj = paginator.get_page(page_number)
+
+    # Proteção GET: impede acesso direto via URL a páginas não respondidas
+    max_permitida_get = request.session.get('max_pagina_respondida', 1)
+    if page_obj.number > max_permitida_get:
+        return redirect(f"{request.path}?page={max_permitida_get}")
+
     secao_atual = page_obj.object_list[0] if page_obj.object_list else None
 
     if 'respostas_temp' not in request.session:
         request.session['respostas_temp'] = {}
+
+    # Rastreia a página mais avançada já respondida nesta sessão
+    if 'max_pagina_respondida' not in request.session:
+        request.session['max_pagina_respondida'] = 1
 
     if request.method == 'POST':
         acao = request.POST.get('acao')
@@ -68,9 +78,25 @@ def responder_questionario(request, pk):
         request.session.modified = True
 
         if acao == 'proximo' and page_obj.has_next():
+            # Avançou: atualiza o máximo de página respondida
+            max_atual = request.session.get('max_pagina_respondida', 1)
+            if page_obj.number >= max_atual:
+                request.session['max_pagina_respondida'] = page_obj.number + 1
+                request.session.modified = True
             return redirect(f"{request.path}?page={page_obj.next_page_number()}")
         elif acao == 'anterior' and page_obj.has_previous():
             return redirect(f"{request.path}?page={page_obj.previous_page_number()}")
+        
+        elif acao and acao.startswith('ir_pagina_'):
+            try:
+                target_page = int(acao.replace('ir_pagina_', ''))
+            except (ValueError, TypeError):
+                target_page = 1
+            # Clamp server-side: só permite navegar até a página máxima respondida
+            max_permitida = request.session.get('max_pagina_respondida', 1)
+            target_page = min(target_page, max_permitida)
+            target_page = max(target_page, 1)
+            return redirect(f"{request.path}?page={target_page}")
         
         elif acao == 'finalizar':
             respostas_cache = request.session.get('respostas_temp', {})
@@ -121,6 +147,7 @@ def responder_questionario(request, pk):
             # 6. Limpeza da sessão para o próximo atendimento
             del request.session['respostas_temp']
             request.session['tcle_aceito'] = False
+            request.session['max_pagina_respondida'] = 1
             request.session.modified = True
 
             messages.success(request, f"Avaliação de {nome_extraido} concluída!")
@@ -131,7 +158,8 @@ def responder_questionario(request, pk):
         'secao': secao_atual,
         'page_obj': page_obj,
         'respostas_preenchidas': request.session.get('respostas_temp', {}),
-        'progresso': int((page_obj.number / paginator.num_pages) * 100)
+        'progresso': int((page_obj.number / paginator.num_pages) * 100),
+        'max_pagina_respondida': request.session.get('max_pagina_respondida', 1),
     }
     return render(request, 'responder_questionario.html', context)
 

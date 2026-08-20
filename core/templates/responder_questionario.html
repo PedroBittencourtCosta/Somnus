@@ -193,6 +193,12 @@
     gap: 12px;
     margin-top: 40px;
   }
+  /* Slot central: centraliza o paginador de verdade */
+  .qr-nav-center {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+  }
   /* Botão Voltar */
   .qr-btn-back {
     display: inline-flex;
@@ -281,6 +287,120 @@
       padding: 11px 28px;
     }
   }
+
+  /* ── Paginador de páginas ── */
+  .qr-paginator {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Poppins', sans-serif;
+    flex-wrap: wrap;
+  }
+  /* O span container dos números precisa ser flex também */
+  #qr-paginator-numbers {
+    display: inline-flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .qr-paginator-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 2px solid #D1D5DB;
+    background: transparent;
+    color: #000;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    padding: 0;
+  }
+  .qr-paginator-btn:hover {
+    border-color: #253786;
+    color: #253786;
+    background-color: #EEF1FB;
+  }
+  .qr-paginator-btn.is-active {
+    background-color: #253786;
+    border-color: #253786;
+    color: #FFFFFF;
+    cursor: default;
+    box-shadow: 0 2px 8px rgba(37,55,134,0.3);
+  }
+  /* Botão do paginador bloqueado (página ainda não acessível) */
+  .qr-paginator-btn.is-locked {
+    opacity: 0.35;
+    cursor: not-allowed !important;
+    pointer-events: none;
+    border-color: #E5E7EB;
+    color: #D1D5DB;
+  }
+  .qr-paginator-arrow {
+    background: none;
+    border: none;
+    color: #253786;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 8px 12px;
+    transition: color 0.15s, transform 0.1s;
+  }
+  .qr-paginator-arrow:hover:not(:disabled) {
+    color: #0067B1;
+    transform: scale(1.05);
+  }
+  .qr-paginator-arrow:disabled {
+    color: #D1D5DB;
+    cursor: default;
+  }
+  .qr-paginator-ellipsis {
+    color: #9CA3AF;
+    font-family: 'Poppins', sans-serif;
+    font-size: 1rem;
+    padding: 0 2px;
+    user-select: none;
+  }
+
+  /* ── Paginador responsivo tablet ── */
+  @media (max-width: 900px) {
+    .qr-paginator {
+      gap: 4px;
+    }
+    .qr-paginator-btn {
+      width: 38px;
+      height: 38px;
+      font-size: 0.875rem;
+    }
+    .qr-paginator-arrow {
+      font-size: 0.8rem;
+      padding: 6px 8px;
+    }
+  }
+
+  /* ── Paginador responsivo mobile ── */
+  @media (max-width: 575px) {
+    .qr-paginator {
+      gap: 3px;
+    }
+    .qr-paginator-btn {
+      width: 34px;
+      height: 34px;
+      font-size: 0.8rem;
+    }
+    .qr-paginator-arrow {
+      font-size: 0.75rem;
+      padding: 4px 6px;
+    }
+  }
 </style>
 
 <div class="qr-wrapper py-3 py-lg-5">
@@ -367,7 +487,7 @@
         </div>
       {% endfor %}
 
-      <!-- Barra de navegação -->
+      <!-- Barra de navegação com paginador -->
       <div class="qr-nav-bar">
         {% if page_obj.has_previous %}
           <button type="submit" name="acao" value="anterior" class="qr-btn-back">
@@ -379,6 +499,17 @@
         {% else %}
           <div></div>
         {% endif %}
+
+        <!-- Paginador central -->
+        <div class="qr-nav-center">
+          <div class="qr-paginator" id="qr-paginator"
+               data-current="{{ page_obj.number }}"
+               data-total="{{ page_obj.paginator.num_pages }}"
+               data-max-visited="{{ max_pagina_respondida }}">
+            <!-- Números gerados via JS -->
+            <span id="qr-paginator-numbers"></span>
+          </div>
+        </div>
 
         {% if page_obj.has_next %}
           <button type="submit" name="acao" value="proximo" class="qr-btn-next">
@@ -517,7 +648,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ── Validação de submit ──
     form.addEventListener('submit', function(e) {
-        if (e.submitter && e.submitter.value === 'anterior') return;
+        const submitterValue = e.submitter ? e.submitter.value : '';
+        const paginadorEl = document.getElementById('qr-paginator');
+        // maxVisited = página mais avançada já confirmada pelo servidor via sessão
+        const maxVisited = parseInt(paginadorEl?.dataset.maxVisited || '1', 10);
+
+        // Voltar: nunca valida
+        if (submitterValue === 'anterior') return;
+        // Ir para uma página via paginador
+        if (submitterValue.startsWith('ir_pagina_')) {
+            const targetPage = parseInt(submitterValue.replace('ir_pagina_', ''), 10);
+            if (targetPage > maxVisited) {
+                // Bloqueia navegação para páginas futuras (defesa no client)
+                e.preventDefault();
+                return;
+            }
+            // Página já respondida: permite sem validar campos
+            return;
+        }
         let valido = true;
         let primeiraPerguntaErro = null;
 
@@ -568,6 +716,79 @@ document.addEventListener('DOMContentLoaded', function() {
     aplicarMascaras();
     sincronizarRadios();
     atualizarVisibilidade();
+
+    // ── Paginador numérico ──
+    (function() {
+        const container = document.getElementById('qr-paginator-numbers');
+        if (!container) return;
+
+        const paginator = document.getElementById('qr-paginator');
+        const current = parseInt(paginator.dataset.current, 10);
+        const total = parseInt(paginator.dataset.total, 10);
+
+        if (total <= 1) {
+            // Esconde o paginador se há apenas 1 página
+            paginator.style.display = 'none';
+            return;
+        }
+
+        // Calcula quais páginas mostrar (com reticências)
+        function getPageNumbers(current, total) {
+            const pages = [];
+            if (total <= 7) {
+                for (let i = 1; i <= total; i++) pages.push(i);
+            } else {
+                // Sempre mostra: 1, current-1, current, current+1, total
+                const around = new Set([1, current - 1, current, current + 1, total]);
+                const sorted = Array.from(around).filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+                
+                for (let i = 0; i < sorted.length; i++) {
+                    pages.push(sorted[i]);
+                    if (i < sorted.length - 1 && sorted[i + 1] - sorted[i] > 1) {
+                        pages.push('…');
+                    }
+                }
+            }
+            return pages;
+        }
+
+        const pageNumbers = getPageNumbers(current, total);
+
+        const maxVisited = parseInt(paginator.dataset.maxVisited || '1', 10);
+
+        pageNumbers.forEach(p => {
+            if (p === '…') {
+                const ellipsis = document.createElement('span');
+                ellipsis.className = 'qr-paginator-ellipsis';
+                ellipsis.textContent = '…';
+                container.appendChild(ellipsis);
+            } else {
+                const btn = document.createElement('button');
+                btn.textContent = p;
+
+                if (p === current) {
+                    // Página atual: inerte, destaque azul
+                    btn.type = 'button';
+                    btn.className = 'qr-paginator-btn is-active';
+                    btn.style.pointerEvents = 'none';
+                } else if (p <= maxVisited) {
+                    // Página já respondida: navegação liberada
+                    btn.type = 'submit';
+                    btn.name = 'acao';
+                    btn.value = 'ir_pagina_' + p;
+                    btn.className = 'qr-paginator-btn';
+                } else {
+                    // Página futura: bloqueada visualmente
+                    btn.type = 'button';
+                    btn.className = 'qr-paginator-btn is-locked';
+                    btn.disabled = true;
+                    btn.title = 'Responda as páginas anteriores primeiro';
+                }
+
+                container.appendChild(btn);
+            }
+        });
+    })();
 });
 </script>
 {% endblock %}
