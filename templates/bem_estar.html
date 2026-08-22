@@ -35,6 +35,7 @@
         Botão direito (right:48px, bottom:32px)
     */
     .bem-hero-wrapper {
+        position: relative;
         margin-top: 32px;
         margin-bottom: 56px;
     }
@@ -344,11 +345,15 @@
             display: none;
         }
 
-        /* No tablet: botão vai para a parte inferior esquerda */
+        /* No tablet: botão flui naturalmente para baixo da imagem */
         .bem-btn-right {
+            position: relative;
             right: auto;
-            left: 32px;
-            bottom: 36px;
+            left: auto;
+            bottom: auto;
+            margin: 24px auto 0;
+            display: flex;
+            width: fit-content;
         }
 
         .bem-social-section {
@@ -399,12 +404,9 @@
         }
 
         .bem-btn-right {
-            left: 16px;
-            right: auto;
-            bottom: 24px;
             font-size: 1rem;
-            min-width: 180px;
             height: 52px;
+            margin-top: 16px;
         }
 
         .bem-content-wrapper {
@@ -449,11 +451,12 @@
                     diretamente a memória, a cognição e o<br>desempenho nas atividades diárias.</p>
             </div>
 
-            <!-- Botão direito (canto inferior direito) -->
-            <a href="{% url 'lista_questionarios' %}" class="bem-btn-green bem-btn-right">
-                Iniciar avaliação
-            </a>
         </div>
+
+        <!-- Botão de Ação -->
+        <a href="{% url 'lista_questionarios' %}" class="bem-btn-green bem-btn-right">
+            Iniciar avaliação
+        </a>
     </div>
 
 <!-- ══════════════════════════════════════════════
