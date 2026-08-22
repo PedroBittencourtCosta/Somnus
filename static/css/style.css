@@ -1,5 +1,5 @@
-/* Importação da Fonte Poppins */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+/* Importação das Fontes */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Poppins:wght@300;400;500;600;700&display=swap');
 
 :root {
     /* Configuração de Fontes */

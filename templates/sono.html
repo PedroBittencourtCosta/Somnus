@@ -5,318 +5,384 @@
 
 {% block content %}
 
+<!-- ══════════════════════════════════════════════
+     ESTILOS ESCOPADOS — sono
+     ══════════════════════════════════════════════ -->
 <style>
-  /* ══════════════════════════════════════════
-     SONO PAGE — Estilos específicos
-     Proporções baseadas no Figma Desktop - 5 - luis (1440px)
-     ══════════════════════════════════════════ */
+    /* ─── Tokens locais ─── */
+    :root {
+        --sono-blue: #253786;
+        --sono-blue-inst: #0067B1;
+        --sono-green-light: #76B82A;
+        --sono-green-dark: #009640;
+        --sono-radius: 16px;
+    }
 
-  /* ── Hero Banner
-     Figma: 1338×376px em tela de 1440px, border-radius 16px,
-     box-shadow: 0px 4px 4px rgba(0,0,0,0.25)
-  */
-  .sono-hero {
-    border-radius: 1rem;
-    overflow: hidden;
-    position: relative;
-    height: 376px;
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-  }
+    /* ─── WRAPPER GLOBAL ─── */
+    /*
+        Figma: hero em 1338px dentro de tela de 1440px.
+        Margem lateral Figma: ~51px (≈3.5%).
+        Sem usar .container do Bootstrap para evitar margens excessivas.
+    */
+    .sono-wrapper {
+        padding-bottom: 64px;
+    }
 
-  /* Imagem cobre TODO o hero como background */
-  .sono-hero-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center 15%;
-    display: block;
-  }
-
-
-
-  /* Corpo de texto — metade esquerda sobre a imagem
-     Figma: título começa em left:77px de um card de 1338px ≈ 5.7% de margem
-  */
-  .sono-hero-body {
-    position: relative;
-    z-index: 2;
-    padding: 3.5rem 2rem 3.5rem 3rem;
-    max-width: 55%;
-  }
-
-  /* ── Título do Hero
-     Figma: font-size 48px, font-weight 700, color #253786, line-height 60px (1.25)
-  */
-  .sono-hero-title {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(1.6rem, 3.33vw, 3rem);
-    font-weight: 700;
-    color: #253786;
-    line-height: 1.25;
-  }
-
-  /* ── Subtítulo do Hero
-     Figma: font-size 24px, font-weight 400, color rgba(33,37,41,0.75), line-height 32px (1.33)
-     (sem text-decoration, sem cor azul — texto cinza semi-transparente)
-  */
-  .sono-hero-subtitle {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(0.95rem, 1.67vw, 1.5rem);
-    font-weight: 400;
-    color: rgba(33, 37, 41, 0.75);
-    line-height: 1.33;
-    text-decoration: none;
-  }
-
-  /* ── Superpoder Section
-     Figma: "O SONO É SEU SUPERPODER!" → font-size 48px, color #0067B1, font-weight 700
-  */
-  .superpoder-title {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(1.5rem, 3.33vw, 3rem);
-    font-weight: 700;
-    color: #0067B1;
-    text-transform: uppercase;
-    letter-spacing: 0.01em;
-    line-height: 1.2;
-  }
-
-  /* Figma: texto de apoio → font-size 24px, font-weight 700, color rgba(0,0,0,0.75), line-height 34px (1.42) */
-  .superpoder-lead {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(0.95rem, 1.67vw, 1.5rem);
-    font-weight: 700;
-    color: rgba(0, 0, 0, 0.75);
-    line-height: 1.42;
-  }
-
-  /* Figma: citação de Matthew Walker — parte do mesmo bloco de texto, peso menor */
-  .superpoder-cite {
-    font-family: 'Poppins', sans-serif;
-    font-size: clamp(0.8rem, 1.25vw, 1.1rem);
-    font-weight: 400;
-    color: rgba(0, 0, 0, 0.55);
-    line-height: 1.42;
-  }
-
-  /* ── Botão Iniciar Avaliação
-     Figma: width 291px, height 53px, border-radius 800px
-     Gradient: linear-gradient(90deg, #76B82A 0%, #009640 54%)
-     box-shadow: 0px 2px 4px rgba(0,0,0,0.08)
-  */
-  .btn-avaliacao {
-    background: linear-gradient(90deg, #76B82A 0%, #009640 54%);
-    color: #fff;
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
-    font-size: 1rem;
-    width: clamp(200px, 20.2vw, 291px);
-    height: clamp(44px, 3.68vw, 53px);
-    border-radius: 800px;
-    border: none;
-    transition: all 0.25s ease;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.08);
-  }
-
-  .btn-avaliacao:hover {
-    background: linear-gradient(90deg, #5a9420 0%, #007a33 54%);
-    color: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 150, 64, 0.32);
-  }
-
-  /* ── Cards comparativos
-     Imagens são infográficos — devem ser exibidas completas, sem corte.
-     max-width reduz o tamanho para ficar proporcional ao Figma.
-     box-shadow: 0px 4px 4px rgba(0,0,0,0.25), border-radius 16px
-  */
-  .sono-cards-row {
-    justify-content: center;
-    /* g-0 no HTML já zera o gutter — não sobrescrever --bs-gutter-x aqui */
-  }
-
-  .sono-cards-row .col-md-6 {
-    display: flex;
-    /* zera qualquer padding residual do Bootstrap */
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-  }
-
-  /* Imagem esquerda empurrada para direita — 20px antes da linha */
-  .sono-cards-row .col-md-6:first-child {
-    justify-content: flex-end;
-    padding-right: 20px !important;
-  }
-
-  /* Imagem direita empurrada para esquerda — 20px após a linha */
-  .sono-cards-row .col-md-6:last-child {
-    justify-content: flex-start;
-    padding-left: 20px !important;
-  }
-
-  /* Linha divisória vertical — encurtada nas extremidades */
-  .sono-cards-row .col-md-6:first-child {
-    position: relative;
-  }
-
-  .sono-cards-row .col-md-6:first-child::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 1.5rem;
-    bottom: 1.5rem;
-    width: 2.5px;
-    background-color: rgba(0, 0, 0, 0.5);
-    border-radius: 2px;
-  }
-
-  .sono-cards-row .col-md-6>img {
-    border-radius: 1rem;
-    box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-    width: 100%;
-    max-width: 480px;
-    height: auto;
-    display: block;
-  }
-
-  /* ── Banner Atenção à Sonolência Diurna
-     Figma: 1264×176px → aspect-ratio 1264/176
-     box-shadow: 0px 2px 4px rgba(0,0,0,0.08), border-radius 16px
-  */
-  .sono-atencao-banner {
-    border-radius: 1rem;
-    box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.08);
-    width: 100%;
-    height: auto;
-    aspect-ratio: 1264 / 176;
-    object-fit: cover;
-    display: block;
-  }
-
-  /* ══════════════════════
-     RESPONSIVE BREAKPOINTS
-     ══════════════════════ */
-  @media (max-width: 991px) {
+    /* ─── HERO BANNER ─── */
+    /*
+        Figma: 1338×376px, border-radius 16px,
+        box-shadow: 0px 4px 4px rgba(0,0,0,0.25)
+        Posição: top 148px (logo abaixo da navbar de 91px)
+    */
     .sono-hero {
-      height: 300px;
+        position: relative;
+        border-radius: var(--sono-radius);
+        overflow: hidden;
+        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+        /* Proporcional: 376px em 1440px = 26.1vw, clamped entre 220px e 376px */
+        height: clamp(220px, 26.1vw, 376px);
+        margin-top: 36px;
+        margin-bottom: 56px;
     }
 
+    /* Imagem cobre todo o hero */
+    .sono-hero-img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        /* Figma: imagem da mulher dormindo — mostra centro superior */
+        object-position: center 15%;
+        display: block;
+    }
+
+    /* Corpo de texto sobre a metade esquerda da imagem */
     .sono-hero-body {
-      padding: 2.5rem 1.5rem 2.5rem 2rem;
-      max-width: 65%;
-    }
-  }
-
-  @media (max-width: 767px) {
-    .sono-hero {
-      height: 280px;
-    }
-
-    .sono-hero-body {
-      max-width: 80%;
-      padding: 1.5rem 1.2rem;
+        position: relative;
+        z-index: 2;
+        padding: 3.5rem 2rem 3.5rem 3.5rem;
+        max-width: 55%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
+    /* ─── Título do Hero ─── */
+    /*
+        Figma: font-size 48px, font-weight 700, color #253786, line-height 60px
+    */
     .sono-hero-title {
-      font-size: 1.5rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(1.6rem, 3.33vw, 3rem);
+        font-weight: 700;
+        color: #253786;
+        line-height: 1.25;
+        margin-bottom: 16px;
     }
 
+    /* ─── Subtítulo do Hero ─── */
+    /*
+        Figma: font-size 24px, font-weight 400, color rgba(33,37,41,0.75), line-height 32px
+    */
     .sono-hero-subtitle {
-      font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(0.95rem, 1.67vw, 1.5rem);
+        font-weight: 400;
+        color: rgba(33, 37, 41, 0.75);
+        line-height: 1.4;
+        text-decoration: none;
+        margin: 0;
+    }
+
+    /* ─── SEÇÃO SUPERPODER ─── */
+    /*
+        Figma: "O SONO É SEU SUPERPODER!" → font-size 48px, color #0067B1, font-weight 700
+    */
+    .superpoder-section {
+        text-align: center;
+        margin-bottom: 48px;
+        padding: 0 16px;
     }
 
     .superpoder-title {
-      font-size: 1.4rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(1.5rem, 3.33vw, 3rem);
+        font-weight: 700;
+        color: #0067B1;
+        text-transform: uppercase;
+        letter-spacing: 0.01em;
+        line-height: 1.2;
+        margin-bottom: 16px;
     }
 
+    /* Figma: texto de apoio → font-size 24px, font-weight 700, color rgba(0,0,0,0.75), line-height 34px */
     .superpoder-lead {
-      font-size: 0.95rem;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(0.95rem, 1.67vw, 1.5rem);
+        font-weight: 700;
+        color: rgba(0, 0, 0, 0.75);
+        line-height: 1.42;
+        margin-bottom: 12px;
     }
 
-    .sono-atencao-banner {
-      aspect-ratio: auto;
-      height: 140px;
+    /* Figma: citação de Matthew Walker — peso menor */
+    .superpoder-cite {
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(0.8rem, 1.25vw, 1.1rem);
+        font-weight: 400;
+        color: rgba(0, 0, 0, 0.55);
+        line-height: 1.5;
+        margin: 0;
     }
-  }
+
+    /* ─── CARDS COMPARATIVOS ─── */
+    /*
+        Figma: duas imagens lado a lado separadas por linha vertical.
+        As imagens são infográficos — devem ser exibidas completas.
+        box-shadow: 0px 4px 4px rgba(0,0,0,0.25), border-radius 16px
+    */
+    .sono-cards-row {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 0;
+        margin-bottom: 40px;
+    }
+
+    .sono-cards-col {
+        flex: 1;
+        display: flex;
+        max-width: 500px;
+    }
+
+    .sono-cards-col:first-child {
+        justify-content: flex-end;
+        padding-right: 20px;
+        position: relative;
+    }
+
+    .sono-cards-col:first-child::after {
+        content: '';
+        position: absolute;
+        right: 0;
+        top: 1.5rem;
+        bottom: 1.5rem;
+        width: 2.5px;
+        background: rgba(0, 0, 0, 0.5);
+        border-radius: 2px;
+    }
+
+    .sono-cards-col:last-child {
+        justify-content: flex-start;
+        padding-left: 20px;
+    }
+
+    .sono-cards-col img {
+        border-radius: var(--sono-radius);
+        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+        width: 100%;
+        max-width: 480px;
+        height: auto;
+        display: block;
+    }
+
+    /* ─── BOTÃO INICIAR AVALIAÇÃO ─── */
+    /*
+        Figma: width 291px, height 53px, border-radius 800px,
+        Gradient: linear-gradient(90deg, #76B82A 0%, #009640 54%)
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.08)
+    */
+    .btn-avaliacao {
+        background: linear-gradient(90deg, #76B82A 0%, #009640 54%);
+        color: #fff;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        font-size: 1.1rem;
+        min-width: clamp(200px, 20.2vw, 291px);
+        height: clamp(48px, 3.68vw, 56px);
+        border-radius: 800px;
+        border: none;
+        transition: all 0.25s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        padding: 0 28px;
+    }
+
+    .btn-avaliacao:hover {
+        background: linear-gradient(90deg, #5a9420 0%, #007a33 54%);
+        color: #fff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 150, 64, 0.32);
+    }
+
+    /* ─── BANNER SONOLÊNCIA DIURNA ─── */
+    /*
+        Figma: 1264×176px → aspect-ratio 1264/176 ≈ 7.18
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.08), border-radius 16px
+    */
+    .sono-atencao-banner {
+        border-radius: var(--sono-radius);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1264 / 176;
+        object-fit: cover;
+        object-position: center;
+        display: block;
+    }
+
+    /* ══════════════════════
+       RESPONSIVE BREAKPOINTS
+       ══════════════════════ */
+
+    /* Tablet alvo: 820×1180 */
+    /* Tablet alvo: 820×1180 — ajustes de layout apenas */
+    @media (max-width: 900px) {
+        .sono-hero-body {
+            padding: 2.5rem 1.5rem 2.5rem 2rem;
+            max-width: 65%;
+        }
+
+        .sono-cards-col {
+            max-width: 360px;
+        }
+
+        .sono-atencao-banner {
+            aspect-ratio: auto;
+            height: 140px;
+        }
+    }
+
+    @media (max-width: 640px) {
+        .sono-hero {
+            margin-top: 16px;
+        }
+
+        .sono-hero-body {
+            max-width: 80%;
+            padding: 1.5rem 1.2rem;
+        }
+
+        .sono-hero-title {
+            font-size: 1.4rem;
+        }
+
+        .sono-hero-subtitle {
+            font-size: 0.9rem;
+        }
+
+        .superpoder-title {
+            font-size: 1.4rem;
+        }
+
+        .superpoder-lead {
+            font-size: 0.95rem;
+        }
+
+        .sono-cards-row {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sono-cards-col {
+            max-width: 100%;
+            justify-content: center;
+            padding: 0 !important;
+        }
+
+        .sono-cards-col:first-child::after {
+            display: none;
+        }
+
+        .sono-cards-col img {
+            max-width: 100%;
+        }
+
+        .sono-atencao-banner {
+            aspect-ratio: auto;
+            height: 120px;
+        }
+    }
 </style>
 
-<div class="container py-4 py-md-5">
+<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+<div class="sono-wrapper">
 
-  <!-- ═══════════════════════
-       HERO BANNER
-       ═══════════════════════ -->
-  <div class="sono-hero mb-5">
-    <!-- Imagem cobre toda a metade direita do card -->
-    <img src="{% static 'img/sono/woman-sleeping 2.png' %}" alt="Mulher dormindo bem" class="sono-hero-img">
-    <!-- Texto da metade esquerda -->
-    <div class="sono-hero-body">
-      <h1 class="sono-hero-title mb-3">
-        Como o sono<br>influencia a sua saúde
-      </h1>
-      <p class="sono-hero-subtitle mb-0">
-        O sono é um estado reversível de menor
-        interação com o ambiente, essencial para a
-        manutenção da homeostase corporal e
-        regulação emocional.
-      </p>
-    </div>
-  </div>
-
-  <!-- ═══════════════════════
-       SUPERPODER
-       ═══════════════════════ -->
-  <div class="text-center mb-5 px-2">
-    <p class="superpoder-title mb-3">O Sono é seu Superpoder!</p>
-    <p class="superpoder-lead mb-2">
-      Dormir bem é cuidar da sua mente, corpo e da sua vida.<br>
-      Entenda como você reage de acordo com a qualidade do seu sono.
-    </p>
-    <p class="superpoder-cite mb-0">
-      Baseado em estudos de Matthew Walker, cientista referência em estudos sobre o sono.
-    </p>
-  </div>
-
-  <!-- ═══════════════════════
-       TABELA COMPARATIVA
-       ═══════════════════════ -->
-  <div class="row g-0 mb-4 sono-cards-row">
-
-    <!-- Boa noite de sono -->
-    <div class="col-md-6">
-      <img src="{% static 'img/sono/Boa noite de sono.png' %}" alt="Boa noite de sono — lista de benefícios">
+    <!-- ═══════════════════════
+         HERO BANNER
+         ═══════════════════════ -->
+    <div class="sono-hero">
+        <img src="{% static 'img/sono/woman-sleeping 2.png' %}"
+             alt="Mulher dormindo bem"
+             class="sono-hero-img">
+        <div class="sono-hero-body">
+            <h1 class="sono-hero-title">
+                Como o sono<br>influencia a sua saúde
+            </h1>
+            <p class="sono-hero-subtitle">
+                O sono é um estado reversível de menor
+                interação com o ambiente, essencial para a
+                manutenção da homeostase corporal e
+                regulação emocional.
+            </p>
+        </div>
     </div>
 
-    <!-- Má noite de sono -->
-    <div class="col-md-6">
-      <img src="{% static 'img/sono/ma noite de sono.png' %}" alt="Má noite de sono — lista de malefícios">
+    <!-- ═══════════════════════
+         SUPERPODER
+         ═══════════════════════ -->
+    <div class="superpoder-section">
+        <p class="superpoder-title">O Sono é seu Superpoder!</p>
+        <p class="superpoder-lead">
+            Dormir bem é cuidar da sua mente, corpo e da sua vida.<br>
+            Entenda como você reage de acordo com a qualidade do seu sono.
+        </p>
+        <p class="superpoder-cite">
+            Baseado em estudos de Matthew Walker, cientista referência em estudos sobre o sono.
+        </p>
     </div>
 
-  </div>
+    <!-- ═══════════════════════
+         TABELA COMPARATIVA
+         ═══════════════════════ -->
+    <div class="sono-cards-row">
 
-  <!-- ═══════════════════════
-       BOTÃO INICIAR AVALIAÇÃO
-       ═══════════════════════ -->
-  <div class="text-center mb-5">
-    <a href="{% url 'nova_avaliacao' %}" class="btn-avaliacao">
-      Iniciar Avaliação
-    </a>
-  </div>
+        <!-- Boa noite de sono -->
+        <div class="sono-cards-col">
+            <img src="{% static 'img/sono/Boa noite de sono.png' %}"
+                 alt="Boa noite de sono — lista de benefícios">
+        </div>
 
-  <!-- ═══════════════════════
-       BANNER SONOLÊNCIA DIURNA
-       ═══════════════════════ -->
-  <img src="{% static 'img/sono/Paragraph+Background+VerticalBorder+Shadow.png' %}" alt="Atenção à Sonolência Diurna"
-    class="sono-atencao-banner">
+        <!-- Má noite de sono -->
+        <div class="sono-cards-col">
+            <img src="{% static 'img/sono/ma noite de sono.png' %}"
+                 alt="Má noite de sono — lista de malefícios">
+        </div>
 
+    </div>
+
+    <!-- ═══════════════════════
+         BOTÃO INICIAR AVALIAÇÃO
+         ═══════════════════════ -->
+    <div style="text-align: center; margin-bottom: 48px;">
+        <a href="{% url 'nova_avaliacao' %}" class="btn-avaliacao">
+            Iniciar Avaliação
+        </a>
+    </div>
+
+    <!-- ═══════════════════════
+         BANNER SONOLÊNCIA DIURNA
+         ═══════════════════════ -->
+    <img src="{% static 'img/sono/Paragraph+Background+VerticalBorder+Shadow.png' %}"
+         alt="Atenção à Sonolência Diurna"
+         class="sono-atencao-banner">
+
+</div>
 </div>
 
 {% endblock %}
