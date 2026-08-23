@@ -5,464 +5,173 @@
 
 {% block content %}
 
-<!-- ══════════════════════════════════════════════
-     ESTILOS ESCOPADOS — sobre_nos
-     ══════════════════════════════════════════════ -->
 <style>
-    /* ─── Tokens locais ─── */
-    :root {
-        --sobre-blue: #253786;
-        --sobre-green-light: #76B82A;
-        --sobre-green-dark: #009640;
-        --sobre-radius: 16px;
+    /* Tokens e Componentes Específicos do Somnus (conforme DESIGN.md) */
+    .bg-somnus-primary { background-color: #009640; }
+    .text-somnus-deep { color: #253786; }
+    
+    .btn-somnus {
+        background-color: #009640;
+        color: #ffffff;
+        font-family: 'Poppins', sans-serif;
+        font-weight: 700;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .btn-somnus:hover {
+        background-color: #76b82a;
+        color: #ffffff;
+        transform: translateY(-3px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12); /* Hover Lift do DESIGN.md */
     }
 
-    /* ─── WRAPPER GLOBAL ─── */
-    /*
-        No Figma a tela é 1440px e o hero fica com 51px de cada lado.
-        Proporção: 51/1440 ≈ 3.5%.
-        Usamos padding proporcional para evitar margens excessivas.
-    */
-    .sobre-wrapper {
-        padding-bottom: 64px;
+    /* The Tactual Rule: Cards interativos flutuam no hover */
+    .card-tactual {
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Card Base */
+    }
+    .card-tactual:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12); /* Hover Lift */
     }
 
-    /* ─── HERO ─── */
-    /*
-        Figma: 1338×376px, border-radius 16px,
-        box-shadow: 0px 4px 4px rgba(0,0,0,0.25)
-        Posição top: 151px (≈60px abaixo da navbar de 91px)
-    */
-    .sobre-hero {
+    /* Hero e imagens overlay */
+    .sobre-hero-container {
         position: relative;
-        border-radius: var(--sobre-radius);
-        overflow: hidden;
-        box-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
-        /* Proporcional: 376px em 1440px = 26.1vw, clamped entre 220px e 376px */
         height: clamp(220px, 26.1vw, 376px);
-        margin-top: 36px;
-        margin-bottom: 56px;
     }
 
-    .sobre-hero-img {
-        position: absolute;
-        inset: 0;
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        object-position: center center;
-        display: block;
-    }
-
-    /* Overlay escuro para legibilidade do texto */
-    .sobre-hero-overlay {
+    .hero-overlay {
         position: absolute;
         inset: 0;
         background: rgba(0, 0, 0, 0.48);
-        z-index: 1;
+        border-radius: inherit;
     }
-
-    /* Texto centralizado sobre o hero */
-    .sobre-hero-text {
+    
+    .hero-img-cover {
+        object-fit: cover;
+        object-position: center;
+        width: 100%;
+        height: 100%;
         position: absolute;
         inset: 0;
-        z-index: 2;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        padding: 0 2rem;
+        border-radius: inherit;
     }
-
-    /* Figma: font-size 48px, font-weight 700, color #FFFFFF, line-height 64px */
-    .sobre-hero-title {
-        font-family: 'Poppins', sans-serif;
-        font-size: clamp(2rem, 3.33vw, 3rem);
-        font-weight: 700;
-        color: #FFFFFF;
-        line-height: 1.33;
-        margin-bottom: 16px;
-    }
-
-    /* Figma: font-size 28px, font-weight 700, color #FFFFFF */
-    .sobre-hero-subtitle {
-        font-family: 'Poppins', sans-serif;
-        font-size: clamp(1rem, 1.94vw, 1.75rem);
-        font-weight: 700;
-        color: #FFFFFF;
-        line-height: 1.35;
-        opacity: 0.9;
-    }
-
-    /* ─── SEÇÃO DESCRIÇÃO ─── */
-    /*
-        Figma: texto de 970px de largura, centralizado,
-        font-size 20px, color rgba(33,37,41,0.75), line-height 32px
-    */
-    .sobre-descricao {
-        max-width: 970px;
-        margin: 0 auto 56px;
-        text-align: center;
-    }
-
-    .sobre-descricao p {
-        font-family: 'Poppins', sans-serif;
-        font-size: clamp(0.95rem, 1.39vw, 1.25rem);
-        color: rgba(33, 37, 41, 0.75);
-        line-height: 2;
-        margin-bottom: 1.25rem;
-    }
-
-    /* ─── BOTÃO INICIAR ─── */
-    /* Figma: 224×64px, border-radius 800px, gradiente verde */
-    .sobre-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 224px;
-        height: 64px;
-        padding: 0 32px;
-        background: linear-gradient(90deg, #76B82A 0%, #009640 54%);
-        color: #fff;
-        font-family: 'Poppins', sans-serif;
-        font-size: 1.25rem;
-        font-weight: 700;
-        border-radius: 800px;
-        text-decoration: none;
-        box-shadow: 0 16px 48px rgba(0, 0, 0, 0.18);
-        transition: transform 0.25s ease, box-shadow 0.25s ease;
-        margin-top: 8px;
-    }
-
-    .sobre-btn:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 20px 56px rgba(0, 150, 64, 0.3);
-        color: #fff;
-    }
-
-    /* ─── CARDS INSTITUIÇÃO E EQUIPE ─── */
-    .sobre-cards-row {
-        display: grid;
-        grid-template-columns: 5fr 7fr;
-        gap: 24px;
-        margin-bottom: 48px;
-    }
-
-    .sobre-card {
-        background: #fff;
-        border-radius: var(--sobre-radius);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        padding: 40px 48px;
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-    }
-
-    .sobre-card:hover {
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12);
-        transform: translateY(-4px);
-    }
-
-    .sobre-card-title {
-        font-family: 'Poppins', sans-serif;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: var(--sobre-blue);
-        margin-bottom: 16px;
-    }
-
-    .sobre-card-text {
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.95rem;
-        color: rgba(33, 37, 41, 0.75);
-        line-height: 1.8;
-    }
-
-    /* Fotos da equipe — proporcional ao Figma (103×103px escalonados) */
-    .team-grid {
-        display: flex;
-        justify-content: center;
-        gap: 32px;
-        flex-wrap: wrap;
-    }
-
-    .team-member {
-        text-align: center;
-        flex: 0 0 auto;
-    }
-
+    
+    /* Time fotos */
     .team-photo {
         width: 104px;
         height: 150px;
         object-fit: cover;
-        object-position: center top;
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        display: block;
-        margin: 0 auto 10px;
+        border-radius: 0.75rem;
     }
-
-    .team-role {
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.78rem;
-        font-weight: 700;
-        color: rgba(33, 37, 41, 0.75);
-        margin-bottom: 2px;
-    }
-
-    .team-name {
-        font-family: 'Poppins', sans-serif;
-        font-size: 0.78rem;
-        color: rgba(33, 37, 41, 0.6);
-        line-height: 1.4;
-    }
-
-    /* ─── CARD ÉTICO (banner verde) ─── */
-    /*
-        Figma: 1296×176px, gradiente verde, border-radius 16px
-        box-shadow: 0px 2px 4px rgba(0,0,0,0.08)
-    */
-    .sobre-etico-card {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        background: linear-gradient(90deg, #009640 73%, #76B82A 100%);
-        border-radius: var(--sobre-radius);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-        padding: 32px 80px;
-        margin-bottom: 32px;
-        overflow: hidden;
-        position: relative;
-        min-height: 176px;
-    }
-
-    .sobre-etico-text {
-        flex: 1;
-    }
-
-    .sobre-etico-title {
-        font-family: 'Poppins', sans-serif;
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 12px;
-    }
-
-    .sobre-etico-body {
-        font-family: 'Poppins', sans-serif;
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.85);
-        line-height: 1.8;
-        max-width: 761px;
-        margin: 0;
-    }
-
-    .sobre-etico-icon {
-        width: 140px;
-        height: auto;
-        flex-shrink: 0;
-        margin-left: 40px;
-        opacity: 0.9;
-    }
-
-    /* ─── TEXTO DE SEGURANÇA ─── */
-    /*
-        Figma: Inter 18px, font-weight 600, color rgba(0,0,0,0.7),
-        text-align center, line-height 29px
-    */
-    .sobre-seguranca-texto {
-        font-family: 'Inter', 'Poppins', sans-serif;
-        font-size: clamp(0.9rem, 1.25vw, 1.125rem);
-        font-weight: 600;
-        color: rgba(0, 0, 0, 0.7);
-        text-align: center;
-        line-height: 1.65;
-        padding: 16px 0 8px;
-    }
-
-    /* ══════════════════════
-       RESPONSIVE BREAKPOINTS
-       ══════════════════════ */
-
-    /* Tablet alvo: 820×1180 — ajustes de layout apenas */
-    @media (max-width: 900px) {
-        .sobre-hero-title {
-            font-size: 2rem;
-        }
-
-        .sobre-hero-subtitle {
-            font-size: 1rem;
-        }
-
-        .sobre-cards-row {
-            grid-template-columns: 1fr;
-        }
-
-        .sobre-card {
-            padding: 32px;
-        }
-
-        .sobre-etico-card {
-            padding: 32px;
-            flex-direction: row;
-            align-items: center;
-        }
-
-        .sobre-etico-icon {
-            width: 100px;
-            margin-left: 24px;
-        }
-    }
-
-    @media (max-width: 600px) {
-        .sobre-hero {
-            margin-top: 16px;
-        }
-
-        .sobre-hero-title {
-            font-size: 1.6rem;
-        }
-
-        .sobre-hero-subtitle {
-            font-size: 0.9rem;
-        }
-
-        .sobre-etico-card {
-            flex-direction: column;
-            padding: 28px 24px;
-            text-align: center;
-        }
-
-        .sobre-etico-icon {
-            margin: 20px auto 0;
-            width: 80px;
-        }
-
-        .team-grid {
-            gap: 20px;
-        }
-
-        .sobre-btn {
-            font-size: 1rem;
-            min-width: 190px;
-            height: 52px;
-        }
-    }
+    
+    .font-poppins { font-family: 'Poppins', sans-serif; }
 </style>
 
-<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
-<div class="sobre-wrapper">
-
-    <!-- ═══════════════════════
-         HERO BANNER
-         ═══════════════════════ -->
-    <div class="sobre-hero">
-        <img src="{% static 'img/sobre/hero_sobre.png' %}"
-             alt="Médico com tablet no corredor do hospital"
-             class="sobre-hero-img">
-        <div class="sobre-hero-overlay"></div>
-        <div class="sobre-hero-text">
-            <h1 class="sobre-hero-title">Sobre o<br>Projeto Somnus</h1>
-            <p class="sobre-hero-subtitle">Ciência que transforma dados em saúde e qualidade de vida.</p>
+<div class="container py-4 py-lg-5 mb-5 font-poppins">
+    <!-- Hero Banner -->
+    <div class="sobre-hero-container rounded-4 shadow-sm mb-5 mx-auto">
+        <img src="{% static 'img/sobre/hero_sobre.png' %}" alt="Médico com tablet no corredor do hospital" class="hero-img-cover">
+        <div class="hero-overlay"></div>
+        <div class="position-absolute top-50 start-50 translate-middle text-center w-100 px-3 z-3">
+            <h1 class="text-white fw-bold mb-3" style="font-size: clamp(2rem, 3.33vw, 3rem); line-height: 1.33;">Sobre o<br>Projeto Somnus</h1>
+            <p class="text-white fw-bold text-opacity-75 m-0" style="font-size: clamp(1rem, 1.94vw, 1.75rem); line-height: 1.35;">Ciência que transforma dados em saúde e qualidade de vida.</p>
         </div>
     </div>
 
-    <!-- ═══════════════════════
-         DESCRIÇÃO DO PROJETO
-         ═══════════════════════ -->
-    <div class="sobre-descricao">
-        <p>
+    <!-- Descrição -->
+    <div class="mx-auto text-center mb-5" style="max-width: 970px;">
+        <p class="fs-5 text-secondary mb-4" style="line-height: 2;">
             O <strong>Somnus</strong> é uma plataforma digital de triagem e coleta de dados epidemiológicos,
             desenvolvida para dar suporte à pesquisa <em>"Associação entre sono e transtorno mental comum: impactos
             na saúde e bem-estar"</em>.
         </p>
-        <p>
+        <p class="fs-5 text-secondary mb-4" style="line-height: 2;">
             O projeto une o rigor da metodologia científica com a eficiência do desenvolvimento de software para
             mapear a saúde mental e a qualidade do sono da população.
         </p>
-        <p>
+        <p class="fs-5 text-secondary mb-4" style="line-height: 2;">
             Nosso objetivo principal é identificar como aspectos relacionados ao sono impactam o desenvolvimento de
             Transtornos Mentais Comuns (TMC).
         </p>
-        <a href="{% url 'lista_questionarios' %}" class="sobre-btn">Iniciar avaliação</a>
+        <a href="{% url 'lista_questionarios' %}" class="btn btn-somnus rounded-pill px-5 py-3 fs-5 mt-2">Iniciar avaliação</a>
     </div>
 
-    <!-- ═══════════════════════
-         INSTITUIÇÃO E EQUIPE
-         ═══════════════════════ -->
-    <div class="sobre-cards-row">
-
+    <!-- Instituição e Equipe -->
+    <div class="row g-4 mx-auto mb-5">
         <!-- Instituição -->
-        <div class="sobre-card">
-            <div>
-                <h2 class="sobre-card-title">A Instituição</h2>
-                <p class="sobre-card-text">
-                    Pesquisa vinculada à <strong>Faculdade de Medicina da Universidade de Rio Verde (UniRV)</strong>,
-                    no estado de Goiás. O estudo é realizado no Centro de Especialidades em Saúde Mental (CESM) de
-                    Rio Verde.
-                </p>
-            </div>
-            <div>
-                <img src="{% static 'img/sobre/logo_unirv_2.png' %}" alt="Logo UniRV"
-                     style="max-width: 160px; opacity: 0.75; display: block;">
+        <div class="col-lg-5">
+            <div class="card card-tactual border-0 rounded-4 h-100 p-4 p-lg-5">
+                <div class="card-body d-flex flex-column justify-content-between p-0">
+                    <div>
+                        <h2 class="fw-bold text-somnus-deep mb-4 fs-4">A Instituição</h2>
+                        <p class="text-secondary" style="line-height: 1.8;">
+                            Pesquisa vinculada à <strong>Faculdade de Medicina da Universidade de Rio Verde (UniRV)</strong>,
+                            no estado de Goiás. O estudo é realizado no Centro de Especialidades em Saúde Mental (CESM) de
+                            Rio Verde.
+                        </p>
+                    </div>
+                    <div class="mt-4 text-center text-lg-start">
+                        <img src="{% static 'img/sobre/logo_unirv_2.png' %}" alt="Logo UniRV" class="img-fluid opacity-75" style="max-width: 160px;">
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Equipe -->
-        <div class="sobre-card">
-            <h2 class="sobre-card-title" style="margin-bottom: 28px;">Equipe de Pesquisa</h2>
-            <div class="team-grid">
-                <div class="team-member">
-                    <img src="{% static 'img/sobre/team_renato.png' %}" alt="Prof. Dr. Renato Canevari"
-                         class="team-photo">
-                    <p class="team-role">Orientador:</p>
-                    <p class="team-name">Prof. Dr. Renato Canevari<br>Dutra da Silva</p>
-                </div>
-                <div class="team-member">
-                    <img src="{% static 'img/sobre/team_mariana.png' %}" alt="Mariana Galhardo Carneiro"
-                         class="team-photo">
-                    <p class="team-role">Acadêmica:</p>
-                    <p class="team-name">Mariana Galhardo<br>Carneiro</p>
-                </div>
-                <div class="team-member">
-                    <img src="{% static 'img/sobre/team_noemi.png' %}" alt="Noemi Queireza Leite"
-                         class="team-photo">
-                    <p class="team-role">Acadêmica:</p>
-                    <p class="team-name">Noemi Queireza<br>Leite</p>
+        <div class="col-lg-7">
+            <div class="card card-tactual border-0 rounded-4 h-100 p-4 p-lg-5">
+                <div class="card-body p-0">
+                    <h2 class="fw-bold text-somnus-deep mb-4 pb-2 fs-4 text-center text-lg-start">Equipe de Pesquisa</h2>
+                    <div class="row text-center justify-content-center g-4">
+                        <div class="col-12 col-sm-4">
+                            <img src="{% static 'img/sobre/team_renato.png' %}" alt="Prof. Dr. Renato Canevari" class="team-photo shadow-sm mb-3">
+                            <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Orientador:</p>
+                            <p class="text-muted lh-sm" style="font-size: 0.85rem;">Prof. Dr. Renato Canevari<br>Dutra da Silva</p>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <img src="{% static 'img/sobre/team_mariana.png' %}" alt="Mariana Galhardo Carneiro" class="team-photo shadow-sm mb-3">
+                            <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Acadêmica:</p>
+                            <p class="text-muted lh-sm" style="font-size: 0.85rem;">Mariana Galhardo<br>Carneiro</p>
+                        </div>
+                        <div class="col-6 col-sm-4">
+                            <img src="{% static 'img/sobre/team_noemi.png' %}" alt="Noemi Queireza Leite" class="team-photo shadow-sm mb-3">
+                            <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Acadêmica:</p>
+                            <p class="text-muted lh-sm" style="font-size: 0.85rem;">Noemi Queireza<br>Leite</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
 
-    <!-- ═══════════════════════
-         COMPROMISSO ÉTICO
-         ═══════════════════════ -->
-    <div class="sobre-etico-card">
-        <div class="sobre-etico-text">
-            <h3 class="sobre-etico-title">Compromisso Ético</h3>
-            <p class="sobre-etico-body">
-                O estudo respeita integralmente as resoluções do Conselho Nacional de Saúde (CNS 466/12 e 510/16),
-                garantindo o total sigilo e anonimato dos participantes. A participação é voluntária e todos os dados
-                são tratados exclusivamente para fins acadêmicos.
-            </p>
+    <!-- Compromisso Ético -->
+    <div class="card border-0 rounded-4 shadow-sm mx-auto mb-5 bg-somnus-primary overflow-hidden">
+        <div class="row g-0 align-items-center p-4 p-lg-5">
+            <div class="col-md-8 col-lg-9 text-center text-md-start mb-4 mb-md-0">
+                <h3 class="fw-bold text-white mb-3 fs-4">Compromisso Ético</h3>
+                <p class="text-white text-opacity-75 mb-0" style="line-height: 1.8;">
+                    O estudo respeita integralmente as resoluções do Conselho Nacional de Saúde (CNS 466/12 e 510/16),
+                    garantindo o total sigilo e anonimato dos participantes. A participação é voluntária e todos os dados
+                    são tratados exclusivamente para fins acadêmicos.
+                </p>
+            </div>
+            <div class="col-md-4 col-lg-3 text-center text-md-end">
+                <img src="{% static 'img/sobre/icone_seguranca_verde.png' %}" alt="Ícone de segurança" class="img-fluid opacity-75" style="max-width: 140px;">
+            </div>
         </div>
-        <img src="{% static 'img/sobre/icone_seguranca_verde.png' %}"
-             alt="Ícone de segurança"
-             class="sobre-etico-icon">
     </div>
 
-    <!-- ═══════════════════════
-         SEGURANÇA DOS DADOS
-         ═══════════════════════ -->
-    <p class="sobre-seguranca-texto">
-        A sua segurança e o sigilo das suas informações são prioridades absolutas no projeto Somnus.<br>
-        Seguimos rigorosos protocolos éticos e técnicos para proteger os seus dados.
-    </p>
-
-</div>
+    <!-- Segurança dos Dados e CTA secundário -->
+    <div class="text-center mx-auto" style="max-width: 800px;">
+        <p class="fw-semibold text-secondary mb-4" style="line-height: 1.65; font-size: clamp(0.9rem, 1.25vw, 1.125rem);">
+            A sua segurança e o sigilo das suas informações são prioridades absolutas no projeto Somnus.<br>
+            Seguimos rigorosos protocolos éticos e técnicos para proteger os seus dados.
+        </p>
+        <div class="mt-5">
+            <a href="{% url 'lista_questionarios' %}" class="btn btn-somnus rounded-pill px-5 py-3 fs-5 shadow-sm">Iniciar avaliação</a>
+        </div>
+    </div>
 </div>
 
 {% endblock %}

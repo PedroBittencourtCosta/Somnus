@@ -139,10 +139,12 @@
     }
 
     .hero-bg-img {
-        height: 376px;
-        object-fit: cover;
-        object-position: center top;
         width: 100%;
+        height: auto;
+        aspect-ratio: 21 / 9;
+        min-height: 400px;
+        object-fit: cover;
+        object-position: center;
         display: block;
         border-radius: 16px;
     }
@@ -253,7 +255,7 @@
     ────────────────────────────────────────── */
     @media (max-width: 991px) {
         .hero-bg-img {
-            height: 280px;
+            min-height: 360px;
         }
 
         .protocolos-inner {
@@ -272,7 +274,7 @@
     ────────────────────────────────────────── */
     @media (max-width: 767px) {
         .hero-bg-img {
-            height: 340px;
+            min-height: 400px;
         }
 
         .protocolos-inner {
@@ -290,7 +292,7 @@
     ────────────────────────────────────────── */
     @media (min-width: 1200px) {
         .hero-bg-img {
-            height: 376px;
+            aspect-ratio: 21 / 9;
         }
 
         .hero-title {
