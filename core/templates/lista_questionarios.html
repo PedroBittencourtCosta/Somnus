@@ -27,20 +27,15 @@
                     <h3 class="fw-bold mb-3 text-somnus-blue" style="font-size: 1.15rem;">{{ quest.titulo }}</h3>
                     <!-- Descrição expansível -->
                     <div class="mb-4">
-                        <p class="text-muted small mb-0 quest-desc-preview" id="desc-preview-{{ quest.id }}">
-                            {{ quest.descricao|truncatewords:25 }}
+                        <p class="text-muted small mb-0 quest-desc-text" id="desc-text-{{ quest.id }}"
+                           style="display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; transition: all 0.3s ease;">
+                            {{ quest.descricao }}
                         </p>
-                        <div class="quest-desc-full collapse" id="desc-full-{{ quest.id }}">
-                            <p class="text-muted small mb-0">{{ quest.descricao }}</p>
-                        </div>
                         <button
                             class="btn btn-link btn-sm p-0 mt-1 text-decoration-none d-flex align-items-center gap-1 mx-auto quest-expand-btn"
                             type="button"
-                            data-bs-toggle="collapse"
-                            data-bs-target="#desc-full-{{ quest.id }}"
+                            data-target-id="desc-text-{{ quest.id }}"
                             aria-expanded="false"
-                            aria-controls="desc-full-{{ quest.id }}"
-                            data-preview-id="desc-preview-{{ quest.id }}"
                             style="color: var(--somnus-blue-inst); font-size: 0.78rem; font-weight: 600;">
                             <span class="btn-label">Ler mais</span>
                             <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
@@ -84,31 +79,33 @@
 </div>
 {% endblock %}
 
-{% block extra_js %}
+{% block extra_scripts %}
 <script>
-document.querySelectorAll('.quest-expand-btn').forEach(function(btn) {
-    const targetId = btn.getAttribute('data-bs-target'); // e.g. "#desc-full-3"
-    const collapseEl = document.querySelector(targetId);
-    if (!collapseEl) return;
+document.querySelectorAll('.quest-expand-btn').forEach(function (btn) {
+    const targetId = btn.getAttribute('data-target-id');
+    const textEl   = targetId ? document.getElementById(targetId) : null;
+    if (!textEl) return;
 
-    collapseEl.addEventListener('show.bs.collapse', function() {
-        const previewId = btn.getAttribute('data-preview-id');
-        const preview   = previewId ? document.getElementById(previewId) : null;
-        const label     = btn.querySelector('.btn-label');
-        const chevron   = btn.querySelector('.chevron-icon');
-        if (preview) preview.style.display = 'none';
-        if (chevron) chevron.style.transform = 'rotate(180deg)';
-        if (label)   label.textContent = 'Ler menos';
-    });
+    btn.addEventListener('click', function (e) {
+        e.stopPropagation();
 
-    collapseEl.addEventListener('hide.bs.collapse', function() {
-        const previewId = btn.getAttribute('data-preview-id');
-        const preview   = previewId ? document.getElementById(previewId) : null;
-        const label     = btn.querySelector('.btn-label');
-        const chevron   = btn.querySelector('.chevron-icon');
-        if (preview) preview.style.display = '';
-        if (chevron) chevron.style.transform = 'rotate(0deg)';
-        if (label)   label.textContent = 'Ler mais';
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        const label    = btn.querySelector('.btn-label');
+        const chevron  = btn.querySelector('.chevron-icon');
+
+        if (expanded) {
+            textEl.style.webkitLineClamp = '3';
+            textEl.style.overflow = 'hidden';
+            btn.setAttribute('aria-expanded', 'false');
+            if (label)  label.textContent = 'Ler mais';
+            if (chevron) chevron.style.transform = 'rotate(0deg)';
+        } else {
+            textEl.style.webkitLineClamp = 'unset';
+            textEl.style.overflow = 'visible';
+            btn.setAttribute('aria-expanded', 'true');
+            if (label)  label.textContent = 'Ler menos';
+            if (chevron) chevron.style.transform = 'rotate(180deg)';
+        }
     });
 });
 </script>
