@@ -7,9 +7,14 @@
 
 <style>
     /* Tokens e Componentes Específicos do Somnus (conforme DESIGN.md) */
-    .bg-somnus-primary { background-color: #009640; }
-    .text-somnus-deep { color: #253786; }
-    
+    .bg-somnus-primary {
+        background-color: #009640;
+    }
+
+    .text-somnus-deep {
+        color: #253786;
+    }
+
     .btn-somnus {
         background-color: #009640;
         color: #ffffff;
@@ -17,27 +22,34 @@
         font-weight: 700;
         transition: transform 0.25s ease, box-shadow 0.25s ease;
     }
+
     .btn-somnus:hover {
         background-color: #76b82a;
         color: #ffffff;
         transform: translateY(-3px);
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12); /* Hover Lift do DESIGN.md */
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12);
+        /* Hover Lift do DESIGN.md */
     }
 
     /* The Tactual Rule: Cards interativos flutuam no hover */
     .card-tactual {
         transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
-        box-shadow: 0 .125rem .25rem rgba(0,0,0,.075); /* Card Base */
+        box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+        /* Card Base */
     }
+
     .card-tactual:hover {
         transform: translateY(-6px);
-        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12); /* Hover Lift */
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12);
+        /* Hover Lift */
     }
 
     /* Hero e imagens overlay */
     .sobre-hero-container {
         position: relative;
-        height: clamp(220px, 26.1vw, 376px);
+        width: 100%;
+        aspect-ratio: 21 / 9;
+        min-height: 300px;
     }
 
     .hero-overlay {
@@ -46,17 +58,17 @@
         background: rgba(0, 0, 0, 0.48);
         border-radius: inherit;
     }
-    
+
     .hero-img-cover {
         object-fit: cover;
-        object-position: center;
+        object-position: center 70%;
         width: 100%;
         height: 100%;
         position: absolute;
         inset: 0;
         border-radius: inherit;
     }
-    
+
     /* Time fotos */
     .team-photo {
         width: 104px;
@@ -64,18 +76,24 @@
         object-fit: cover;
         border-radius: 0.75rem;
     }
-    
-    .font-poppins { font-family: 'Poppins', sans-serif; }
+
+    .font-poppins {
+        font-family: 'Poppins', sans-serif;
+    }
 </style>
 
 <div class="container py-4 py-lg-5 mb-5 font-poppins">
     <!-- Hero Banner -->
     <div class="sobre-hero-container rounded-4 shadow-sm mb-5 mx-auto">
-        <img src="{% static 'img/sobre/hero_sobre.png' %}" alt="Médico com tablet no corredor do hospital" class="hero-img-cover">
+        <img src="{% static 'img/sobre/hero_sobre.png' %}" alt="Médico com tablet no corredor do hospital"
+            class="hero-img-cover">
         <div class="hero-overlay"></div>
         <div class="position-absolute top-50 start-50 translate-middle text-center w-100 px-3 z-3">
-            <h1 class="text-white fw-bold mb-3" style="font-size: clamp(2rem, 3.33vw, 3rem); line-height: 1.33;">Sobre o<br>Projeto Somnus</h1>
-            <p class="text-white fw-bold text-opacity-75 m-0" style="font-size: clamp(1rem, 1.94vw, 1.75rem); line-height: 1.35;">Ciência que transforma dados em saúde e qualidade de vida.</p>
+            <h1 class="text-white fw-bold mb-3" style="font-size: clamp(2rem, 3.33vw, 3rem); line-height: 1.33;">Sobre
+                o<br>Projeto Somnus</h1>
+            <p class="text-white fw-bold text-opacity-75 m-0"
+                style="font-size: clamp(1rem, 1.94vw, 1.75rem); line-height: 1.35;">Ciência que transforma dados em
+                saúde e qualidade de vida.</p>
         </div>
     </div>
 
@@ -84,7 +102,7 @@
         <p class="fs-5 text-secondary mb-4" style="line-height: 2;">
             O <strong>Somnus</strong> é uma plataforma digital de triagem e coleta de dados epidemiológicos,
             desenvolvida para dar suporte à pesquisa <em>"Associação entre sono e transtorno mental comum: impactos
-            na saúde e bem-estar"</em>.
+                na saúde e bem-estar"</em>.
         </p>
         <p class="fs-5 text-secondary mb-4" style="line-height: 2;">
             O projeto une o rigor da metodologia científica com a eficiência do desenvolvimento de software para
@@ -94,7 +112,8 @@
             Nosso objetivo principal é identificar como aspectos relacionados ao sono impactam o desenvolvimento de
             Transtornos Mentais Comuns (TMC).
         </p>
-        <a href="{% url 'lista_questionarios' %}" class="btn btn-somnus rounded-pill px-5 py-3 fs-5 mt-2">Iniciar avaliação</a>
+        <a href="{% url 'lista_questionarios' %}" class="btn btn-somnus rounded-pill px-5 py-3 fs-5 mt-2">Iniciar
+            avaliação</a>
     </div>
 
     <!-- Instituição e Equipe -->
@@ -106,13 +125,16 @@
                     <div>
                         <h2 class="fw-bold text-somnus-deep mb-4 fs-4">A Instituição</h2>
                         <p class="text-secondary" style="line-height: 1.8;">
-                            Pesquisa vinculada à <strong>Faculdade de Medicina da Universidade de Rio Verde (UniRV)</strong>,
-                            no estado de Goiás. O estudo é realizado no Centro de Especialidades em Saúde Mental (CESM) de
+                            Pesquisa vinculada à <strong>Faculdade de Medicina da Universidade de Rio Verde
+                                (UniRV)</strong>,
+                            no estado de Goiás. O estudo é realizado no Centro de Especialidades em Saúde Mental (CESM)
+                            de
                             Rio Verde.
                         </p>
                     </div>
                     <div class="mt-4 text-center text-lg-start">
-                        <img src="{% static 'img/sobre/logo_unirv_2.png' %}" alt="Logo UniRV" class="img-fluid opacity-75" style="max-width: 160px;">
+                        <img src="{% static 'img/sobre/logo_unirv_2.png' %}" alt="Logo UniRV"
+                            class="img-fluid opacity-75" style="max-width: 160px;">
                     </div>
                 </div>
             </div>
@@ -122,20 +144,25 @@
         <div class="col-lg-7">
             <div class="card card-tactual border-0 rounded-4 h-100 p-4 p-lg-5">
                 <div class="card-body p-0">
-                    <h2 class="fw-bold text-somnus-deep mb-4 pb-2 fs-4 text-center text-lg-start">Equipe de Pesquisa</h2>
+                    <h2 class="fw-bold text-somnus-deep mb-4 pb-2 fs-4 text-center text-lg-start">Equipe de Pesquisa
+                    </h2>
                     <div class="row text-center justify-content-center g-4">
                         <div class="col-12 col-sm-4">
-                            <img src="{% static 'img/sobre/team_renato.png' %}" alt="Prof. Dr. Renato Canevari" class="team-photo shadow-sm mb-3">
+                            <img src="{% static 'img/sobre/team_renato.png' %}" alt="Prof. Dr. Renato Canevari"
+                                class="team-photo shadow-sm mb-3">
                             <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Orientador:</p>
-                            <p class="text-muted lh-sm" style="font-size: 0.85rem;">Prof. Dr. Renato Canevari<br>Dutra da Silva</p>
+                            <p class="text-muted lh-sm" style="font-size: 0.85rem;">Prof. Dr. Renato Canevari<br>Dutra
+                                da Silva</p>
                         </div>
                         <div class="col-6 col-sm-4">
-                            <img src="{% static 'img/sobre/team_mariana.png' %}" alt="Mariana Galhardo Carneiro" class="team-photo shadow-sm mb-3">
+                            <img src="{% static 'img/sobre/team_mariana.png' %}" alt="Mariana Galhardo Carneiro"
+                                class="team-photo shadow-sm mb-3">
                             <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Acadêmica:</p>
                             <p class="text-muted lh-sm" style="font-size: 0.85rem;">Mariana Galhardo<br>Carneiro</p>
                         </div>
                         <div class="col-6 col-sm-4">
-                            <img src="{% static 'img/sobre/team_noemi.png' %}" alt="Noemi Queireza Leite" class="team-photo shadow-sm mb-3">
+                            <img src="{% static 'img/sobre/team_noemi.png' %}" alt="Noemi Queireza Leite"
+                                class="team-photo shadow-sm mb-3">
                             <p class="fw-bold text-secondary mb-1" style="font-size: 0.85rem;">Acadêmica:</p>
                             <p class="text-muted lh-sm" style="font-size: 0.85rem;">Noemi Queireza<br>Leite</p>
                         </div>
@@ -152,25 +179,28 @@
                 <h3 class="fw-bold text-white mb-3 fs-4">Compromisso Ético</h3>
                 <p class="text-white text-opacity-75 mb-0" style="line-height: 1.8;">
                     O estudo respeita integralmente as resoluções do Conselho Nacional de Saúde (CNS 466/12 e 510/16),
-                    garantindo o total sigilo e anonimato dos participantes. A participação é voluntária e todos os dados
+                    garantindo o total sigilo e anonimato dos participantes. A participação é voluntária e todos os
+                    dados
                     são tratados exclusivamente para fins acadêmicos.
                 </p>
             </div>
             <div class="col-md-4 col-lg-3 text-center text-md-end">
-                <img src="{% static 'img/sobre/icone_seguranca_verde.png' %}" alt="Ícone de segurança" class="img-fluid opacity-75" style="max-width: 140px;">
+                <img src="{% static 'img/sobre/icone_seguranca_verde.png' %}" alt="Ícone de segurança"
+                    class="img-fluid opacity-75" style="max-width: 140px;">
             </div>
         </div>
     </div>
 
     <!-- Segurança dos Dados e CTA secundário -->
     <div class="text-center mx-auto" style="max-width: 800px;">
-        <p class="fw-semibold text-secondary mb-4" style="line-height: 1.65; font-size: clamp(0.9rem, 1.25vw, 1.125rem);">
+        <p class="fw-semibold text-secondary mb-4"
+            style="line-height: 1.65; font-size: clamp(0.9rem, 1.25vw, 1.125rem);">
             A sua segurança e o sigilo das suas informações são prioridades absolutas no projeto Somnus.<br>
             Seguimos rigorosos protocolos éticos e técnicos para proteger os seus dados.
         </p>
-        <div class="mt-5">
+        <!-- <div class="mt-5">
             <a href="{% url 'lista_questionarios' %}" class="btn btn-somnus rounded-pill px-5 py-3 fs-5 shadow-sm">Iniciar avaliação</a>
-        </div>
+        </div> -->
     </div>
 </div>
 
