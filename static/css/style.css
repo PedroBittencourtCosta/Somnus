@@ -36,6 +36,50 @@
     color: white;
 }
 
+/* Botão verde padrão de CTA — "Iniciar Avaliação" */
+.btn.btn-evaluate {
+    background-color: #009640 !important;
+    border-color: #009640 !important;
+    color: #fff !important;
+    box-shadow: 0 4px 12px rgba(0, 150, 64, 0.28);
+    transition: background-color 0.2s ease, border-color 0.2s ease,
+                transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn.btn-evaluate:hover,
+.btn.btn-evaluate:focus {
+    background-color: #76b82a !important;
+    border-color: #76b82a !important;
+    color: #fff !important;
+    transform: scale(1.02);
+    box-shadow: 0 6px 16px rgba(118, 184, 42, 0.35);
+}
+
+.btn.btn-evaluate:active {
+    background-color: #007a33 !important;
+    border-color: #007a33 !important;
+    color: #fff !important;
+    transform: scale(0.99);
+}
+
+/* Suporte para âncoras <a> sem a classe .btn (retrocompatibilidade) */
+a.btn-evaluate:not(.btn) {
+    display: inline-block;
+    background-color: #009640 !important;
+    border: 1px solid #009640;
+    color: #fff !important;
+    text-decoration: none;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.btn-evaluate:not(.btn):hover {
+    background-color: #76b82a !important;
+    border-color: #76b82a;
+    color: #fff !important;
+    transform: scale(1.02);
+}
+
+
 /* ══════════════════════════════════════════════════
    COMPONENTES GLOBAIS REUTILIZÁVEIS
    ══════════════════════════════════════════════════ */

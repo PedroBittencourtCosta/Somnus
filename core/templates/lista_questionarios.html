@@ -40,7 +40,7 @@
                             data-bs-target="#desc-full-{{ quest.id }}"
                             aria-expanded="false"
                             aria-controls="desc-full-{{ quest.id }}"
-                            onclick="toggleDescricao(this, 'desc-preview-{{ quest.id }}')"
+                            data-preview-id="desc-preview-{{ quest.id }}"
                             style="color: var(--somnus-blue-inst); font-size: 0.78rem; font-weight: 600;">
                             <span class="btn-label">Ler mais</span>
                             <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
@@ -53,10 +53,7 @@
 
                     <div class="d-grid">
                         <a href="{% url 'responder_questionario' pk=quest.id %}"
-                           class="btn rounded-pill fw-bold py-2 shadow-sm text-white"
-                           style="background-color: #2e7d32; border-color: #2e7d32;"
-                           onmouseover="this.style.backgroundColor='#1b5e20'; this.style.borderColor='#1b5e20'"
-                           onmouseout="this.style.backgroundColor='#2e7d32'; this.style.borderColor='#2e7d32'"
+                           class="btn btn-evaluate rounded-pill fw-bold py-2"
                            aria-label="Iniciar avaliação: {{ quest.titulo }}">
                             Iniciar Avaliação
                         </a>
@@ -89,24 +86,30 @@
 
 {% block extra_js %}
 <script>
-function toggleDescricao(btn, previewId) {
-    const preview = document.getElementById(previewId);
-    const label   = btn.querySelector('.btn-label');
-    const chevron = btn.querySelector('.chevron-icon');
-    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+document.querySelectorAll('.quest-expand-btn').forEach(function(btn) {
+    const targetId = btn.getAttribute('data-bs-target'); // e.g. "#desc-full-3"
+    const collapseEl = document.querySelector(targetId);
+    if (!collapseEl) return;
 
-    // O Bootstrap já gerencia o collapse; aqui só ajustamos visuais extras
-    if (!isExpanded) {
-        // Vai abrir: esconde preview, rotaciona chevron, muda texto
+    collapseEl.addEventListener('show.bs.collapse', function() {
+        const previewId = btn.getAttribute('data-preview-id');
+        const preview   = previewId ? document.getElementById(previewId) : null;
+        const label     = btn.querySelector('.btn-label');
+        const chevron   = btn.querySelector('.chevron-icon');
         if (preview) preview.style.display = 'none';
         if (chevron) chevron.style.transform = 'rotate(180deg)';
         if (label)   label.textContent = 'Ler menos';
-    } else {
-        // Vai fechar: mostra preview, desfaz rotação, muda texto
+    });
+
+    collapseEl.addEventListener('hide.bs.collapse', function() {
+        const previewId = btn.getAttribute('data-preview-id');
+        const preview   = previewId ? document.getElementById(previewId) : null;
+        const label     = btn.querySelector('.btn-label');
+        const chevron   = btn.querySelector('.chevron-icon');
         if (preview) preview.style.display = '';
         if (chevron) chevron.style.transform = 'rotate(0deg)';
         if (label)   label.textContent = 'Ler mais';
-    }
-}
+    });
+});
 </script>
-{% endblock %}
+{% endblock %}
