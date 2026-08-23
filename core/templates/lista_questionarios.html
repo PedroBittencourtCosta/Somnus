@@ -2,9 +2,9 @@
 {% load static %}
 
 {% block content %}
-<div class="container py-3 py-lg-5">
+<div class="container py-3 py-md-4 py-lg-5">
     <div class="text-center mb-5">
-        <h1 class="fw-bold" style="color: var(--somnus-blue-deep);">Avaliações Disponíveis</h1>
+        <h1 class="fw-bold text-somnus-blue">Avaliações Disponíveis</h1>
         <p class="text-muted mx-auto" style="max-width: 600px;">
             Selecione uma das pesquisas abaixo para iniciar sua avaliação de saúde e bem-estar.
         </p>
@@ -13,21 +13,51 @@
 
     <div class="row g-4 justify-content-center">
         {% for quest in questionarios %}
-        <div class="col-md-6 col-lg-5">
-            <div class="card h-100 shadow rounded-4 hover-shadow transition p-3 p-md-4 border-light-subtle">
+        <div class="col-md-8 col-lg-6">
+            <div class="card h-100 shadow rounded-4 hover-shadow transition p-3 p-md-4 border-0">
                 <div class="card-body d-flex flex-column text-center">
-                    <div class="mb-4">
-                        <span class="fs-1">📋</span>
+                    <div class="mb-4 d-flex justify-content-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="none"
+                             viewBox="0 0 24 24" stroke-width="1.5" stroke="var(--somnus-blue-deep)"
+                             aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                  d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+                        </svg>
                     </div>
-                    <h3 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">{{ quest.titulo }}</h3>
-                    <p class="text-muted flex-grow-1 mb-4 small">
-                        {{ quest.descricao|truncatewords:30 }}
-                    </p>
-                    
+                    <h3 class="fw-bold mb-3 text-somnus-blue" style="font-size: 1.15rem;">{{ quest.titulo }}</h3>
+                    <!-- Descrição expansível -->
+                    <div class="mb-4">
+                        <p class="text-muted small mb-0 quest-desc-preview" id="desc-preview-{{ quest.id }}">
+                            {{ quest.descricao|truncatewords:25 }}
+                        </p>
+                        <div class="quest-desc-full collapse" id="desc-full-{{ quest.id }}">
+                            <p class="text-muted small mb-0">{{ quest.descricao }}</p>
+                        </div>
+                        <button
+                            class="btn btn-link btn-sm p-0 mt-1 text-decoration-none d-flex align-items-center gap-1 mx-auto quest-expand-btn"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#desc-full-{{ quest.id }}"
+                            aria-expanded="false"
+                            aria-controls="desc-full-{{ quest.id }}"
+                            onclick="toggleDescricao(this, 'desc-preview-{{ quest.id }}')"
+                            style="color: var(--somnus-blue-inst); font-size: 0.78rem; font-weight: 600;">
+                            <span class="btn-label">Ler mais</span>
+                            <svg class="chevron-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                 fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"
+                                 style="transition: transform 0.25s ease;" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                    </div>
+
                     <div class="d-grid">
-                        <a href="{% url 'responder_questionario' pk=quest.id %}" 
-                           class="btn btn-primary rounded-pill fw-bold py-2 shadow-sm"
-                           style="background-color: var(--somnus-blue-inst); border: none;">
+                        <a href="{% url 'responder_questionario' pk=quest.id %}"
+                           class="btn rounded-pill fw-bold py-2 shadow-sm text-white"
+                           style="background-color: #2e7d32; border-color: #2e7d32;"
+                           onmouseover="this.style.backgroundColor='#1b5e20'; this.style.borderColor='#1b5e20'"
+                           onmouseout="this.style.backgroundColor='#2e7d32'; this.style.borderColor='#2e7d32'"
+                           aria-label="Iniciar avaliação: {{ quest.titulo }}">
                             Iniciar Avaliação
                         </a>
                     </div>
@@ -37,29 +67,46 @@
         </div>
         {% empty %}
         <div class="col-12 text-center py-5">
-            <p class="text-muted">Nenhum questionário disponível no momento.</p>
+            <div class="mb-4 d-flex justify-content-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" fill="none"
+                     viewBox="0 0 24 24" stroke-width="1" stroke="var(--somnus-blue-deep)"
+                     aria-hidden="true" style="opacity: 0.3;">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+                </svg>
+            </div>
+            <h2 class="fw-bold text-somnus-blue mb-2" style="font-size: 1.25rem;">Nenhuma avaliação disponível</h2>
+            <p class="text-muted mb-4">As avaliações serão disponibilizadas em breve. Volte mais tarde ou entre em contato conosco.</p>
+            <a href="{% url 'home' %}" class="btn rounded-pill px-4 py-2 fw-bold text-white"
+               style="background-color: var(--somnus-blue-inst);">
+                Voltar ao início
+            </a>
         </div>
         {% endfor %}
     </div>
 </div>
-
-<style>
-    /* Estilo para dar mais presença ao Card no estado normal */
-    .card {
-        background-color: #ffffff;
-        border: 1px solid rgba(0,0,0,0.05);
-    }
-
-    /* Borda de destaque no hover */
-    .hover-shadow:hover {
-        border-color: var(--somnus-blue-inst);
-    }
-
-    .btn-secondary:disabled {
-        background-color: #e9ecef;
-        border-color: #dee2e6;
-        color: #6c757d;
-        opacity: 1;
-    }
-</style>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleDescricao(btn, previewId) {
+    const preview = document.getElementById(previewId);
+    const label   = btn.querySelector('.btn-label');
+    const chevron = btn.querySelector('.chevron-icon');
+    const isExpanded = btn.getAttribute('aria-expanded') === 'true';
+
+    // O Bootstrap já gerencia o collapse; aqui só ajustamos visuais extras
+    if (!isExpanded) {
+        // Vai abrir: esconde preview, rotaciona chevron, muda texto
+        if (preview) preview.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(180deg)';
+        if (label)   label.textContent = 'Ler menos';
+    } else {
+        // Vai fechar: mostra preview, desfaz rotação, muda texto
+        if (preview) preview.style.display = '';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        if (label)   label.textContent = 'Ler mais';
+    }
+}
+</script>
+{% endblock %}

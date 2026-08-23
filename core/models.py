@@ -16,7 +16,9 @@ class Questionario(models.Model):
 
     def __str__(self):
         return self.titulo
-    
+
+
+
 class Secao(models.Model):
     # Tipos de layout para a seção
     LAYOUT_CHOICES = [('LISTA', 'Lista Vertical'), ('TABELA', 'Tabela (Matriz)')]
