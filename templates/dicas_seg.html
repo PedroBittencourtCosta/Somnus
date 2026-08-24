@@ -1,24 +1,39 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block title %}Segurança Digital — Somnus{% endblock %}
+
 {% block content %}
 
 <style>
     /* ============================================
-       DICAS DE SEGURANÇA - FIEL AO FIGMA
-       Fontes: Inter (títulos/corpo), Poppins (contato)
+       DICAS DE SEGURANÇA - PADRÃO SOMNUS
     ============================================ */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap');
+
+    /* The Tactual Rule: Cards interativos flutuam no hover */
+    .card-tactual {
+        transition: transform 0.4s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.4s ease;
+        box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+        background-color: #FFFFFF;
+        border: none;
+        border-radius: 1rem;
+    }
+
+    .card-tactual:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.12);
+    }
 
     /* Hero Banner */
     .dicas-hero {
         width: 100%;
-        min-height: 376px;
         position: relative;
-        border-radius: 24px;
+        border-radius: 1rem;
         overflow: hidden;
-        box-shadow: 0px 8px 10px -6px rgba(0,0,0,0.1), 0px 20px 25px -5px rgba(0,0,0,0.1);
-        margin-bottom: 40px;
+        box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075);
+        margin-bottom: 3rem;
+        /* Proporcional */
+        height: clamp(220px, 26.1vw, 376px);
     }
 
     .dicas-hero__bg {
@@ -34,73 +49,57 @@
     .dicas-hero__overlay {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, rgba(37, 55, 134, 0.80) 0%, rgba(0, 103, 177, 0.60) 100%);
+        background: rgba(37, 55, 134, 0.85); /* Deep Blue overlay */
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         gap: 16px;
         padding: 40px 24px;
+        text-align: center;
     }
 
     .dicas-hero__shield {
         width: 52px;
         height: 52px;
         opacity: 0.95;
-        filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
     }
 
     .dicas-hero__title {
-        font-family: 'Inter', sans-serif;
-        font-size: 48px;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(1.8rem, 3.33vw, 2.75rem);
         font-weight: 700;
         color: #FFFFFF;
-        line-height: 1.1;
-        text-align: center;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        line-height: 1.2;
         margin: 0;
     }
 
     .dicas-hero__subtitle {
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(0.85rem, 1.39vw, 1.125rem);
         font-weight: 400;
         color: rgba(255, 255, 255, 0.90);
-        line-height: 26px;
-        text-align: center;
-        max-width: 640px;
+        line-height: 1.5;
+        max-width: 680px;
         margin: 0;
-        text-shadow: 0 1px 4px rgba(0,0,0,0.3);
     }
 
-    /* Cards principais */
-    .dicas-card {
-        background-color: #F3F5F6;
-        border: 0.8px solid #F3F4F6;
-        border-radius: 24px;
-        box-shadow: 0px 8px 8px -5px rgba(0,0,0,0.25);
-    }
-
-    /* Card Compromisso */
-    .compromisso-card {
-        padding: 41px 27px 61px 41px;
-    }
-
-    .compromisso-card__title {
-        font-family: 'Inter', sans-serif;
-        font-size: 30px;
+    /* Títulos de Seção */
+    .section-title {
+        font-family: 'Poppins', sans-serif;
+        font-size: clamp(1.2rem, 1.94vw, 1.75rem);
         font-weight: 700;
-        color: #253786;
-        line-height: 36px;
-        margin-bottom: 40px;
+        color: #253786; /* Deep Blue */
+        margin-bottom: 2rem;
     }
 
+    /* Itens de Lista/Compromisso */
     .compromisso-item {
         display: flex;
         gap: 20px;
-        padding-bottom: 32px;
-        margin-bottom: 32px;
-        border-bottom: 0.8px solid #F2F8FF;
+        padding-bottom: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e5e7eb; /* Neutral Border */
     }
 
     .compromisso-item:last-child {
@@ -109,181 +108,70 @@
         margin-bottom: 0;
     }
 
-    .compromisso-item__icon-wrap {
-        width: 72px;
-        height: 72px;
-        border-radius: 16px;
+    .icon-wrap-large {
+        width: 64px;
+        height: 64px;
+        border-radius: 0.75rem;
         flex-shrink: 0;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0px 4px 6px -4px rgba(0,0,0,0.1), 0px 10px 15px -3px rgba(0,0,0,0.1);
+        background-color: #f8f9fa; /* Cool Background */
+        border: 1px solid #e5e7eb;
     }
 
-    .icon-sigilo {
-        background: linear-gradient(135deg, #253786 0%, #0067B1 100%);
+    /* Remover gradientes aleatórios, usar o Institutional Blue para os ícones */
+    .icon-wrap-large svg {
+        width: 32px;
+        height: 32px;
+        fill: #0067b1; /* Institutional Blue */
     }
 
-    .icon-etica {
-        background: linear-gradient(135deg, #AD46FF 0%, #9810FA 100%);
-    }
-
-    .icon-desistencia {
-        background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
-    }
-
-    .compromisso-item__heading {
-        font-family: 'Inter', sans-serif;
-        font-size: 20px;
-        font-weight: 700;
-        color: #253786;
-        line-height: 28px;
-        margin-bottom: 8px;
-    }
-
-    .compromisso-item__text {
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 400;
-        color: #4A5565;
-        line-height: 26px;
-        margin-bottom: 0;
-    }
-
-    /* Card de Armazenamento */
-    .armazenamento-card {
-        background-color: #FFFFFF;
-        border-radius: 24px;
-        box-shadow: 0px 4px 6px -4px rgba(0,0,0,0.1), 0px 10px 15px -3px rgba(0,0,0,0.25);
-        padding: 32px 36px;
-        display: flex;
-        gap: 20px;
-        align-items: flex-start;
-        margin-top: 24px;
-    }
-
-    .armazenamento-card__icon {
-        width: 72px;
-        height: 72px;
+    .icon-wrap-small {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
         flex-shrink: 0;
-        border-radius: 16px;
-    }
-
-    .armazenamento-card__title {
-        font-family: 'Inter', sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+        border: 1px solid #e5e7eb;
         font-size: 20px;
-        font-weight: 700;
-        color: #253786;
-        line-height: 28px;
-        margin-bottom: 12px;
     }
 
-    .armazenamento-card__text {
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
-        color: #4A5565;
-        line-height: 26px;
+    .item-heading {
+        font-family: 'Poppins', sans-serif;
+        font-size: 1.1rem;
+        font-weight: 600; /* Headline weight */
+        color: #253786;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-text {
+        font-family: 'Poppins', sans-serif;
+        font-size: 0.95rem;
+        color: #6c757d;
+        line-height: 1.6;
         margin-bottom: 0;
     }
 
-    /* Card Dicas de Segurança */
-    .dicas-card-right {
-        padding: 33px 33px 45px 33px;
-    }
-
-    .dicas-card-right__title {
-        font-family: 'Inter', sans-serif;
-        font-size: 30px;
-        font-weight: 700;
-        color: #253786;
-        line-height: 36px;
-        margin-bottom: 32px;
-    }
-
-    /* Cards internos das dicas */
     .dica-item {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        box-shadow: 0px 1px 2px -1px rgba(0,0,0,0.1), 0px 1px 3px 0px rgba(0,0,0,0.1);
-        padding: 20px;
-        display: flex;
-        gap: 16px;
-        align-items: flex-start;
-        margin-bottom: 24px;
+        margin-bottom: 1.5rem;
     }
-
     .dica-item:last-child {
         margin-bottom: 0;
     }
 
-    .dica-item__icon-wrap {
-        width: 48px;
-        height: 48px;
-        border-radius: 14px;
-        flex-shrink: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0px 4px 6px -4px rgba(0,0,0,0.1), 0px 10px 15px -3px rgba(0,0,0,0.1);
-        font-size: 22px;
-        line-height: 1;
-    }
-
-    .icon-senha {
-        background: linear-gradient(135deg, #F0B100 0%, #FF6900 100%);
-    }
-
-    .icon-dispositivo {
-        background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%);
-    }
-
-    .icon-conexao {
-        background: linear-gradient(135deg, #10B981 0%, #059669 100%);
-    }
-
-    .dica-item__heading {
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 700;
-        color: #253786;
-        line-height: 24px;
-        margin-bottom: 4px;
-    }
-
-    .dica-item__text {
-        font-family: 'Inter', sans-serif;
-        font-size: 14px;
-        color: #4A5565;
-        line-height: 22px;
-        margin-bottom: 0;
-    }
-
-    /* Card de Contato */
-    .contato-card {
-        background-color: #FFFFFF;
-        border-radius: 16px;
-        box-shadow: 0px 1px 2px -1px rgba(0,0,0,0.1), 0px 1px 3px 0px rgba(0,0,0,0.1);
-        padding: 24px;
-        margin-top: 24px;
-    }
-
-    .contato-card__header {
+    /* Card Contato */
+    .contato-card-header {
         display: flex;
         align-items: center;
         gap: 12px;
-        margin-bottom: 16px;
+        margin-bottom: 1rem;
     }
 
-    .contato-card__title {
-        font-family: 'Inter', sans-serif;
-        font-size: 16px;
-        font-weight: 700;
-        color: #253786;
-        line-height: 24px;
-        margin: 0;
-    }
-
-    .contato-card__icon {
+    .contato-card-icon {
         width: 36px;
         height: 36px;
         background-color: #253786;
@@ -294,83 +182,59 @@
         flex-shrink: 0;
     }
 
-    .contato-card__text {
-        font-family: 'Poppins', sans-serif;
-        font-size: 14px;
-        font-weight: 700;
-        color: rgba(33, 37, 41, 0.75);
-        line-height: 20px;
-        margin-bottom: 4px;
+    .contato-card-icon svg {
+        width: 18px;
+        height: 18px;
+        fill: #ffffff;
     }
 
-    .contato-card__text:last-child {
-        margin-bottom: 0;
+    /* Imagem de Armazenamento específica */
+    .img-armazenamento {
+        width: 64px;
+        height: 64px;
+        border-radius: 0.75rem;
+        object-fit: cover;
+        flex-shrink: 0;
+        border: 1px solid #e5e7eb;
     }
 
-    /* Responsividade */
-    /* Tablet 820px */
-    @media (max-width: 900px) and (min-width: 600px) {
-        .dicas-hero {
-            min-height: 300px;
-        }
-        .dicas-hero__title {
-            font-size: 36px;
-        }
-        .dicas-hero__subtitle {
-            font-size: 15px;
-            max-width: 560px;
-        }
+    /* Responsividade específica da página */
+    @media (max-width: 900px) {
         .dicas-hero__shield {
             width: 44px;
             height: 44px;
         }
-        .compromisso-card {
-            padding: 32px 24px 48px;
-        }
-        .dicas-card-right {
-            padding: 32px 24px 40px;
-        }
-        .compromisso-item__icon-wrap {
+        .icon-wrap-large {
             width: 56px;
             height: 56px;
         }
-        .compromisso-item__heading {
-            font-size: 18px;
+        .icon-wrap-large svg {
+            width: 28px;
+            height: 28px;
+        }
+        .img-armazenamento {
+            width: 56px;
+            height: 56px;
         }
     }
 
     @media (max-width: 599.98px) {
-        .dicas-hero {
-            min-height: 220px;
-            margin-bottom: 24px;
-        }
-        .dicas-hero__title {
-            font-size: 26px;
-        }
-        .dicas-hero__subtitle {
-            font-size: 13px;
-            line-height: 22px;
-        }
         .dicas-hero__shield {
             width: 36px;
             height: 36px;
         }
-        .compromisso-card {
-            padding: 28px 20px 40px;
-        }
-        .dicas-card-right {
-            padding: 28px 20px 36px;
+        .dicas-hero__overlay {
+            padding: 24px 16px;
         }
     }
 </style>
 
-<div class="container-fluid px-3 px-lg-5 py-4 py-lg-5">
+<div class="container py-4 py-lg-5 font-poppins">
 
     <!-- ============ HERO BANNER ============ -->
     <div class="dicas-hero">
         <div class="dicas-hero__bg"></div>
         <div class="dicas-hero__overlay">
-            <!-- Ícone escudo -->
             <svg class="dicas-hero__shield" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" fill="white" fill-opacity="0.25" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
                 <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/>
@@ -385,56 +249,51 @@
 
         <!-- ========== COLUNA ESQUERDA ========== -->
         <div class="col-12 col-lg-7">
-
             <!-- Card: Compromisso com o Participante -->
-            <div class="dicas-card compromisso-card">
-                <h2 class="compromisso-card__title">Compromisso com o Participante</h2>
+            <div class="card-tactual p-4 p-lg-5 h-100">
+                <h2 class="section-title">Compromisso com o Participante</h2>
 
-                <!-- Item 1: Sigilo e Anonimato -->
                 <div class="compromisso-item">
-                    <div class="compromisso-item__icon-wrap icon-sigilo">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2L4 5V11C4 15.55 7.84 19.74 12 21C16.16 19.74 20 15.55 20 11V5L12 2ZM12 11.99H18C17.47 15.11 15.72 17.78 12 19.93V12H6V6.3L12 4.19V11.99Z" fill="white"/>
+                    <div class="icon-wrap-large">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2L4 5V11C4 15.55 7.84 19.74 12 21C16.16 19.74 20 15.55 20 11V5L12 2ZM12 11.99H18C17.47 15.11 15.72 17.78 12 19.93V12H6V6.3L12 4.19V11.99Z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="compromisso-item__heading">Sigilo e Anonimato</h3>
-                        <p class="compromisso-item__text">A sua identidade nunca será divulgada em publicações de resultados.</p>
+                        <h3 class="item-heading">Sigilo e Anonimato</h3>
+                        <p class="item-text">A sua identidade nunca será divulgada em publicações de resultados.</p>
                     </div>
                 </div>
 
-                <!-- Item 2: Ética Profissional -->
                 <div class="compromisso-item">
-                    <div class="compromisso-item__icon-wrap icon-etica">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z" fill="white"/>
+                    <div class="icon-wrap-large">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 3H14.82C14.4 1.84 13.3 1 12 1C10.7 1 9.6 1.84 9.18 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM12 3C12.55 3 13 3.45 13 4C13 4.55 12.55 5 12 5C11.45 5 11 4.55 11 4C11 3.45 11.45 3 12 3ZM10 17L6 13L7.41 11.59L10 14.17L16.59 7.58L18 9L10 17Z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="compromisso-item__heading">Ética Profissional</h3>
-                        <p class="compromisso-item__text">Este estudo respeita as resoluções CNS 466/12 e CNS/MS 510/16 do Conselho Nacional de Saúde. O projeto é aprovado pelo Comitê de Ética em Pesquisa (CEP) da UniRV.</p>
+                        <h3 class="item-heading">Ética Profissional</h3>
+                        <p class="item-text">Este estudo respeita as resoluções CNS 466/12 e CNS/MS 510/16 do Conselho Nacional de Saúde. O projeto é aprovado pelo Comitê de Ética em Pesquisa (CEP) da UniRV.</p>
                     </div>
                 </div>
 
-                <!-- Item 3: Direito de Desistência -->
                 <div class="compromisso-item">
-                    <div class="compromisso-item__icon-wrap icon-desistencia">
-                        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z" fill="white"/>
+                    <div class="icon-wrap-large">
+                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 20C7.59 20 4 16.41 4 12C4 7.59 7.59 4 12 4C16.41 4 20 7.59 20 12C20 16.41 16.41 20 12 20ZM16.59 7.58L10 14.17L7.41 11.59L6 13L10 17L18 9L16.59 7.58Z"/>
                         </svg>
                     </div>
                     <div>
-                        <h3 class="compromisso-item__heading">Direito de Desistência</h3>
-                        <p class="compromisso-item__text">A sua participação é totalmente voluntária. Você tem o direito de retirar o seu consentimento em qualquer fase do estudo, sem qualquer tipo de penalização ou prejuízo no seu atendimento.</p>
+                        <h3 class="item-heading">Direito de Desistência</h3>
+                        <p class="item-text">A sua participação é totalmente voluntária. Você tem o direito de retirar o seu consentimento em qualquer fase do estudo, sem qualquer tipo de penalização ou prejuízo no seu atendimento.</p>
                     </div>
                 </div>
 
-                <!-- Item 4: Armazenamento de Dados (dentro do card Compromisso) -->
                 <div class="compromisso-item">
-                    <img src="{% static 'images/icon_armazenamento.png' %}" alt="Ícone de banco de dados" class="compromisso-item__icon-wrap" style="width:72px;height:72px;border-radius:16px;object-fit:cover;flex-shrink:0;">
+                    <img src="{% static 'images/icon_armazenamento.png' %}" alt="Ícone de banco de dados" class="img-armazenamento">
                     <div>
-                        <h3 class="compromisso-item__heading">Armazenamento de Dados</h3>
-                        <p class="compromisso-item__text">As informações coletadas são armazenadas com segurança e serão guardadas pelo período de 5 anos, sendo posteriormente destruídas conforme os protocolos de pesquisa.</p>
+                        <h3 class="item-heading">Armazenamento de Dados</h3>
+                        <p class="item-text">As informações coletadas são armazenadas com segurança e serão guardadas pelo período de 5 anos, sendo posteriormente destruídas conforme os protocolos de pesquisa.</p>
                     </div>
                 </div>
             </div>
@@ -442,58 +301,50 @@
 
         <!-- ========== COLUNA DIREITA ========== -->
         <div class="col-12 col-lg-5">
+            
+            <div class="d-flex flex-column gap-4 h-100">
+                <!-- Card: Dicas de Segurança Digital -->
+                <div class="card-tactual p-4">
+                    <h2 class="section-title mb-4">Dicas de Segurança Digital</h2>
 
-            <!-- Card: Dicas de Segurança Digital -->
-            <div class="dicas-card dicas-card-right">
-                <h2 class="dicas-card-right__title">Dicas de Segurança Digital</h2>
-
-                <!-- Dica 1: Senhas Fortes -->
-                <div class="dica-item">
-                    <div class="dica-item__icon-wrap icon-senha">
-                        <span>🔑</span>
+                    <div class="d-flex gap-3 dica-item">
+                        <div class="icon-wrap-small">🔑</div>
+                        <div>
+                            <h3 class="item-heading fs-6">Senhas Fortes</h3>
+                            <p class="item-text small">Utilize combinações de letras, números e símbolos. Não compartilhe a sua senha com ninguém.</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="dica-item__heading">Senhas Fortes</h3>
-                        <p class="dica-item__text">Utilize combinações de letras, números e símbolos. Não compartilhe a sua senha com ninguém.</p>
+
+                    <div class="d-flex gap-3 dica-item">
+                        <div class="icon-wrap-small">📱</div>
+                        <div>
+                            <h3 class="item-heading fs-6">Acesso em Dispositivos</h3>
+                            <p class="item-text small">Evite aceder à sua conta em computadores públicos. Lembre-se sempre de fazer "Sair" ao terminar.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 dica-item">
+                        <div class="icon-wrap-small">🔒</div>
+                        <div>
+                            <h3 class="item-heading fs-6">Conexão Segura</h3>
+                            <p class="item-text small">Certifique-se de que está a aceder ao site através de uma ligação segura (HTTPS).</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Dica 2: Acesso em Dispositivos -->
-                <div class="dica-item">
-                    <div class="dica-item__icon-wrap icon-dispositivo">
-                        <span>📱</span>
+                <!-- Card de Contato -->
+                <div class="card-tactual p-4">
+                    <div class="contato-card-header">
+                        <div class="contato-card-icon">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M20 15.5c-1.2 0-2.4-.2-3.6-.6-.3-.1-.7 0-1 .2l-2.2 2.2c-2.8-1.4-5.1-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.2-.5-2.3-.6-3.6-.1-.7-.7-1.3-1.4-1.3H4c-.7 0-1.3.6-1.3 1.3 0 10 8.2 18.2 18.2 18.2.7 0 1.3-.6 1.3-1.3v-2.2c0-.7-.6-1.3-1.3-1.3z"/>
+                            </svg>
+                        </div>
+                        <h4 class="item-heading mb-0">Contato dos Responsáveis:</h4>
                     </div>
-                    <div>
-                        <h3 class="dica-item__heading">Acesso em Dispositivos</h3>
-                        <p class="dica-item__text">Evite aceder à sua conta em computadores públicos. Se o fizer, lembre-se sempre de fazer "Sair" (Logout) ao terminar.</p>
-                    </div>
+                    <p class="item-text"><strong>Orientador:</strong> Prof. Dr. Renato Canevari Dutra da Silva</p>
+                    <p class="item-text"><strong>Telefone:</strong> (64) 3620-2297</p>
                 </div>
-
-                <!-- Dica 3: Conexão Segura -->
-                <div class="dica-item">
-                    <div class="dica-item__icon-wrap icon-conexao">
-                        <span>🔒</span>
-                    </div>
-                    <div>
-                        <h3 class="dica-item__heading">Conexão Segura</h3>
-                        <p class="dica-item__text">Certifique-se de que está a aceder ao site através de uma ligação segura (HTTPS).</p>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Card de Contato (fora do card Dicas) -->
-            <div class="contato-card">
-                <div class="contato-card__header">
-                    <h4 class="contato-card__title">Contacto dos Responsáveis:</h4>
-                    <div class="contato-card__icon">
-                        <svg width="16" height="16" fill="white" viewBox="0 0 24 24">
-                            <path d="M20 15.5c-1.2 0-2.4-.2-3.6-.6-.3-.1-.7 0-1 .2l-2.2 2.2c-2.8-1.4-5.1-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.2-.5-2.3-.6-3.6-.1-.7-.7-1.3-1.4-1.3H4c-.7 0-1.3.6-1.3 1.3 0 10 8.2 18.2 18.2 18.2.7 0 1.3-.6 1.3-1.3v-2.2c0-.7-.6-1.3-1.3-1.3z"/>
-                        </svg>
-                    </div>
-                </div>
-                <p class="contato-card__text"><strong>Orientador:</strong> Prof. Dr. Renato Canevari Dutra da Silva</p>
-                <p class="contato-card__text"><strong>Telefone:</strong> (64) 3620-2297</p>
             </div>
 
         </div>
