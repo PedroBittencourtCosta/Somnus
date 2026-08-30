@@ -307,7 +307,40 @@ def dashboard_respostas(request):
         'dist_audit_json': _json.dumps(dist_audit),
         'scatter_psqi_dass_json': _json.dumps(scatter_psqi_dass),
     }
+        
     return render(request, 'dashboard_respostas.html', context)
+
+@login_required
+def relatorios_medicos(request):
+    from django.core.paginator import Paginator
+    from .models import Questionario, RespostaQuestionario
+
+    questionarios = Questionario.objects.filter(ativo=True).order_by('titulo')
+    qs_respostas = RespostaQuestionario.objects.select_related('pesquisadora', 'questionario').all()
+
+    questionario_id = request.GET.get('questionario', '')
+    if questionario_id:
+        qs_respostas = qs_respostas.filter(questionario_id=questionario_id)
+
+    sort = request.GET.get('sort', '-data_submissao')
+    valid_sorts = ['codigo_paciente', '-codigo_paciente', 'questionario__titulo', '-questionario__titulo', 'data_submissao', '-data_submissao']
+    if sort in valid_sorts:
+        qs_respostas = qs_respostas.order_by(sort)
+    else:
+        qs_respostas = qs_respostas.order_by('-data_submissao')
+
+    # Paginação para 10 itens por página
+    paginator = Paginator(qs_respostas, 10)
+    page_number = request.GET.get('page')
+    todas_respostas = paginator.get_page(page_number)
+
+    context = {
+        'questionarios': questionarios,
+        'filtro_questionario': questionario_id,
+        'todas_respostas': todas_respostas,
+        'current_sort': sort,
+    }
+    return render(request, 'relatorios_medicos.html', context)
 
 
 @login_required
@@ -492,6 +525,91 @@ def exportar_respostas_excel(request, pk):
     response['Content-Disposition'] = f'attachment; filename="Somnus_Relatorio_{res_quest.id}.xlsx"'
     wb.save(response)
     return response
+
+@login_required
+def exportar_resultados_massa_excel(request):
+    questionario_id = request.GET.get('questionario')
+    
+    if questionario_id:
+        respostas = RespostaQuestionario.objects.filter(questionario_id=questionario_id).select_related('questionario', 'pesquisadora')
+    else:
+        respostas = RespostaQuestionario.objects.all().select_related('questionario', 'pesquisadora')
+        
+    respostas = respostas.order_by('-data_submissao')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Resultados em Massa"
+    
+    # 1. Cabecalhos fixos
+    cabecalhos = ['ID', 'Código Paciente', 'Nome Paciente', 'Data', 'Questionário']
+    
+    todas_perguntas = {}
+    todas_escalas = {}
+    
+    from django.db.models import Prefetch
+    respostas = respostas.prefetch_related(
+        'respostas__pergunta',
+        'respostas__alternativa',
+        'questionario__escalas_config',
+        'resultados_escalas__escala_config'
+    )
+    
+    dados_linhas = []
+    
+    for res in respostas:
+        linha_base = {
+            'ID': res.id,
+            'Código Paciente': res.codigo_paciente,
+            'Nome Paciente': res.paciente_nome,
+            'Data': res.data_submissao.strftime('%d/%m/%Y %H:%M'),
+            'Questionário': res.questionario.titulo_curto
+        }
+        
+        # Respostas brutas
+        for rp in res.respostas.all():
+            chave = f"P: {rp.pergunta.identificador or rp.pergunta.conteudo[:30]}"
+            if chave not in todas_perguntas:
+                todas_perguntas[chave] = True
+            
+            valor = rp.alternativa.valor if rp.alternativa else rp.resposta_texto
+            linha_base[chave] = valor
+            
+        # Resultados de escalas (usando o cache)
+        for esc in res.resultados_escalas.all():
+            chave_score = f"E: {esc.escala_config.nome} (Score)"
+            chave_class = f"E: {esc.escala_config.nome} (Classificação)"
+            
+            if chave_score not in todas_escalas: todas_escalas[chave_score] = True
+            if chave_class not in todas_escalas: todas_escalas[chave_class] = True
+            
+            linha_base[chave_score] = esc.score_principal
+            linha_base[chave_class] = esc.classificacao
+            
+        dados_linhas.append(linha_base)
+        
+    cabecalhos.extend(list(todas_escalas.keys()))
+    cabecalhos.extend(list(todas_perguntas.keys()))
+    
+    ws.append(cabecalhos)
+    
+    azul_somnus = PatternFill(start_color='1A365D', end_color='1A365D', fill_type='solid')
+    fonte_branca = Font(color='FFFFFF', bold=True)
+    for cell in ws[1]:
+        cell.fill = azul_somnus
+        cell.font = fonte_branca
+        
+    for linha_dict in dados_linhas:
+        linha_excel = []
+        for col in cabecalhos:
+            linha_excel.append(linha_dict.get(col, ""))
+        ws.append(linha_excel)
+        
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = 'attachment; filename="Somnus_Exportacao_Massa.xlsx"'
+    wb.save(response)
+    return response
+
 
 @login_required
 def editar_questionario_view(request, pk=None):

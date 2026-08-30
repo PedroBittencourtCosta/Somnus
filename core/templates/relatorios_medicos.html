@@ -1,0 +1,172 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatórios Médicos — Somnus{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-3 px-lg-4 py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4 g-3 flex-wrap">
+    <div>
+      <h2 class="fw-bold mb-1" style="color: var(--somnus-blue-deep);">Relatórios Médicos</h2>
+      <p class="text-muted mb-0 small">Lista de participações e submissões nos questionários.</p>
+    </div>
+    <div class="pt-2">
+      <a href="{% url 'dashboard_respostas' %}" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
+        &larr; Voltar ao Dashboard
+      </a>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 mb-4">
+    <div class="card-body p-4">
+      
+      <!-- Filtro e Indicador -->
+      <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <div class="text-muted small">
+          Exibindo submissões
+          {% if filtro_questionario %} para o questionário selecionado{% else %} (Todos os questionários){% endif %}
+        </div>
+        
+        <!-- Filtro no Dropdown e Exportar -->
+        <div class="d-flex align-items-center gap-2">
+          <form method="get" class="d-flex align-items-center gap-2 m-0">
+            <label class="fw-bold mb-0 flex-shrink-0 small" for="filtro-questionario" style="color: var(--somnus-blue-deep);">
+              Filtrar Questionário:
+            </label>
+            <select id="filtro-questionario" name="questionario" class="form-select form-select-sm border-light bg-light rounded-3 text-truncate" style="max-width:300px;" onchange="this.form.submit()">
+              <option value="">Todos os questionários</option>
+              {% for q in questionarios %}
+              <option value="{{ q.pk }}" title="{{ q.titulo }}" {% if filtro_questionario == q.pk|stringformat:"s" %}selected{% endif %}>
+                {{ q.titulo_curto }}
+              </option>
+              {% endfor %}
+            </select>
+            {% if current_sort %}
+            <input type="hidden" name="sort" value="{{ current_sort }}">
+            {% endif %}
+          </form>
+          
+          <a href="{% url 'exportar_resultados_massa_excel' %}{% if filtro_questionario %}?questionario={{ filtro_questionario }}{% endif %}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 fw-bold d-flex align-items-center gap-1">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+            </svg>
+            Exportar Resultados
+          </a>
+        </div>
+      </div>
+
+      <div class="table-responsive rounded-3 border bg-white">
+        <table class="table align-middle mb-0 table-hover">
+          <thead class="bg-light">
+            <tr>
+              <th class="fw-bold text-black border-bottom-0 py-3 px-4 rounded-start-3">
+                <a href="?sort={% if current_sort == 'codigo_paciente' %}-codigo_paciente{% else %}codigo_paciente{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                  Usuário
+                  {% if current_sort == 'codigo_paciente' %}&uarr;{% elif current_sort == '-codigo_paciente' %}&darr;{% endif %}
+                </a>
+              </th>
+              <th class="fw-bold text-black border-bottom-0 py-3 px-3">
+                <a href="?sort={% if current_sort == 'questionario__titulo' %}-questionario__titulo{% else %}questionario__titulo{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                  Questionário
+                  {% if current_sort == 'questionario__titulo' %}&uarr;{% elif current_sort == '-questionario__titulo' %}&darr;{% endif %}
+                </a>
+              </th>
+              <th class="fw-bold text-black border-bottom-0 py-3 px-3 text-nowrap rounded-end-3">
+                <a href="?sort={% if current_sort == '-data_submissao' %}data_submissao{% else %}-data_submissao{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" class="text-decoration-none text-dark d-flex align-items-center gap-1">
+                  Data da Resposta
+                  {% if current_sort == '-data_submissao' %}&darr;{% elif current_sort == 'data_submissao' %}&uarr;{% endif %}
+                </a>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for res in todas_respostas %}
+            <tr>
+              <td class="py-3 px-4 border-light">
+                <span class="fw-bold text-dark">{{ res.codigo_paciente }}</span>
+              </td>
+              <td class="py-3 px-3 border-light">
+                <span class="badge rounded-pill bg-light border text-dark fw-bold px-3 py-2" style="color: var(--somnus-blue-deep) !important;" title="{{ res.questionario.titulo }}">
+                  {{ res.questionario.titulo_curto }}
+                </span>
+              </td>
+              <td class="py-3 px-3 text-muted border-light text-nowrap fw-medium">
+                {{ res.data_submissao|date:"d/m/Y H:i" }}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="text-center py-5 text-muted border-light">
+                <svg width="40" height="40" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="mb-3 opacity-50">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 012-2h2a2 2 0 012 2"></path>
+                </svg>
+                <p class="mb-0">Nenhuma submissão encontrada.</p>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginação -->
+      {% if todas_respostas.has_other_pages %}
+      <nav aria-label="Navegação de páginas" class="mt-4 d-flex justify-content-between align-items-center w-100 flex-wrap gap-3">
+        
+        <!-- Botão Voltar -->
+        <div>
+          {% if todas_respostas.has_previous %}
+          <a class="btn btn-light rounded-pill px-4 text-dark fw-bold d-flex align-items-center gap-2 border-0 shadow-sm" href="?page={{ todas_respostas.previous_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" style="background-color: #F8F9FA;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+            Voltar
+          </a>
+          {% else %}
+          <span class="btn btn-light rounded-pill px-4 text-muted fw-bold d-flex align-items-center gap-2 border-0 disabled shadow-sm" style="background-color: #F8F9FA; opacity: 0.6;">
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"></path></svg>
+            Voltar
+          </span>
+          {% endif %}
+        </div>
+
+        <!-- Números de Página -->
+        <div class="d-flex align-items-center gap-2">
+          {% for num in todas_respostas.paginator.page_range %}
+            {% if todas_respostas.number == num %}
+            <span class="d-flex align-items-center justify-content-center rounded-circle text-white fw-bold shadow-sm" style="width: 38px; height: 38px; background-color: var(--somnus-blue-deep, #2C3579); font-size: 14px;">
+              {{ num }}
+            </span>
+            {% elif num > todas_respostas.number|add:'-3' and num < todas_respostas.number|add:'3' %}
+            <a class="d-flex align-items-center justify-content-center rounded-circle text-dark text-decoration-none border border-secondary border-opacity-25 fw-bold bg-white transition-all hover-shadow" href="?page={{ num }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" style="width: 38px; height: 38px; font-size: 14px;">
+              {{ num }}
+            </a>
+            {% elif num == todas_respostas.number|add:'-3' or num == todas_respostas.number|add:'3' %}
+            <span class="text-muted px-1" style="font-size: 14px; letter-spacing: 1px;">...</span>
+            {% elif num == 1 or num == todas_respostas.paginator.num_pages %}
+            <a class="d-flex align-items-center justify-content-center rounded-circle text-muted text-decoration-none border border-secondary border-opacity-10 fw-bold bg-white" href="?page={{ num }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" style="width: 38px; height: 38px; font-size: 14px; opacity: 0.5;">
+              {{ num }}
+            </a>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- Botão Próximo -->
+        <div>
+          {% if todas_respostas.has_next %}
+          <a class="btn rounded-pill px-4 text-white fw-bold d-flex align-items-center gap-2 shadow-sm border-0" href="?page={{ todas_respostas.next_page_number }}{% if current_sort %}&sort={{ current_sort }}{% endif %}{% if request.GET.questionario %}&questionario={{ request.GET.questionario }}{% endif %}" style="background: linear-gradient(90deg, #2C3579 0%, #3B5B9E 100%);">
+            Próximo
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+          </a>
+          {% else %}
+          <span class="btn rounded-pill px-4 text-white fw-bold d-flex align-items-center gap-2 border-0 disabled shadow-sm" style="background: linear-gradient(90deg, #2C3579 0%, #3B5B9E 100%); opacity: 0.6;">
+            Próximo
+            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path></svg>
+          </span>
+          {% endif %}
+        </div>
+        
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

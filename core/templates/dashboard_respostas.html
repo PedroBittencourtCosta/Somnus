@@ -38,7 +38,7 @@
           <option value="">Todos os questionários</option>
           {% for q in questionarios %}
           <option value="{{ q.pk }}" title="{{ q.titulo }}" {% if filtro_questionario == q.pk|stringformat:"s" %}selected{% endif %}>
-            {{ q.titulo|truncatechars:60 }}
+            {{ q.titulo_curto }}
           </option>
           {% endfor %}
         </select>
@@ -46,8 +46,17 @@
     </div>
   </div>
 
-  <!-- Botão recalcular escalas -->
-  <div class="d-flex justify-content-end mb-3">
+  <!-- Botões de ação -->
+  <div class="d-flex justify-content-end mb-3 gap-2">
+    <!-- Novo botão para ir à tela de Relatórios -->
+    <a href="{% url 'relatorios_medicos' %}" class="btn btn-sm d-inline-flex align-items-center gap-2"
+      style="background:var(--somnus-blue-inst); color:#fff; border:none; border-radius:0.75rem; font-weight:600; font-size:.82rem; padding:.45rem 1rem; transition:all .2s; box-shadow: 0 2px 4px rgba(0,103,177,.2); text-decoration:none;">
+      <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+      </svg>
+      Ver Submissões
+    </a>
+  
     <button id="btn-recalcular" type="button"
       class="btn btn-sm d-inline-flex align-items-center gap-2"
       style="background:rgba(37,55,134,.07); color:var(--somnus-blue-deep); border:1.5px solid rgba(37,55,134,.18); border-radius:0.75rem; font-weight:600; font-size:.82rem; padding:.45rem 1rem; transition:all .2s;"
@@ -281,9 +290,6 @@
 
   </div>
 
-
-
-
 </div>
 
 
@@ -466,6 +472,7 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function () {
+
 
     /* ── Paleta de cores Somnus ── */
     const BLUE_DEEP = '#253786';

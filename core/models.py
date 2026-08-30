@@ -17,6 +17,13 @@ class Questionario(models.Model):
     def __str__(self):
         return self.titulo
 
+    @property
+    def titulo_curto(self):
+        palavras = self.titulo.split()
+        if len(palavras) > 7:
+            return ' '.join(palavras[:7]) + '...'
+        return self.titulo
+
 
 
 class Secao(models.Model):
