@@ -31,10 +31,21 @@
                                placeholder="E-mail *" style="font-size: 0.9rem;">
                     </div>
 
-                    <div class="mb-2">
+                    <div class="mb-2 position-relative">
                         <input type="password" name="password" id="modal_password" required
                                class="form-control form-control-lg bg-light border-0 rounded-3 py-3 px-4"
-                               placeholder="Senha *" style="font-size: 0.9rem;">
+                               placeholder="Senha *" style="font-size: 0.9rem; padding-right: 3rem;">
+                        <button type="button" id="toggleModalPassword" tabindex="-1" 
+                                class="position-absolute top-50 end-0 translate-middle-y border-0 bg-transparent text-secondary p-2 me-1"
+                                style="z-index: 10;">
+                            <svg id="eyeIconModal" class="d-block" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eyeSlashIconModal" class="d-none" style="width: 20px; height: 20px;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </button>
                     </div>
 
                     <div class="mb-4 d-flex justify-content-end px-1">
@@ -81,3 +92,33 @@
         border: 1px solid var(--somnus-blue-inst) !important;
     }
 </style>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleModalPassword = document.getElementById('toggleModalPassword');
+        const modalPasswordInput = document.getElementById('modal_password');
+        const eyeIconModal = document.getElementById('eyeIconModal');
+        const eyeSlashIconModal = document.getElementById('eyeSlashIconModal');
+
+        if (toggleModalPassword && modalPasswordInput) {
+            toggleModalPassword.addEventListener('click', function () {
+                // Alterna o tipo do input
+                const type = modalPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                modalPasswordInput.setAttribute('type', type);
+
+                // Alterna os ícones usando classes do Bootstrap (d-block / d-none)
+                if (type === 'text') {
+                    eyeIconModal.classList.remove('d-block');
+                    eyeIconModal.classList.add('d-none');
+                    eyeSlashIconModal.classList.remove('d-none');
+                    eyeSlashIconModal.classList.add('d-block');
+                } else {
+                    eyeSlashIconModal.classList.remove('d-block');
+                    eyeSlashIconModal.classList.add('d-none');
+                    eyeIconModal.classList.remove('d-none');
+                    eyeIconModal.classList.add('d-block');
+                }
+            });
+        }
+    });
+</script>

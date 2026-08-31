@@ -12,26 +12,7 @@
         padding: 2rem 0 4rem;
     }
 
-    /* ── Header sticky ─────────────────────────────── */
-    .builder-topbar {
-        position: sticky;
-        top: 56px; /* altura da navbar */
-        z-index: 100;
-        background: rgba(255, 255, 255, 0.92);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(37, 55, 134, 0.08);
-        padding: 0.85rem 0;
-        margin-bottom: 2rem;
-    }
 
-    .builder-topbar-inner {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 1rem;
-        flex-wrap: wrap;
-    }
 
     .builder-title {
         font-size: 1.15rem;
@@ -664,11 +645,12 @@
 
 <div class="builder-wrapper">
 
-    {# ── Topbar sticky ── #}
-    <div class="builder-topbar">
-        <div class="container">
-            <div class="builder-topbar-inner">
-                <h2 class="builder-title">
+    <div class="container">
+
+        {# ── Card de Informações Gerais ── #}
+        <div class="meta-card">
+            <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+                <h2 class="builder-title mb-0">
                     <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
@@ -687,13 +669,7 @@
                     </button>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <div class="container">
-
-        {# ── Card de Informações Gerais ── #}
-        <div class="meta-card">
             <div class="meta-card-label">
                 <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
