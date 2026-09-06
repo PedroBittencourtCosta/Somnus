@@ -9,8 +9,8 @@
 
         <!-- Imagem hero com título, subtítulo e botão sobrepostos (tudo dentro da imagem) -->
         <div class="hero-image-wrapper position-relative rounded-4 overflow-hidden">
-            <img src="{% static 'images/hero_image.png' %}" alt="Avaliação da Qualidade do Sono"
-                class="hero-bg-img w-100">
+            <img src="{% static 'images/hero_image.webp' %}" alt="Avaliação da Qualidade do Sono"
+                class="hero-bg-img w-100" width="1600" height="376" fetchpriority="high">
 
             <!-- Overlay escuro gradiente -->
             <div class="position-absolute top-0 start-0 w-100 h-100 hero-overlay"></div>
@@ -102,8 +102,8 @@
 
                 <!-- Benefit 1 -->
                 <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3" style="flex: 1;">
-                    <img src="{% static 'images/icon_verificado_1.png' %}" alt="Verificado"
-                        class="proto-icon">
+                    <img src="{% static 'images/icon_verificado_1.webp' %}" alt="Verificado"
+                        class="proto-icon" loading="lazy" width="103" height="103" decoding="async">
                     <div style="font-size: 1.05rem; line-height: 1.4; color: #F9FAFB;">
                         <span class="fw-bold d-block">Protocolos validados</span>
                         Base científica confiável e recomendação personalizada
@@ -112,8 +112,8 @@
 
                 <!-- Benefit 2 -->
                 <div class="d-flex flex-column flex-sm-row align-items-center text-center text-sm-start gap-3" style="flex: 1;">
-                    <img src="{% static 'images/icon_verificado_2.png' %}" alt="Protegido"
-                        class="proto-icon">
+                    <img src="{% static 'images/icon_verificado_2.webp' %}" alt="Protegido"
+                        class="proto-icon" loading="lazy" width="103" height="103" decoding="async">
                     <div style="font-size: 1.05rem; line-height: 1.4; color: #FFFFFF;">
                         <span class="fw-bold d-block">Dados Protegidos</span>
                         Sua identidade não será divulgada em publicações
@@ -122,8 +122,8 @@
             </div>
 
             <!-- Ícone de segurança — posição absoluta à direita (desktop) -->
-            <img src="{% static 'images/icon_seguranca.png' %}" alt="Segurança"
-                class="d-none d-lg-block position-absolute proto-seguranca">
+            <img src="{% static 'images/icon_seguranca.webp' %}" alt="Segurança"
+                class="d-none d-lg-block position-absolute proto-seguranca" loading="lazy" width="162" height="162" decoding="async">
         </div>
     </section>
 

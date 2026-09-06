@@ -443,9 +443,9 @@
 <div class="container py-4 py-lg-5">
     <div class="bem-hero-wrapper">
         <div class="bem-hero-img-container">
-            <img src="{% static 'img/bem_estar/yoga_hero.png' %}"
+            <img src="{% static 'img/bem_estar/yoga_hero.webp' %}"
                  alt="Pessoas praticando yoga juntas"
-                 class="bem-hero-img">
+                 class="bem-hero-img" fetchpriority="high" width="1600" height="685">
 
             <!-- Textos (canto inferior esquerdo) -->
             <div class="bem-hero-text">
@@ -548,9 +548,9 @@
                 desconforto intenso, procure um profissional de saúde mental.
             </p>
         </div>
-        <img src="{% static 'img/bem_estar/icone_seguranca.png' %}"
+        <img src="{% static 'img/bem_estar/icone_seguranca.webp' %}"
              alt="Ícone de segurança"
-             class="bem-nota-icon">
+             class="bem-nota-icon" loading="lazy" width="140" height="140" decoding="async">
     </div>
 
     <p class="bem-nota-subtexto">
