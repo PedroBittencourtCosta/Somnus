@@ -553,33 +553,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Delegação de evento: clique em qualquer radio-option
-    document.querySelectorAll('.qr-radio-option').forEach(label => {
-        label.addEventListener('mousedown', function() {
-            const radio = this.querySelector('input[type="radio"]');
-            if (radio) radio.dataset.wasChecked = radio.checked ? 'true' : 'false';
-        });
+    // Delegação de evento para permitir desmarcar radio buttons
+    document.querySelectorAll('.alternativa-radio').forEach(radio => {
+        // Armazena o estado inicial
+        radio.dataset.previous = radio.checked;
 
-        label.addEventListener('click', function(e) {
-            const radio = this.querySelector('input[type="radio"]');
-            if (!radio) return;
-
-            if (radio.dataset.wasChecked === 'true') {
-                // Toggle: desmarcar
-                radio.checked = false;
-                radio.dataset.wasChecked = 'false';
-                sincronizarRadios();
-                atualizarVisibilidade();
-            } else {
-                // Desmarca todos do mesmo grupo primeiro
-                const name = radio.name;
-                document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
-                    r.dataset.wasChecked = 'false';
-                });
-                radio.checked = true;
-                sincronizarRadios();
-                atualizarVisibilidade();
+        radio.addEventListener('click', function(e) {
+            if (this.dataset.previous === 'true') {
+                this.checked = false;
             }
+            
+            // Atualiza o estado "previous" de todos os radios com o mesmo name
+            const name = this.name;
+            document.querySelectorAll(`input[name="${name}"]`).forEach(r => {
+                r.dataset.previous = r.checked;
+            });
+            
+            sincronizarRadios();
+            atualizarVisibilidade();
         });
     });
 
