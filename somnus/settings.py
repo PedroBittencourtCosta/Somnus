@@ -254,3 +254,7 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='Somnus <noreply@somnus.a
 
 # Criptografia de campos sensíveis (LGPD art. 46)
 FIELD_ENCRYPTION_KEY = env('FIELD_ENCRYPTION_KEY')
+
+# Configurações de Sessão
+SESSION_COOKIE_AGE = 28800  # 8 horas em segundos (8 * 60 * 60)
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
