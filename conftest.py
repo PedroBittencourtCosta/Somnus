@@ -14,41 +14,32 @@ def grupo_assistente(db):
     return Group.objects.get_or_create(name='Assistente de Pesquisa')[0]
 
 
+def _criar_usuario(email, password='senha123', **kwargs):
+    """Cria e salva um Usuario sem depender do manager padrão (que exige username)."""
+    from accounts.models import Usuario
+    user = Usuario(email=email, **kwargs)
+    user.set_password(password)
+    user.save()
+    return user
+
+
 @pytest.fixture
 def usuario_pesquisador(db, grupo_pesquisador):
-    from accounts.models import Usuario
-    user = Usuario.objects.create_user(
-        email='pesquisador@test.com',
-        password='senha123',
-        first_name='Ana',
-        last_name='Pesquisadora',
-    )
+    user = _criar_usuario('pesquisador@test.com', first_name='Ana', last_name='Pesquisadora')
     user.groups.add(grupo_pesquisador)
     return user
 
 
 @pytest.fixture
 def usuario_assistente(db, grupo_assistente):
-    from accounts.models import Usuario
-    user = Usuario.objects.create_user(
-        email='assistente@test.com',
-        password='senha123',
-        first_name='Carlos',
-        last_name='Assistente',
-    )
+    user = _criar_usuario('assistente@test.com', first_name='Carlos', last_name='Assistente')
     user.groups.add(grupo_assistente)
     return user
 
 
 @pytest.fixture
 def usuario_comum(db):
-    from accounts.models import Usuario
-    return Usuario.objects.create_user(
-        email='comum@test.com',
-        password='senha123',
-        first_name='Maria',
-        last_name='Comum',
-    )
+    return _criar_usuario('comum@test.com', first_name='Maria', last_name='Comum')
 
 
 # ── Questionário completo ───────────────────────────────────────────────────
