@@ -1,7 +1,10 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from .models import TCLE
+from django.core.paginator import Paginator
+from django.db import transaction
+from core.models import RespostaQuestionario
+from .models import TCLE, AceiteTCLE, RevogacaoConsentimento
 
 
 @login_required
@@ -72,6 +75,62 @@ def nova_versao_tcle(request):
 
     return render(request, 'nova_versao_tcle.html', {
         'versao': proxima_versao,
+    })
+
+
+@login_required
+def revogar_consentimento(request):
+    """
+    RF-014: localiza a coleta pelo código do participante e a exclui de forma
+    definitiva (respostas, resultados de escalas e aceite saem em cascata).
+    """
+    if not (request.user.is_staff or _is_pesquisador(request.user)):
+        messages.error(request, 'Acesso restrito a pesquisadores.')
+        return redirect('home')
+
+    if request.method == 'POST':
+        codigo = request.POST.get('codigo', '').strip().upper()
+        resposta = RespostaQuestionario.objects.filter(codigo_paciente=codigo).select_related('questionario').first()
+        if not resposta:
+            messages.error(request, 'Nenhuma coleta encontrada com esse código. Ela pode já ter sido excluída.')
+            return redirect('revogar_consentimento')
+
+        aceite = AceiteTCLE.objects.filter(resposta_questionario=resposta).select_related('tcle').first()
+        with transaction.atomic():
+            RevogacaoConsentimento.objects.create(
+                codigo_paciente=resposta.codigo_paciente,
+                questionario_titulo=resposta.questionario.titulo,
+                tcle_versao=aceite.tcle.versao if aceite else None,
+                data_coleta=resposta.data_submissao,
+                revogado_por=request.user,
+            )
+            resposta.delete()
+
+        messages.success(request, f'Consentimento revogado. Os dados da coleta {codigo} foram excluídos definitivamente.')
+        return redirect('revogar_consentimento')
+
+    codigo = request.GET.get('codigo', '').strip().upper()
+    resposta = None
+    aceite = None
+    if codigo:
+        resposta = (
+            RespostaQuestionario.objects
+            .filter(codigo_paciente=codigo)
+            .select_related('questionario', 'pesquisadora')
+            .first()
+        )
+        if resposta:
+            aceite = AceiteTCLE.objects.filter(resposta_questionario=resposta).select_related('tcle').first()
+
+    paginator = Paginator(RevogacaoConsentimento.objects.select_related('revogado_por'), 10)
+    revogacoes = paginator.get_page(request.GET.get('page'))
+
+    return render(request, 'revogar_consentimento.html', {
+        'codigo': codigo,
+        'resposta': resposta,
+        'aceite': aceite,
+        'total_respostas': resposta.respostas.count() if resposta else 0,
+        'revogacoes': revogacoes,
     })
 
 

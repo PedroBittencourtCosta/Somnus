@@ -17,6 +17,13 @@ import json
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.db import transaction
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.mail import send_mail
+from django.core.validators import validate_email
+from django.template.loader import render_to_string
+import logging
+
+logger = logging.getLogger(__name__)
 
 def index_view(request: HttpRequest):
     return render(request, 'home.html')
@@ -145,13 +152,10 @@ def responder_questionario(request, pk):
             calcular_e_salvar_resultados(res_quest)
 
             # 6. Limpeza da sessão para o próximo atendimento
-            del request.session['respostas_temp']
-            request.session['tcle_aceito'] = False
-            request.session['max_pagina_respondida'] = 1
-            request.session.modified = True
+            _limpar_sessao_coleta(request)
 
-            messages.success(request, f"Avaliação de {nome_extraido} concluída!")
-            return redirect('home')
+            messages.success(request, f"Avaliação {res_quest.codigo_paciente} concluída!")
+            return redirect('comprovante_coleta', codigo=res_quest.codigo_paciente)
 
     context = {
         'questionario': questionario,
@@ -162,6 +166,100 @@ def responder_questionario(request, pk):
         'max_pagina_respondida': request.session.get('max_pagina_respondida', 1),
     }
     return render(request, 'responder_questionario.html', context)
+
+
+def _limpar_sessao_coleta(request):
+    """Descarta o estado da coleta em andamento, exigindo novo aceite do TCLE."""
+    request.session.pop('respostas_temp', None)
+    request.session['tcle_aceito'] = False
+    request.session['max_pagina_respondida'] = 1
+    request.session.modified = True
+
+
+@login_required
+@require_POST
+def cancelar_preenchimento(request, pk):
+    """Interrompe a coleta a qualquer momento sem gravar nada (RN05 / RN09)."""
+    get_object_or_404(Questionario, pk=pk)
+    _limpar_sessao_coleta(request)
+    messages.info(request, 'Preenchimento cancelado. Nenhuma resposta foi gravada.')
+    return redirect('lista_questionarios')
+
+
+def _obter_resposta_autorizada(request, codigo):
+    """Somente quem conduziu a coleta, Pesquisadores ou staff acessam o comprovante."""
+    resposta = get_object_or_404(RespostaQuestionario, codigo_paciente=codigo)
+    user = request.user
+    if not (
+        resposta.pesquisadora_id == user.id
+        or user.is_staff
+        or user.groups.filter(name='Pesquisador').exists()
+    ):
+        raise PermissionDenied
+    return resposta
+
+
+def _registrar_entrega(resposta, modo):
+    aceite = AceiteTCLE.objects.filter(resposta_questionario=resposta).first()
+    if aceite:
+        aceite.comprovante_entregue_por = modo
+        aceite.save(update_fields=['comprovante_entregue_por'])
+
+
+@login_required
+def comprovante_coleta(request, codigo):
+    """Comprovante de participação entregue ao paciente ao fim da coleta assistida."""
+    resposta = _obter_resposta_autorizada(request, codigo)
+    aceite = AceiteTCLE.objects.filter(resposta_questionario=resposta).select_related('tcle').first()
+    return render(request, 'comprovante_coleta.html', {
+        'resposta': resposta,
+        'aceite': aceite,
+    })
+
+
+@login_required
+@require_POST
+def registrar_entrega_comprovante(request, codigo):
+    """Registra entrega impressa ou anotada (chamado via fetch antes de imprimir)."""
+    resposta = _obter_resposta_autorizada(request, codigo)
+    modo = request.POST.get('modo')
+    if modo not in ('IMPRESSO', 'ANOTADO'):
+        return JsonResponse({'status': 'error', 'message': 'Modo de entrega inválido.'}, status=400)
+    _registrar_entrega(resposta, modo)
+    return JsonResponse({'status': 'success'})
+
+
+@login_required
+@require_POST
+def enviar_comprovante_email(request, codigo):
+    """Envia o comprovante ao paciente. O endereço é usado só neste envio e não é salvo."""
+    resposta = _obter_resposta_autorizada(request, codigo)
+    email = request.POST.get('email', '').strip()
+    try:
+        validate_email(email)
+    except ValidationError:
+        messages.error(request, 'Informe um e-mail válido.')
+        return redirect('comprovante_coleta', codigo=codigo)
+
+    aceite = AceiteTCLE.objects.filter(resposta_questionario=resposta).select_related('tcle').first()
+    contexto = {'resposta': resposta, 'aceite': aceite}
+    try:
+        send_mail(
+            subject='Comprovante de participação em pesquisa – UniRV',
+            message=render_to_string('emails/comprovante.txt', contexto),
+            html_message=render_to_string('emails/comprovante.html', contexto),
+            from_email=None,
+            recipient_list=[email],
+        )
+    except Exception:
+        logger.exception('Falha ao enviar comprovante da coleta %s', resposta.codigo_paciente)
+        messages.error(request, 'Não foi possível enviar o e-mail. Tente novamente ou imprima o comprovante.')
+        return redirect('comprovante_coleta', codigo=codigo)
+
+    _registrar_entrega(resposta, 'EMAIL')
+    messages.success(request, 'Comprovante enviado por e-mail.')
+    return redirect('comprovante_coleta', codigo=codigo)
+
 
 def lista_questionarios(request):
     # Exibe apenas questínarios ativos para coleta assistida.

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import TCLE, AceiteTCLE
+from .models import TCLE, AceiteTCLE, RevogacaoConsentimento
 
 @admin.register(TCLE)
 class TCLEAdmin(admin.ModelAdmin):
@@ -9,3 +9,10 @@ class TCLEAdmin(admin.ModelAdmin):
 class AceiteTCLEAdmin(admin.ModelAdmin):
     list_display = ('resposta_questionario', 'tcle', 'data_aceite')
     readonly_fields = ('data_aceite',) # Evita alteração manual da data de aceite
+
+
+@admin.register(RevogacaoConsentimento)
+class RevogacaoConsentimentoAdmin(admin.ModelAdmin):
+    list_display = ('codigo_paciente', 'questionario_titulo', 'data_revogacao', 'revogado_por')
+    search_fields = ('codigo_paciente',)
+    readonly_fields = ('codigo_paciente', 'questionario_titulo', 'tcle_versao', 'data_coleta', 'data_revogacao', 'revogado_por')

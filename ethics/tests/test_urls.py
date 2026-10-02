@@ -17,3 +17,8 @@ class TestEthicsUrls:
         url = reverse('nova_versao_tcle')
         assert url == '/tcle/gerenciar/nova-versao/'
         assert resolve(url).view_name == 'nova_versao_tcle'
+
+    def test_revogar_consentimento(self):
+        url = reverse('revogar_consentimento')
+        assert url == '/tcle/revogacao/'
+        assert resolve(url).view_name == 'revogar_consentimento'

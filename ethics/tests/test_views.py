@@ -137,3 +137,87 @@ class TestNovaVersaoTcle:
         })
         assert response.status_code == 302
         assert response['Location'] == reverse('lista_tcle')
+
+
+# ── revogar_consentimento ───────────────────────────────────────────────────
+
+class TestRevogarConsentimento:
+    def test_anonimo_redireciona_para_login(self, client):
+        response = client.get(reverse('revogar_consentimento'))
+        assert response.status_code == 302
+        assert '/login/' in response['Location']
+
+    def test_assistente_sem_acesso(self, client_assistente):
+        response = client_assistente.get(reverse('revogar_consentimento'))
+        assert response.status_code == 302
+        assert response['Location'] == reverse('home')
+
+    def test_assistente_nao_consegue_excluir(self, client_assistente, resposta_completa):
+        from core.models import RespostaQuestionario
+        client_assistente.post(reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente})
+        assert RespostaQuestionario.objects.filter(pk=resposta_completa.pk).exists()
+
+    def test_get_sem_codigo_renderiza(self, client_pesquisador):
+        response = client_pesquisador.get(reverse('revogar_consentimento'))
+        assert response.status_code == 200
+        assert response.context['resposta'] is None
+
+    def test_busca_encontra_coleta(self, client_pesquisador, resposta_completa):
+        response = client_pesquisador.get(
+            reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente.lower()}
+        )
+        assert response.context['resposta'] == resposta_completa
+        assert response.context['total_respostas'] == 1
+
+    def test_busca_codigo_inexistente(self, client_pesquisador):
+        response = client_pesquisador.get(reverse('revogar_consentimento'), {'codigo': 'NAOEXISTE'})
+        assert response.status_code == 200
+        assert response.context['resposta'] is None
+        assert 'Nenhuma coleta encontrada' in response.content.decode()
+
+    def test_resumo_nao_exibe_nome_do_participante(self, client_pesquisador, resposta_completa):
+        response = client_pesquisador.get(
+            reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente}
+        )
+        assert 'Paciente Teste' not in response.content.decode()
+
+    def test_post_exclui_coleta_e_dependentes(self, client_pesquisador, resposta_completa, tcle_ativo):
+        from core.models import RespostaQuestionario, RespostaPergunta
+        from ethics.models import AceiteTCLE
+        AceiteTCLE.objects.create(resposta_questionario=resposta_completa, tcle=tcle_ativo)
+
+        client_pesquisador.post(reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente})
+
+        assert not RespostaQuestionario.objects.filter(pk=resposta_completa.pk).exists()
+        assert not RespostaPergunta.objects.filter(resposta_questionario_id=resposta_completa.pk).exists()
+        assert not AceiteTCLE.objects.filter(resposta_questionario_id=resposta_completa.pk).exists()
+
+    def test_post_registra_revogacao(self, client_pesquisador, usuario_pesquisador, resposta_completa, tcle_ativo):
+        from ethics.models import AceiteTCLE, RevogacaoConsentimento
+        AceiteTCLE.objects.create(resposta_questionario=resposta_completa, tcle=tcle_ativo)
+        codigo = resposta_completa.codigo_paciente
+
+        client_pesquisador.post(reverse('revogar_consentimento'), {'codigo': codigo})
+
+        revogacao = RevogacaoConsentimento.objects.get(codigo_paciente=codigo)
+        assert revogacao.revogado_por == usuario_pesquisador
+        assert revogacao.tcle_versao == 1.0
+        assert revogacao.questionario_titulo == resposta_completa.questionario.titulo
+
+    def test_post_redireciona_para_tela(self, client_pesquisador, resposta_completa):
+        response = client_pesquisador.post(
+            reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente}
+        )
+        assert response.status_code == 302
+        assert response['Location'] == reverse('revogar_consentimento')
+
+    def test_post_codigo_inexistente_nao_registra(self, client_pesquisador):
+        from ethics.models import RevogacaoConsentimento
+        client_pesquisador.post(reverse('revogar_consentimento'), {'codigo': 'NAOEXISTE'})
+        assert not RevogacaoConsentimento.objects.exists()
+
+    def test_historico_lista_revogacoes(self, client_pesquisador, resposta_completa):
+        codigo = resposta_completa.codigo_paciente
+        client_pesquisador.post(reverse('revogar_consentimento'), {'codigo': codigo})
+        response = client_pesquisador.get(reverse('revogar_consentimento'))
+        assert codigo in response.content.decode()

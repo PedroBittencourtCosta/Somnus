@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<body style="margin: 0; padding: 24px; background-color: #f8f9fa; font-family: Poppins, Arial, sans-serif; color: #333;">
+    <div style="max-width: 560px; margin: 0 auto; background-color: #ffffff; border-radius: 16px; padding: 32px;">
+        <h2 style="color: #253786; margin-top: 0;">Comprovante de participação em pesquisa</h2>
+        <p>Obrigado por participar da pesquisa da Universidade de Rio Verde (UniRV).</p>
+
+        <p style="font-size: 12px; font-weight: 600; color: #253786; text-transform: uppercase; margin-bottom: 6px;">Código do participante</p>
+        <div style="font-family: 'Courier New', monospace; font-size: 28px; font-weight: 700; letter-spacing: 4px; color: #253786; background-color: #f8f9fa; border: 2px dashed #dee2e6; border-radius: 12px; padding: 12px; text-align: center;">
+            {{ resposta.codigo_paciente }}
+        </div>
+
+        <p style="font-size: 14px; margin-top: 20px;">
+            <strong>Data da coleta:</strong> {{ resposta.data_submissao|date:"d/m/Y H:i" }}<br>
+            {% if aceite %}<strong>Versão do TCLE aceita:</strong> {{ aceite.tcle.versao }}{% endif %}
+        </p>
+
+        <div style="background-color: #eef5fb; border-left: 4px solid #0067b1; border-radius: 8px; padding: 12px 16px; font-size: 14px;">
+            Você pode retirar seu consentimento a qualquer momento, sem nenhum prejuízo ao seu atendimento.
+            Para isso, entre em contato com a equipe de pesquisa informando o código acima, e seus dados serão excluídos.
+        </div>
+
+        <div style="margin-top: 20px; font-size: 14px;">
+            {% include '_contatos_pesquisa.html' %}
+        </div>
+
+        {% if aceite %}
+            <hr style="border: none; border-top: 1px solid #dee2e6; margin: 24px 0;">
+            <p style="font-weight: 700; color: #253786;">Termo de Consentimento Livre e Esclarecido — versão {{ aceite.tcle.versao }}</p>
+            <div style="font-size: 13px; line-height: 1.6; color: #444;">{{ aceite.tcle.conteudo|linebreaks }}</div>
+        {% endif %}
+
+        <p style="font-size: 12px; color: #6b7280; margin-top: 24px; margin-bottom: 0;">Equipe Somnus.</p>
+    </div>
+</body>
+</html>
