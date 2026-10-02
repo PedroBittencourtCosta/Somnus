@@ -1,9 +1,13 @@
 from django.urls import path
-from .views import exportar_respostas_excel, exportar_resultados_massa_excel, responder_questionario, lista_questionarios, dashboard_respostas, editar_questionario_view, salvar_questionario_api, configurar_escala_view, gerenciar_questionarios, desativar_questionario, recalcular_escalas, relatorios_medicos
+from .views import cancelar_preenchimento, comprovante_coleta, registrar_entrega_comprovante, enviar_comprovante_email, exportar_respostas_excel, exportar_resultados_massa_excel, responder_questionario, lista_questionarios, dashboard_respostas, editar_questionario_view, salvar_questionario_api, configurar_escala_view, gerenciar_questionarios, desativar_questionario, recalcular_escalas, relatorios_medicos
 
 
 urlpatterns = [
     path('responder/<int:pk>/', responder_questionario, name='responder_questionario'),
+    path('responder/<int:pk>/cancelar/', cancelar_preenchimento, name='cancelar_preenchimento'),
+    path('comprovante/<str:codigo>/', comprovante_coleta, name='comprovante_coleta'),
+    path('comprovante/<str:codigo>/entrega/', registrar_entrega_comprovante, name='registrar_entrega_comprovante'),
+    path('comprovante/<str:codigo>/email/', enviar_comprovante_email, name='enviar_comprovante_email'),
     path('avaliacoes/', lista_questionarios, name='lista_questionarios'),
     path('avaliacoes/gerenciar/', gerenciar_questionarios, name='gerenciar_questionarios'),
     path('avaliacoes/nova/', editar_questionario_view, name='nova_avaliacao'),
@@ -16,4 +20,4 @@ urlpatterns = [
     path('relatorios/', relatorios_medicos, name='relatorios_medicos'),
     path('exportar-excel/<int:pk>/', exportar_respostas_excel, name='exportar_respostas_excel'),
     path('exportar-resultados-massa/', exportar_resultados_massa_excel, name='exportar_resultados_massa_excel'),
-]
+]

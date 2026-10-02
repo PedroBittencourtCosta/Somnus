@@ -96,7 +96,7 @@
             </p>
             
             <div class="premium-modal-actions">
-                <button type="button" class="btn btn-premium-cancel" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-premium-cancel" data-bs-dismiss="modal">{{ btn_cancel_text|default:'Cancelar' }}</button>
                 <button type="button" class="btn btn-premium-danger" id="{{ btn_confirm_id|default:'btnModalConfirmar' }}">{{ btn_text|default:'Sim, remover' }}</button>
             </div>
         </div>

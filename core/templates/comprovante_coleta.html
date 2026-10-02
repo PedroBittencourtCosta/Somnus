@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4 py-lg-5">
+
+    <!-- Cabeçalho (somente tela) -->
+    <div class="d-print-none mb-4">
+        <h2 class="fw-bold" style="color: var(--somnus-blue-deep);">Coleta concluída</h2>
+        <p class="text-muted mb-0">Entregue o comprovante ao participante. Ele precisa do código para retirar o consentimento no futuro.</p>
+    </div>
+
+    <div class="row g-4">
+
+        <!-- Comprovante (tela + impressão) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 comprovante-card">
+                <div class="card-body p-4">
+                    <p class="comprovante-label mb-1">Comprovante de participação em pesquisa</p>
+                    <p class="text-muted small mb-4">Universidade de Rio Verde (UniRV) — Somnus</p>
+
+                    <p class="comprovante-label mb-2">Código do participante</p>
+                    <div class="comprovante-codigo" id="comprovante-codigo">{{ resposta.codigo_paciente }}</div>
+
+                    <dl class="row small mt-4 mb-0">
+                        <dt class="col-5 text-muted fw-semibold">Data da coleta</dt>
+                        <dd class="col-7">{{ resposta.data_submissao|date:"d/m/Y H:i" }}</dd>
+                        {% if aceite %}
+                            <dt class="col-5 text-muted fw-semibold">Versão do TCLE aceita</dt>
+                            <dd class="col-7">{{ aceite.tcle.versao }}</dd>
+                            <dt class="col-5 text-muted fw-semibold">Data do aceite</dt>
+                            <dd class="col-7 mb-0">{{ aceite.data_aceite|date:"d/m/Y H:i" }}</dd>
+                        {% endif %}
+                    </dl>
+
+                    <div class="comprovante-aviso mt-4">
+                        <p class="fw-semibold mb-1">Seus direitos</p>
+                        <p class="mb-0">Você pode retirar seu consentimento a qualquer momento, sem nenhum prejuízo ao seu atendimento. Para isso, entre em contato com a equipe de pesquisa informando o código acima, e seus dados serão excluídos.</p>
+                    </div>
+
+                    <div class="mt-4 comprovante-contatos">
+                        {% include '_contatos_pesquisa.html' with ocultar_cep=True %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Opções de entrega (somente tela) -->
+        <div class="col-lg-5 d-print-none">
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <p class="filter-label mb-3">Como entregar ao participante?</p>
+
+                    <button type="button" id="btn-imprimir" class="btn entrega-btn w-100 mb-2">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Imprimir comprovante e TCLE
+                    </button>
+
+                    <button type="button" id="btn-anotado" class="btn entrega-btn w-100 mb-4">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Participante anotou o código
+                    </button>
+
+                    <form method="post" action="{% url 'enviar_comprovante_email' resposta.codigo_paciente %}" id="form-email-comprovante">
+                        {% csrf_token %}
+                        <label for="email-comprovante" class="filter-label">Enviar por e-mail (opcional)</label>
+                        <div class="input-group">
+                            <input type="email" name="email" id="email-comprovante" class="form-control filter-input"
+                                   placeholder="email@exemplo.com" autocomplete="off" required>
+                            <button type="submit" class="btn text-white fw-semibold px-3 btn-enviar-email"
+                                    style="background-color: var(--somnus-blue-inst);">
+                                Enviar
+                            </button>
+                        </div>
+                        <p class="text-muted mt-2 mb-0" style="font-size: 0.75rem;">
+                            O e-mail é usado apenas neste envio e não fica salvo no sistema.
+                        </p>
+                    </form>
+
+                    <p class="small mt-4 mb-0" id="status-entrega"
+                       {% if not aceite or not aceite.comprovante_entregue_por %}hidden{% endif %}>
+                        <span class="badge rounded-pill px-3 py-2"
+                              style="background-color: #d1fae5; color: #065f46; font-size: 0.75rem;">
+                            ● Entregue: <span id="status-entrega-texto">{{ aceite.get_comprovante_entregue_por_display }}</span>
+                        </span>
+                    </p>
+                </div>
+            </div>
+
+            <a href="{% url 'lista_questionarios' %}" class="btn text-white fw-bold shadow-sm rounded-pill px-4 py-2 w-100 mt-3"
+               style="background-color: var(--somnus-green-dark);">
+                Nova coleta
+            </a>
+        </div>
+    </div>
+
+    <!-- Via do TCLE (somente impressão) -->
+    {% if aceite %}
+        <div class="d-none d-print-block comprovante-tcle">
+            <h5 class="fw-bold">Termo de Consentimento Livre e Esclarecido — versão {{ aceite.tcle.versao }}</h5>
+            <div>{{ aceite.tcle.conteudo|linebreaks }}</div>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const urlEntrega = "{% url 'registrar_entrega_comprovante' resposta.codigo_paciente %}";
+    const status = document.getElementById('status-entrega');
+    const statusTexto = document.getElementById('status-entrega-texto');
+
+    function registrarEntrega(modo, rotulo) {
+        const body = new FormData();
+        body.append('modo', modo);
+        return fetch(urlEntrega, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: body,
+        }).then(function (resp) {
+            if (resp.ok) {
+                statusTexto.textContent = rotulo;
+                status.hidden = false;
+            }
+        }).catch(function () { /* a entrega em si não depende do registro */ });
+    }
+
+    document.getElementById('btn-imprimir').addEventListener('click', function () {
+        registrarEntrega('IMPRESSO', 'Impresso').finally(function () { window.print(); });
+    });
+
+    document.getElementById('btn-anotado').addEventListener('click', function () {
+        registrarEntrega('ANOTADO', 'Código anotado pelo participante');
+    });
+});
+</script>
+
+<style>
+    .comprovante-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .comprovante-codigo {
+        font-family: 'Courier New', monospace;
+        font-size: clamp(1.75rem, 7vw, 2.5rem);
+        font-weight: 700;
+        letter-spacing: 0.2em;
+        color: var(--somnus-blue-deep);
+        background-color: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        border-radius: 0.75rem;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        word-break: break-all;
+    }
+
+    .comprovante-aviso {
+        background-color: rgba(0, 103, 177, 0.06);
+        border-left: 4px solid var(--somnus-blue-inst);
+        border-radius: 0.5rem;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .filter-label {
+        display: block;
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+    }
+
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+    }
+
+    .filter-input:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
+    }
+
+    .btn-enviar-email {
+        border-radius: 0 0.75rem 0.75rem 0;
+        transition: all 0.18s ease;
+    }
+
+    .btn-enviar-email:hover {
+        filter: brightness(1.1);
+    }
+
+    .entrega-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        border: 1.5px solid #dee2e6;
+        border-radius: 0.75rem;
+        color: var(--somnus-blue-deep);
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.7rem 1rem;
+        transition: all 0.18s ease;
+    }
+
+    .entrega-btn:hover {
+        border-color: var(--somnus-blue-inst);
+        color: var(--somnus-blue-inst);
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    @media print {
+        nav, footer, .alert { display: none !important; }
+        .comprovante-card { box-shadow: none !important; border: 1px solid #dee2e6 !important; }
+        .col-lg-7 { width: 100% !important; }
+        .comprovante-tcle { page-break-before: always; margin-top: 1rem; }
+    }
+</style>
+{% endblock %}

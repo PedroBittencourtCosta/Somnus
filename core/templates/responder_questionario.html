@@ -252,6 +252,28 @@
     height: 20px;
   }
 
+  /* Botão Cancelar preenchimento */
+  .qr-btn-cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent;
+    color: #6b7280;
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border: 1.5px solid #dee2e6;
+    border-radius: 9999px;
+    padding: 6px 16px;
+    cursor: pointer;
+    transition: all 0.18s ease;
+  }
+  .qr-btn-cancel:hover {
+    color: #dc2626;
+    border-color: #dc2626;
+    background-color: #fee2e2;
+  }
+
   /* ── Responsivo – tablet 820px ── */
   @media (max-width: 900px) {
     .qr-section-banner {
@@ -406,6 +428,19 @@
 <div class="qr-wrapper py-3 py-lg-5">
   <div class="container">
 
+    <!-- Cancelar preenchimento (form separado: não envia nem valida as respostas) -->
+    <form method="post" action="{% url 'cancelar_preenchimento' questionario.id %}"
+          id="form-cancelar-preenchimento" class="d-flex justify-content-end mb-3">
+      {% csrf_token %}
+      <button type="button" class="qr-btn-cancel" id="btn-cancelar-preenchimento"
+              data-bs-toggle="modal" data-bs-target="#modal-cancelar-preenchimento">
+        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+        </svg>
+        Cancelar preenchimento
+      </button>
+    </form>
+
     <!-- Barra de progresso -->
     <div class="mb-4">
       <div class="qr-progress-track">
@@ -533,9 +568,18 @@
 </div><!-- /.qr-wrapper -->
 
 {% include 'modal_tcle.html' %}
+{% include 'partials/_modal_confirmacao.html' with modal_id="modal-cancelar-preenchimento" modal_title="Cancelar preenchimento?" modal_text="Todas as respostas desta coleta serão descartadas e nada será gravado. O próximo preenchimento exigirá um novo aceite do TCLE." modal_text_id="modal-cancelar-texto" btn_confirm_id="btn-confirmar-cancelamento" btn_text="Sim, cancelar" btn_cancel_text="Continuar" %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Cancelar preenchimento ──
+    const btnConfirmarCancelamento = document.getElementById('btn-confirmar-cancelamento');
+    if (btnConfirmarCancelamento) {
+        btnConfirmarCancelamento.addEventListener('click', function() {
+            document.getElementById('form-cancelar-preenchimento').submit();
+        });
+    }
+
     const form = document.getElementById('form-questionario');
     const inputsTexto = document.querySelectorAll('.input-pergunta');
 

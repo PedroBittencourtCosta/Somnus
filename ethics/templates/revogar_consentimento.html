@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Revogação de Consentimento · Somnus{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-9">
+
+            <!-- Cabeçalho -->
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <a href="{% url 'lista_tcle' %}"
+                   class="btn btn-sm rounded-circle border-0 d-flex align-items-center justify-content-center shadow-sm back-btn"
+                   style="width:40px; height:40px; background-color: #f0f4ff;"
+                   title="Voltar para TCLE">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div>
+                    <h1 class="fw-bold mb-0" style="color: var(--somnus-blue-deep); font-size: 1.6rem;">Revogação de Consentimento</h1>
+                    <p class="text-muted mb-0 small">Localize a coleta pelo código do participante e exclua seus dados de forma definitiva.</p>
+                </div>
+            </div>
+
+            <!-- Linha decorativa -->
+            <div class="rounded-pill mb-5" style="height: 4px; width: 60px; background-color: var(--somnus-green-dark);"></div>
+
+            <!-- Busca por código -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body px-4 py-3">
+                    <form method="get" id="form-buscar-codigo" class="row g-3 align-items-end">
+                        <div class="col-12 col-md">
+                            <label for="input-codigo-participante" class="filter-label">Código do participante</label>
+                            <div class="position-relative">
+                                <i class="bi bi-shield-lock-fill position-absolute text-muted" style="left: 0.9rem; top: 50%; transform: translateY(-50%);"></i>
+                                <input type="text" id="input-codigo-participante" name="codigo"
+                                       class="form-control filter-input codigo-input"
+                                       placeholder="Ex: A1B2C3D4E5" maxlength="12"
+                                       value="{{ codigo }}" autocomplete="off" required>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-auto">
+                            <button type="submit" id="btn-buscar-codigo"
+                                    class="btn text-white fw-bold shadow-sm rounded-pill px-4 w-100 d-flex align-items-center justify-content-center gap-2"
+                                    style="background-color: var(--somnus-blue-inst); border: none; height: 38px;">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                                </svg>
+                                Buscar coleta
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if codigo %}
+                {% if resposta %}
+                <!-- Resumo da coleta encontrada -->
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5 revogacao-card">
+                    <div class="card-body p-4">
+                        <div class="d-flex align-items-center gap-2 mb-3 flex-wrap">
+                            <h5 class="fw-bold mb-0" style="color: var(--somnus-blue-deep);">Coleta encontrada</h5>
+                            <span class="badge rounded-pill px-3 py-2"
+                                  style="background-color: #e0e7ff; color: #3730a3; font-size: 0.75rem; font-weight: 600;">
+                                {{ resposta.codigo_paciente }}
+                            </span>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-12 col-sm-6">
+                                <div class="revogacao-info-label">Questionário</div>
+                                <div class="revogacao-info-valor">{{ resposta.questionario.titulo }}</div>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <div class="revogacao-info-label">Data da coleta</div>
+                                <div class="revogacao-info-valor">{{ resposta.data_submissao|date:"d/m/Y \à\s H:i" }}</div>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <div class="revogacao-info-label">Conduzida por</div>
+                                <div class="revogacao-info-valor">{{ resposta.pesquisadora.get_full_name|default:resposta.pesquisadora.email }}</div>
+                            </div>
+                            <div class="col-12 col-sm-6">
+                                <div class="revogacao-info-label">TCLE aceito</div>
+                                <div class="revogacao-info-valor">{% if aceite %}Versão {{ aceite.tcle.versao }}{% else %}Não registrado{% endif %}</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-3 p-3 rounded-4 mb-4 revogacao-aviso">
+                            <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24" class="flex-shrink-0" style="color: #dc2626;">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <div style="font-size: 0.9rem;">
+                                <p class="fw-semibold mb-1" style="color: #991b1b;">Esta ação não pode ser desfeita.</p>
+                                <p class="mb-0 text-muted">
+                                    Serão excluídos o nome do participante, as {{ total_respostas }} resposta{{ total_respostas|pluralize }},
+                                    os resultados das escalas e o registro de aceite do TCLE. Ficará guardado apenas o registro
+                                    da revogação (código, data e responsável), sem dados do participante.
+                                </p>
+                            </div>
+                        </div>
+
+                        <form method="post" id="form-revogar-consentimento">
+                            {% csrf_token %}
+                            <input type="hidden" name="codigo" value="{{ resposta.codigo_paciente }}">
+                            <div class="d-flex justify-content-end gap-2 flex-wrap">
+                                <a href="{% url 'revogar_consentimento' %}" class="btn btn-outline-secondary rounded-pill px-4">Cancelar</a>
+                                <button type="button" id="btn-revogar-consentimento"
+                                        class="btn text-white fw-bold rounded-pill px-4 d-flex align-items-center gap-2 btn-revogar"
+                                        data-bs-toggle="modal" data-bs-target="#modal-confirmar-revogacao">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                    Revogar e excluir dados
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {% include 'partials/_modal_confirmacao.html' with modal_id="modal-confirmar-revogacao" modal_title="Revogar consentimento?" modal_text="Todos os dados desta coleta serão excluídos definitivamente. Esta ação não pode ser desfeita." modal_text_id="modal-revogacao-texto" btn_confirm_id="btn-confirmar-revogacao" btn_text="Sim, excluir" %}
+
+                {% else %}
+                <!-- Estado vazio: código não encontrado -->
+                <div class="card border-0 shadow-sm rounded-4 mb-5">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-funnel d-block mb-3 text-muted" style="font-size: 2rem;"></i>
+                        <h5 class="fw-bold" style="color: var(--somnus-blue-deep);">Nenhuma coleta encontrada</h5>
+                        <p class="text-muted mx-auto mb-0" style="max-width: 420px; font-size: 0.9rem;">
+                            Não há coleta com o código <strong>{{ codigo }}</strong>. Confira o código no comprovante
+                            do participante ou veja no histórico abaixo se ela já foi revogada.
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+            {% endif %}
+
+            <!-- Histórico de revogações -->
+            <h5 class="fw-bold mb-3" style="color: var(--somnus-blue-deep);">Histórico de revogações</h5>
+            {% if revogacoes %}
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0 revogacao-tabela">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Código</th>
+                                <th>Questionário</th>
+                                <th>Coleta</th>
+                                <th>Revogação</th>
+                                <th class="pe-4">Registrado por</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for revogacao in revogacoes %}
+                            <tr>
+                                <td class="ps-4 fw-semibold" style="letter-spacing: 0.05em;">{{ revogacao.codigo_paciente }}</td>
+                                <td class="text-muted" style="font-size: 0.9rem;">{{ revogacao.questionario_titulo }}</td>
+                                <td class="text-muted" style="font-size: 0.9rem;">{{ revogacao.data_coleta|date:"d/m/Y" }}</td>
+                                <td class="text-muted" style="font-size: 0.9rem;">{{ revogacao.data_revogacao|date:"d/m/Y H:i" }}</td>
+                                <td class="pe-4 text-muted" style="font-size: 0.9rem;">
+                                    {% if revogacao.revogado_por %}{{ revogacao.revogado_por.get_full_name|default:revogacao.revogado_por.email }}{% else %}—{% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {% if revogacoes.has_other_pages %}
+            <nav aria-label="Navegação de páginas" class="mt-4 d-flex justify-content-between align-items-center gap-3">
+                {% if revogacoes.has_previous %}
+                <a class="btn btn-light rounded-pill px-4 text-dark fw-bold d-flex align-items-center gap-2 border-0 shadow-sm"
+                   href="?page={{ revogacoes.previous_page_number }}{% if codigo %}&codigo={{ codigo|urlencode }}{% endif %}" style="background-color: #F8F9FA;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    Voltar
+                </a>
+                {% else %}<span></span>{% endif %}
+
+                <span class="text-muted" style="font-size: 0.9rem;">Página {{ revogacoes.number }} de {{ revogacoes.paginator.num_pages }}</span>
+
+                {% if revogacoes.has_next %}
+                <a class="btn btn-light rounded-pill px-4 text-dark fw-bold d-flex align-items-center gap-2 border-0 shadow-sm"
+                   href="?page={{ revogacoes.next_page_number }}{% if codigo %}&codigo={{ codigo|urlencode }}{% endif %}" style="background-color: #F8F9FA;">
+                    Avançar
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                {% else %}<span></span>{% endif %}
+            </nav>
+            {% endif %}
+
+            {% else %}
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body text-center py-4 text-muted" style="font-size: 0.9rem;">
+                    Nenhuma revogação registrada até o momento.
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const btnConfirmar = document.getElementById('btn-confirmar-revogacao');
+        const form = document.getElementById('form-revogar-consentimento');
+        if (btnConfirmar && form) {
+            btnConfirmar.addEventListener('click', function () {
+                btnConfirmar.disabled = true;
+                form.submit();
+            });
+        }
+
+        const inputCodigo = document.getElementById('input-codigo-participante');
+        inputCodigo.addEventListener('input', function () {
+            inputCodigo.value = inputCodigo.value.toUpperCase();
+        });
+    });
+</script>
+
+<style>
+    .filter-label {
+        font-weight: 600;
+        font-size: 0.82rem;
+        color: var(--somnus-blue-deep);
+        margin-bottom: 0.4rem;
+    }
+
+    .filter-input {
+        border-radius: 0.75rem;
+        border: 1px solid #e5e7eb;
+        background-color: #f8f9fa;
+        font-size: 0.875rem;
+    }
+
+    .filter-input:focus {
+        border-color: var(--somnus-blue-inst);
+        box-shadow: 0 0 0 0.2rem rgba(0, 103, 177, 0.1);
+    }
+
+    .codigo-input {
+        padding-left: 2.4rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+    }
+
+    .revogacao-card {
+        border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    }
+
+    .revogacao-info-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #6b7280;
+        margin-bottom: 0.15rem;
+    }
+
+    .revogacao-info-valor {
+        font-weight: 600;
+        color: var(--somnus-blue-deep);
+    }
+
+    .revogacao-aviso {
+        background-color: #fee2e2;
+        border: 1px solid rgba(220, 38, 38, 0.15);
+    }
+
+    .btn-revogar {
+        background-color: #dc2626;
+        border: none;
+        transition: all 0.18s ease;
+    }
+
+    .btn-revogar:hover,
+    .btn-revogar:focus,
+    .btn-revogar:active {
+        background-color: #ef1c1c !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(239, 28, 28, 0.35);
+    }
+
+    .revogacao-tabela tbody tr:hover {
+        background-color: rgba(0, 103, 177, 0.04);
+    }
+
+    .revogacao-tabela td,
+    .revogacao-tabela th {
+        border-color: rgba(0, 0, 0, 0.05);
+    }
+
+    .back-btn {
+        color: var(--somnus-blue-deep);
+        transition: all 0.18s ease;
+    }
+
+    .back-btn:hover {
+        filter: brightness(0.95);
+    }
+</style>
+{% endblock %}
