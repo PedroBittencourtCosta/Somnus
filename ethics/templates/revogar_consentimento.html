@@ -276,9 +276,12 @@
         transition: all 0.18s ease;
     }
 
-    .btn-revogar:hover {
-        filter: brightness(1.1);
-        color: #fff;
+    .btn-revogar:hover,
+    .btn-revogar:focus,
+    .btn-revogar:active {
+        background-color: #ef1c1c !important;
+        color: #fff !important;
+        box-shadow: 0 4px 12px rgba(239, 28, 28, 0.35);
     }
 
     .revogacao-tabela tbody tr:hover {

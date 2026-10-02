@@ -12,7 +12,6 @@ Você pode retirar seu consentimento a qualquer momento, sem nenhum prejuízo ao
 Contatos de Responsabilidade:
 Pesquisador: Prof. Dr. Renato Canevari Dutra da Silva
 Telefone: (64) 3620-2297
-Comitê de Ética (UniRV): (64) 3622-1446 | cep@unirv.edu.br
 {% if aceite %}
 ----------------------------------------
 Termo de Consentimento Livre e Esclarecido — versão {{ aceite.tcle.versao }}
