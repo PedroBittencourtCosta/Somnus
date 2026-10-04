@@ -66,35 +66,6 @@ class TestLogoutView:
         assert '_auth_user_id' not in client_pesquisador.session
 
 
-# ── cadastro_view ────────────────────────────────────────────────────────────
-
-class TestCadastroView:
-    def test_get_retorna_200(self, client):
-        response = client.get(reverse('cadastro'))
-        assert response.status_code == 200
-
-    def test_post_valido_cria_usuario(self, client):
-        from accounts.models import Usuario
-        response = client.post(reverse('cadastro'), {
-            'email': 'novousuario@test.com',
-            'first_name': 'Novo',
-            'last_name': 'Usuário',
-            'password1': 'senhaForte123',
-            'password2': 'senhaForte123',
-        })
-        assert response.status_code == 302
-        assert Usuario.objects.filter(email='novousuario@test.com').exists()
-
-    def test_post_invalido_nao_cria_usuario(self, client):
-        from accounts.models import Usuario
-        response = client.post(reverse('cadastro'), {
-            'email': 'invalido@test.com',
-            'password1': 'senhaA',
-            'password2': 'senhaB',   # senhas diferentes
-        })
-        assert not Usuario.objects.filter(email='invalido@test.com').exists()
-
-
 # ── perfil_view ──────────────────────────────────────────────────────────────
 
 class TestPerfilView:

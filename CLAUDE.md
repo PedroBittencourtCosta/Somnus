@@ -45,7 +45,7 @@ Seu objetivo é **coletar, processar e exportar respostas de questionários clí
 ```
 somnus_project/
 ├── accounts/          # App de autenticação e gestão de usuários
-│   └── templates/     # login, cadastro, perfil, modal_login, gestao_assistentes
+│   └── templates/     # login, perfil, modal_login, cadastrar_assistente, gestao_assistentes
 ├── core/              # App principal: questionários, respostas, escalas
 │   ├── templates/     # dashboard, lista, responder, gerenciar, configurar_escala
 │   ├── static/        # CSS e assets do app core
@@ -344,7 +344,6 @@ Usados nos filtros de texto e alguns estados de componentes. Requerem que a bibl
 | `configurar_escala` | Configurador de escalas clínicas |
 | `perfil` | Perfil do usuário logado |
 | `login` / `logout` | Autenticação |
-| `cadastro` | Cadastro público (atualmente oculto) |
 | `exportar_respostas_excel` | Exportação de respostas em `.xlsx` |
 | `alternar_status_assistente` | Toggle ativo/inativo via POST (fetch) |
 | `dicas` | Dicas de segurança |

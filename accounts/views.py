@@ -3,7 +3,6 @@ from django.contrib.auth import authenticate, login, logout, update_session_auth
 from django.contrib import messages
 from .forms import PerfilForm, AlterarSenhaForm
 from django.contrib.auth.decorators import login_required, user_passes_test
-from accounts.forms import UsuarioCreationForm
 from django.contrib.auth.models import Group
 from .forms import CadastroAssistenteForm
 
@@ -44,19 +43,6 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     return redirect('home')
-
-def cadastro_view(request):
-    if request.method == 'POST':
-        form = UsuarioCreationForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Cadastro realizado com sucesso! Faça login para continuar.')
-            # messages.info(request, 'abrir_modal') 
-            return redirect('home')
-    else:
-        form = UsuarioCreationForm()
-    
-    return render(request, 'cadastro.html', {'form': form})
 
 @login_required
 def perfil_view(request):

@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import Usuario
 from datetime import date
 from django.contrib.auth.models import Group
+from django.contrib.auth.password_validation import validate_password
 
 class UsuarioCreationForm(UserCreationForm):
     email = forms.EmailField(label="E-mail", required=True)
@@ -46,6 +47,18 @@ class CadastroAssistenteForm(forms.ModelForm):
 
         if senha != confirmar_senha:
             raise forms.ValidationError("As senhas não conferem.")
+
+        # Aplica as regras de senha forte (AUTH_PASSWORD_VALIDATORS)
+        if senha:
+            usuario_temp = Usuario(
+                email=cleaned_data.get("email"),
+                first_name=cleaned_data.get("first_name"),
+                last_name=cleaned_data.get("last_name"),
+            )
+            try:
+                validate_password(senha, user=usuario_temp)
+            except forms.ValidationError as erro:
+                self.add_error("senha", erro)
         return cleaned_data
 
 

@@ -74,6 +74,14 @@ FIELD_ENCRYPTION_KEY = 'h3ZQ8MfLz6kFJEW5r8n3KGtAOiXRmSjVBYNUCqpvDe0='
 
 EMAIL_BACKEND = 'django.core.mail.backends.locmem.EmailBackend'
 
+# Mesmas regras de senha forte de produção
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
 # MD5 para testes — muito mais rápido que bcrypt/PBKDF2
 PASSWORD_HASHERS = ['django.contrib.auth.hashers.MD5PasswordHasher']
 

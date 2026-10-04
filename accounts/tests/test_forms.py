@@ -35,6 +35,27 @@ class TestCadastroAssistenteForm:
         assert not form.is_valid()
         assert 'As senhas não conferem.' in str(form.errors)
 
+    def test_senha_curta_formulario_invalido(self):
+        from accounts.forms import CadastroAssistenteForm
+        dados = {**self._dados_base, 'senha': 'ab12', 'confirmar_senha': 'ab12'}
+        form = CadastroAssistenteForm(data=dados)
+        assert not form.is_valid()
+        assert 'senha' in form.errors
+
+    def test_senha_somente_numerica_formulario_invalido(self):
+        from accounts.forms import CadastroAssistenteForm
+        dados = {**self._dados_base, 'senha': '83749261', 'confirmar_senha': '83749261'}
+        form = CadastroAssistenteForm(data=dados)
+        assert not form.is_valid()
+        assert 'senha' in form.errors
+
+    def test_senha_comum_formulario_invalido(self):
+        from accounts.forms import CadastroAssistenteForm
+        dados = {**self._dados_base, 'senha': 'password', 'confirmar_senha': 'password'}
+        form = CadastroAssistenteForm(data=dados)
+        assert not form.is_valid()
+        assert 'senha' in form.errors
+
     def test_email_obrigatorio(self):
         from accounts.forms import CadastroAssistenteForm
         dados = {**self._dados_base, 'email': ''}

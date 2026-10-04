@@ -13,11 +13,6 @@ class TestAccountsUrls:
         assert url == '/accounts/logout/'
         assert resolve(url).view_name == 'logout'
 
-    def test_cadastro(self):
-        url = reverse('cadastro')
-        assert url == '/accounts/cadastro/'
-        assert resolve(url).view_name == 'cadastro'
-
     def test_perfil(self):
         url = reverse('perfil')
         assert url == '/accounts/perfil/'
