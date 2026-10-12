@@ -74,3 +74,5 @@ backup_somnus.sql
 
 # Scripts de teste/rascunho que não devem ir pro repo
 scratch_*.py
+.coverage
+htmlcov/
