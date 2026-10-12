@@ -1,0 +1,46 @@
+# Configuração do Pyrefly (verificador de tipos estático) para o projeto Somnus.
+# Usada pela extensão do Pyrefly no Antigravity IDE e pelo comando `pyrefly check`.
+
+# Conjunto de regras "basic": foca em erros reais (nomes não definidos,
+# imports inexistentes, chamadas inválidas) sem exigir anotações de tipo
+# em todo o código Django.
+preset = "basic"
+
+# Analisa também o corpo das funções sem anotação de tipo (ex.: as views),
+# para detectar nomes não definidos dentro delas.
+untyped-def-behavior = "check-and-infer-return-type"
+
+# Apps Django analisados
+project-includes = [
+    "accounts",
+    "core",
+    "ethics",
+    "somnus",
+]
+
+# Arquivos fora da análise
+project-excludes = [
+    "**/__pycache__/**",
+    "**/.venv/**",
+    "staticfiles/**",
+    "htmlcov/**",
+]
+
+# Mesmo interpretador do ambiente virtual do projeto (Python 3.11)
+python-interpreter-path = ".venv/Scripts/python.exe"
+python-version = "3.11"
+
+# A biblioteca django-encrypted-model-fields não possui anotações de tipo,
+# o que gera falsos positivos (ex.: `null`, `blank`, `verbose_name` não reconhecidos)
+# nos campos EncryptedCharField / EncryptedTextField. Seus tipos são tratados como Any.
+replace-imports-with-any = [
+    "encrypted_model_fields.*",
+]
+
+[errors]
+# Nome não definido (ex.: identificador inexistente em uma view)
+unknown-name = "error"
+# Import de módulo inexistente
+missing-import = "error"
+# Comentário de supressão que não suprime nenhum erro
+unused-ignore = "warn"
