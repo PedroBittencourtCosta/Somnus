@@ -290,7 +290,7 @@ Usados nos filtros de texto e alguns estados de componentes. Requerem que a bibl
 | Grupo | Acesso |
 |---|---|
 | `Pesquisador` | Acesso total: dashboard, TCLE, questionários, colaboradores |
-| `Assistente de Pesquisa` | Acesso ao dashboard de respostas |
+| `Assistente de Pesquisa` | Acesso ao dashboard de respostas; visualiza TCLEs (sem criar versões) e pode revogar consentimentos |
 | `is_staff` | Equivalente ao Pesquisador (acesso total) |
 | Não autenticado | Apenas páginas públicas + formulários de resposta |
 

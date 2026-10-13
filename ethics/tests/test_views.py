@@ -45,14 +45,21 @@ class TestListaTcle:
         assert response.status_code == 302
         assert '/login/' in response['Location']
 
-    def test_assistente_sem_permissao_redireciona(self, client_assistente):
+    def test_assistente_visualiza_lista(self, client_assistente):
         response = client_assistente.get(reverse('lista_tcle'))
-        assert response.status_code == 302
-        assert response['Location'] == reverse('home')
+        assert response.status_code == 200
+        assert response.context['pode_gerenciar_tcle'] is False
+
+    def test_assistente_nao_ve_botao_nova_versao(self, client_assistente, tcle_ativo):
+        response = client_assistente.get(reverse('lista_tcle'))
+        assert reverse('nova_versao_tcle') not in response.content.decode()
+        assert reverse('revogar_consentimento') in response.content.decode()
 
     def test_pesquisador_retorna_200(self, client_pesquisador):
         response = client_pesquisador.get(reverse('lista_tcle'))
         assert response.status_code == 200
+        assert response.context['pode_gerenciar_tcle'] is True
+        assert reverse('nova_versao_tcle') in response.content.decode()
 
     def test_lista_ordenada_do_mais_recente(self, client_pesquisador, tcle_ativo):
         from ethics.models import TCLE
@@ -147,14 +154,25 @@ class TestRevogarConsentimento:
         assert response.status_code == 302
         assert '/login/' in response['Location']
 
-    def test_assistente_sem_acesso(self, client_assistente):
+    def test_assistente_acessa_tela(self, client_assistente):
         response = client_assistente.get(reverse('revogar_consentimento'))
-        assert response.status_code == 302
-        assert response['Location'] == reverse('home')
+        assert response.status_code == 200
 
-    def test_assistente_nao_consegue_excluir(self, client_assistente, resposta_completa):
+    def test_assistente_consegue_revogar(self, client_assistente, usuario_assistente, resposta_completa):
         from core.models import RespostaQuestionario
+        from ethics.models import RevogacaoConsentimento
         client_assistente.post(reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente})
+        assert not RespostaQuestionario.objects.filter(pk=resposta_completa.pk).exists()
+        assert RevogacaoConsentimento.objects.get(
+            codigo_paciente=resposta_completa.codigo_paciente
+        ).revogado_por == usuario_assistente
+
+    def test_usuario_sem_grupo_sem_acesso(self, client, resposta_completa):
+        from conftest import _criar_usuario
+        from core.models import RespostaQuestionario
+        client.force_login(_criar_usuario('semgrupo@test.com'))
+        response = client.post(reverse('revogar_consentimento'), {'codigo': resposta_completa.codigo_paciente})
+        assert response['Location'] == reverse('home')
         assert RespostaQuestionario.objects.filter(pk=resposta_completa.pk).exists()
 
     def test_get_sem_codigo_renderiza(self, client_pesquisador):

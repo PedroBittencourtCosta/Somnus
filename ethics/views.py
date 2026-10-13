@@ -22,13 +22,19 @@ def aceitar_tcle(request, tcle_id):
 
 @login_required
 def lista_tcle(request):
-    """Lista todas as versões de TCLE, da mais recente para a mais antiga."""
-    if not (request.user.is_staff or _is_pesquisador(request.user)):
-        messages.error(request, 'Acesso restrito a pesquisadores.')
+    """
+    Lista todas as versões de TCLE, da mais recente para a mais antiga.
+    Assistentes de pesquisa apenas visualizam; criar versões é exclusivo do Pesquisador/Staff.
+    """
+    if not _pode_acessar_tcle(request.user):
+        messages.error(request, 'Acesso restrito à equipe de pesquisa.')
         return redirect('home')
 
     tcles = TCLE.objects.all().order_by('-data_criacao')
-    return render(request, 'lista_tcle.html', {'tcles': tcles})
+    return render(request, 'lista_tcle.html', {
+        'tcles': tcles,
+        'pode_gerenciar_tcle': request.user.is_staff or _is_pesquisador(request.user),
+    })
 
 
 @login_required
@@ -83,9 +89,10 @@ def revogar_consentimento(request):
     """
     RF-014: localiza a coleta pelo código do participante e a exclui de forma
     definitiva (respostas, resultados de escalas e aceite saem em cascata).
+    Permitido a Pesquisador, Assistente de Pesquisa e Staff.
     """
-    if not (request.user.is_staff or _is_pesquisador(request.user)):
-        messages.error(request, 'Acesso restrito a pesquisadores.')
+    if not _pode_acessar_tcle(request.user):
+        messages.error(request, 'Acesso restrito à equipe de pesquisa.')
         return redirect('home')
 
     if request.method == 'POST':
@@ -138,3 +145,8 @@ def revogar_consentimento(request):
 def _is_pesquisador(user):
     """Verifica se o usuário pertence ao grupo Pesquisador."""
     return user.groups.filter(name='Pesquisador').exists()
+
+
+def _pode_acessar_tcle(user):
+    """Pesquisador, Assistente de Pesquisa ou Staff podem visualizar TCLEs e revogar consentimentos."""
+    return user.is_staff or user.groups.filter(name__in=['Pesquisador', 'Assistente de Pesquisa']).exists()

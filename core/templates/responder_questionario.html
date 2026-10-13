@@ -444,7 +444,7 @@
     <!-- Barra de progresso -->
     <div class="mb-4">
       <div class="qr-progress-track">
-        <div class="qr-progress-fill" style="width: {{ progresso }}%;"></div>
+        <div class="qr-progress-fill" id="qr-progress-fill" data-progresso="{{ progresso }}"></div>
       </div>
     </div>
 
@@ -572,6 +572,12 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ── Barra de progresso ──
+    const progressFill = document.getElementById('qr-progress-fill');
+    if (progressFill) {
+        progressFill.style.width = progressFill.dataset.progresso + '%';
+    }
+
     // ── Cancelar preenchimento ──
     const btnConfirmarCancelamento = document.getElementById('btn-confirmar-cancelamento');
     if (btnConfirmarCancelamento) {

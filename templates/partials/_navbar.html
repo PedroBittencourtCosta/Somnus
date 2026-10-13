@@ -105,8 +105,8 @@
                 </li>
                 {% endif %}
 
-                {# 3. GESTÃO DE TCLE: Somente Pesquisador e Staff #}
-                {% if user.is_staff or user.groups.all.0.name == 'Pesquisador' %}
+                {# 3. TCLE: Pesquisador e Staff gerenciam; Assistente visualiza e revoga #}
+                {% if user.is_staff or user.groups.all.0.name in 'Pesquisador, Assistente de Pesquisa' %}
                 <li class="nav-item">
                     <a href="{% url 'lista_tcle' %}"
                         class="nav-link text-secondary fw-medium d-flex align-items-center gap-2"
@@ -280,7 +280,7 @@
                 </li>
                 {% endif %}
 
-                {% if user.is_staff or user.groups.all.0.name == 'Pesquisador' %}
+                {% if user.is_staff or user.groups.all.0.name in 'Pesquisador, Assistente de Pesquisa' %}
                 <li class="nav-item">
                     <a href="{% url 'lista_tcle' %}"
                         class="nav-link text-secondary fw-medium d-flex align-items-center gap-2"

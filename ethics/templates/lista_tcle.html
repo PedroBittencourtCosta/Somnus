@@ -20,6 +20,7 @@
                 </svg>
                 Revogar Consentimento
             </a>
+            {% if pode_gerenciar_tcle %}
             <a href="{% url 'nova_versao_tcle' %}" id="btn-nova-versao-tcle"
                 class="btn rounded-pill fw-bold text-white px-4 py-2 shadow-sm d-flex align-items-center gap-2"
                 style="background-color: var(--somnus-blue-inst); border: none;">
@@ -28,6 +29,7 @@
                 </svg>
                 Nova Versão
             </a>
+            {% endif %}
         </div>
     </div>
 
@@ -154,10 +156,12 @@
         <p class="text-muted mx-auto" style="max-width: 400px;">
             Ainda não existe nenhuma versão do Termo de Consentimento Livre e Esclarecido registrada no sistema.
         </p>
+        {% if pode_gerenciar_tcle %}
         <a href="{% url 'nova_versao_tcle' %}" class="btn rounded-pill fw-bold text-white px-5 py-3 mt-2 shadow-sm"
             style="background-color: var(--somnus-blue-deep); border: none;">
             Criar Primeira Versão
         </a>
+        {% endif %}
     </div>
     {% endif %}
 
