@@ -41,6 +41,14 @@ class TestLoginView:
         assert response.status_code == 302
         assert '_auth_user_id' not in client.session
 
+    def test_post_email_inexistente_nao_autentica(self, client):
+        response = client.post(reverse('login'), {
+            'email': 'ninguem@test.com',
+            'password': 'senha123',
+        })
+        assert response.status_code == 302
+        assert '_auth_user_id' not in client.session
+
     def test_post_conta_desativada_nao_autentica(self, client):
         user = _criar_usuario('desativado@test.com', password='senha123')
         user.is_active = False
@@ -205,6 +213,31 @@ class TestAlternarStatusAssistente:
         url = reverse('alternar_status_assistente', args=[usuario_pesquisador.id])
         response = client_pesquisador.post(url, HTTP_ACCEPT='application/json')
 
-        # Deve retornar erro (403) ou redirecionar sem alterar is_active
+        assert response.status_code == 403
         usuario_pesquisador.refresh_from_db()
         assert usuario_pesquisador.is_active is True   # não foi alterado
+
+    def test_pesquisador_alterna_status_via_formulario(self, client_pesquisador, usuario_assistente):
+        url = reverse('alternar_status_assistente', args=[usuario_assistente.id])
+        response = client_pesquisador.post(url)
+        assert response['Location'] == reverse('gestao_assistentes')
+        usuario_assistente.refresh_from_db()
+        assert usuario_assistente.is_active is False
+
+    def test_proprio_status_via_formulario_apenas_redireciona(self, client_pesquisador, usuario_pesquisador):
+        url = reverse('alternar_status_assistente', args=[usuario_pesquisador.id])
+        response = client_pesquisador.post(url)
+        assert response['Location'] == reverse('gestao_assistentes')
+        usuario_pesquisador.refresh_from_db()
+        assert usuario_pesquisador.is_active is True
+
+    def test_usuario_inexistente_via_json_retorna_404(self, client_pesquisador):
+        url = reverse('alternar_status_assistente', args=[99999])
+        response = client_pesquisador.post(url, HTTP_ACCEPT='application/json')
+        assert response.status_code == 404
+        assert response.json()['status'] == 'error'
+
+    def test_usuario_inexistente_via_formulario_redireciona(self, client_pesquisador):
+        url = reverse('alternar_status_assistente', args=[99999])
+        response = client_pesquisador.post(url)
+        assert response['Location'] == reverse('gestao_assistentes')

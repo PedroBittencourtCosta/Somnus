@@ -95,6 +95,163 @@ class TestSalvarQuestionarioApi:
         response = client_pesquisador.get(reverse('salvar_avaliacao_api'))
         assert response.status_code == 405
 
+    def _pergunta(self, conteudo, temp_id, alternativas=(), **extra):
+        return {
+            'temp_id': temp_id,
+            'conteudo': conteudo,
+            'tipo': 'MC' if alternativas else 'TX',
+            'identificador': temp_id,
+            'alternativas': list(alternativas),
+            **extra,
+        }
+
+    def test_resolve_dependencias_por_ids_temporarios(self, client_pesquisador):
+        """O frontend ainda não conhece os IDs reais: as dependências chegam com temp_id."""
+        from core.models import Pergunta
+        payload = self._payload('Q Dependências', secoes=[{
+            'titulo': 'Triagem',
+            'perguntas': [
+                self._pergunta('Fuma?', 'fuma', alternativas=[
+                    {'temp_id': 'alt_sim', 'conteudo': 'Sim', 'valor': '1'},
+                    {'temp_id': 'alt_nao', 'conteudo': 'Não', 'valor': '0'},
+                ]),
+                self._pergunta('Quantos cigarros por dia?', 'cigarros', depende_de_alternativa_ids=['alt_sim']),
+                self._pergunta('Qual marca?', 'marca', depende_de_texto_de_id='cigarros'),
+            ],
+        }])
+
+        response = self._post(client_pesquisador, payload)
+        assert response.json()['status'] == 'success'
+
+        fuma = Pergunta.objects.get(identificador='fuma')
+        cigarros = Pergunta.objects.get(identificador='cigarros')
+        marca = Pergunta.objects.get(identificador='marca')
+        alt_sim = fuma.alternativas.get(conteudo='Sim')
+        assert list(cigarros.depende_de_alternativa.all()) == [alt_sim]
+        assert marca.depende_de_texto_de == cigarros
+        assert fuma.depende_de_texto_de is None
+
+    def test_valor_de_alternativa_nao_numerico_vira_zero(self, client_pesquisador):
+        from core.models import Alternativa
+        payload = self._payload('Q Valores', secoes=[{
+            'titulo': 'S',
+            'perguntas': [self._pergunta('P', 'p', alternativas=[{'conteudo': 'Talvez', 'valor': 'abc'}])],
+        }])
+        self._post(client_pesquisador, payload)
+        assert Alternativa.objects.get(conteudo='Talvez').valor == 0
+
+    def test_dependencia_de_texto_inexistente_e_descartada(self, client_pesquisador):
+        from core.models import Pergunta
+        payload = self._payload('Q Dep Órfã', secoes=[{
+            'titulo': 'S',
+            'perguntas': [self._pergunta('P', 'p', depende_de_texto_de_id='temp_removida')],
+        }])
+        self._post(client_pesquisador, payload)
+        assert Pergunta.objects.get(identificador='p').depende_de_texto_de is None
+
+    def test_atualiza_registros_existentes_sem_duplicar(self, client_pesquisador, questionario_completo):
+        from core.models import Secao, Pergunta, Alternativa
+        secao = Secao.objects.get(questionario=questionario_completo, ordem=2)
+        pergunta = Pergunta.objects.get(identificador='k10a')
+        alternativa = pergunta.alternativas.get(valor=1)
+        outra_alternativa = pergunta.alternativas.get(valor=2)
+
+        payload = {
+            'id': questionario_completo.id,
+            'titulo': questionario_completo.titulo,
+            'secoes': [{
+                'id': secao.id,
+                'titulo': 'K10 revisada',
+                'layout': 'TABELA',
+                'perguntas': [{
+                    'id': pergunta.id,
+                    'conteudo': 'Texto revisado',
+                    'tipo': 'MC',
+                    'identificador': 'k10a',
+                    'alternativas': [
+                        {'id': alternativa.id, 'conteudo': 'Nunca (revisado)', 'valor': 1},
+                        {'id': outra_alternativa.id, 'conteudo': 'Raramente', 'valor': 2},
+                    ],
+                    'depende_de_alternativa_ids': [],
+                }],
+            }],
+        }
+        response = self._post(client_pesquisador, payload)
+        assert response.json()['status'] == 'success'
+
+        secao.refresh_from_db()
+        pergunta.refresh_from_db()
+        alternativa.refresh_from_db()
+        assert secao.titulo == 'K10 revisada'
+        assert secao.ordem == 1   # passou a ser a primeira seção do payload
+        assert pergunta.conteudo == 'Texto revisado'
+        assert alternativa.conteudo == 'Nunca (revisado)'
+        # Itens fora do payload foram removidos: seção 'Dados Demográficos' e 3 alternativas
+        assert Secao.objects.filter(questionario=questionario_completo).count() == 1
+        assert Alternativa.objects.filter(pergunta=pergunta).count() == 2
+
+    def test_erro_no_meio_do_salvamento_desfaz_tudo(self, client_pesquisador, questionario_simples, questionario_completo):
+        """Seção de outro questionário no payload → erro e rollback da transação."""
+        from core.models import Secao
+        secao_alheia = Secao.objects.filter(questionario=questionario_completo).first()
+        payload = {
+            'id': questionario_simples.id,
+            'titulo': 'Não deveria salvar',
+            'secoes': [{'id': secao_alheia.id, 'titulo': 'Invasão', 'perguntas': []}],
+        }
+
+        response = self._post(client_pesquisador, payload)
+
+        assert response.status_code == 400
+        questionario_simples.refresh_from_db()
+        secao_alheia.refresh_from_db()
+        assert questionario_simples.titulo == 'Questionário de Teste'
+        assert secao_alheia.titulo != 'Invasão'
+
+    def test_json_invalido_retorna_400_sem_detalhes_internos(self, client_pesquisador):
+        response = client_pesquisador.post(
+            reverse('salvar_avaliacao_api'), data='{quebrado', content_type='application/json',
+        )
+        assert response.status_code == 400
+        data = response.json()
+        assert data['status'] == 'error'
+        assert 'trace' not in data
+        assert 'Traceback' not in response.content.decode()
+
+
+# ── editar_questionario_view ─────────────────────────────────────────────────
+
+class TestEditarQuestionarioView:
+    def test_novo_questionario_comeca_vazio(self, client_pesquisador):
+        response = client_pesquisador.get(reverse('nova_avaliacao'))
+        assert response.status_code == 200
+        assert response.context['questionario'] is None
+        assert response.context['questionario_json'] == '{}'
+
+    def test_edicao_carrega_estrutura_completa(self, client_pesquisador, questionario_completo):
+        from core.models import Pergunta, Secao
+        k10a = Pergunta.objects.get(identificador='k10a')
+        dependente = Pergunta.objects.create(
+            secao=Secao.objects.get(questionario=questionario_completo, ordem=2),
+            conteudo='Desde quando?', tipo='TX', ordem=2, identificador='desde',
+            depende_de_texto_de=Pergunta.objects.get(identificador='idade'),
+        )
+        dependente.depende_de_alternativa.add(k10a.alternativas.get(valor=5))
+
+        response = client_pesquisador.get(reverse('editar_avaliacao', args=[questionario_completo.id]))
+        dados = json.loads(response.context['questionario_json'])
+
+        assert dados['titulo'] == questionario_completo.titulo
+        assert [s['titulo'] for s in dados['secoes']] == ['Dados Demográficos', 'Escala K10']
+        perguntas_k10 = dados['secoes'][1]['perguntas']
+        assert [p['identificador'] for p in perguntas_k10] == ['k10a', 'desde']
+        assert [a['valor'] for a in perguntas_k10[0]['alternativas']] == [1, 2, 3, 4, 5]
+        assert perguntas_k10[1]['depende_de_alternativa_ids'] == [k10a.alternativas.get(valor=5).id]
+        assert perguntas_k10[1]['depende_de_texto_de_id'] == Pergunta.objects.get(identificador='idade').id
+
+    def test_questionario_inexistente_retorna_404(self, client_pesquisador):
+        assert client_pesquisador.get(reverse('editar_avaliacao', args=[99999])).status_code == 404
+
 
 # ── configurar_escala_view ───────────────────────────────────────────────────
 
@@ -163,3 +320,40 @@ class TestConfigurarEscalaView:
         nova = EscalaConfig.objects.get(nome='K10 Nativa')
         assert nova.strategy_class == 'K10'
         assert nova.config_dinamica is None
+
+    def test_edita_escala_existente(self, client_pesquisador, questionario_simples, escala_k10):
+        response = self._post(client_pesquisador, questionario_simples.id, {
+            'escala_id': escala_k10.id,
+            'nome': 'K10 Renomeada',
+            'strategy_class': 'K10',
+        })
+        assert response.status_code == 200
+        escala_k10.refresh_from_db()
+        assert escala_k10.nome == 'K10 Renomeada'
+
+    def test_vincular_escala_inexistente_retorna_404(self, client_pesquisador, questionario_simples):
+        response = self._post(client_pesquisador, questionario_simples.id, {
+            'acao': 'vincular', 'escala_id': 99999,
+        })
+        assert response.status_code == 404
+
+    def test_corpo_invalido_retorna_400_sem_detalhes_internos(self, client_pesquisador, questionario_simples):
+        response = client_pesquisador.post(
+            self._url(questionario_simples.id), data='nao-e-json', content_type='application/json',
+        )
+        assert response.status_code == 400
+        assert 'trace' not in response.json()
+
+    def test_get_lista_variaveis_e_escalas_ativas(self, client_pesquisador, questionario_completo, escala_k10):
+        from core.models import EscalaConfig
+        EscalaConfig.objects.create(nome='Outra', strategy_class='ESE')
+        EscalaConfig.objects.create(nome='Desativada', strategy_class='AUDIT', ativo=False)
+
+        response = client_pesquisador.get(self._url(questionario_completo.id))
+
+        variaveis = {p['identificador'] for p in json.loads(response.context['perguntas_json'])}
+        assert variaveis == {'idade', 'k10a'}
+        escalas = {e['nome']: e for e in json.loads(response.context['escalas_templates_json'])}
+        assert set(escalas) == {'K10', 'Outra'}
+        assert escalas['K10']['is_linked'] is True
+        assert escalas['Outra']['is_linked'] is False

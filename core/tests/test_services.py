@@ -60,6 +60,17 @@ class TestExtrarirScoreEClassif:
         assert score == 60.0
         assert classif == ''   # EMSSP não tem classificação no mapa
 
+    def test_score_nao_numerico_fica_nulo(self):
+        score, classif = _extrair_score_e_classif(
+            {'k10_total': 'n/d', 'k10_classificacao': 'Baixo risco'}, 'K10'
+        )
+        assert score is None
+        assert classif == 'Baixo risco'
+
+    def test_dynamic_ignora_chave_nao_numerica_e_usa_a_seguinte(self):
+        score, _ = _extrair_score_e_classif({'total': None, 'media': 2.5}, 'DYNAMIC')
+        assert score == 2.5
+
     def test_imc(self):
         score, classif = _extrair_score_e_classif(
             {'imc_valor': 22.5, 'imc_status': 'Peso normal'}, 'IMC'

@@ -45,6 +45,12 @@ class TestListaTcle:
         assert response.status_code == 302
         assert '/login/' in response['Location']
 
+    def test_usuario_sem_grupo_redireciona_para_home(self, client, usuario_comum):
+        client.force_login(usuario_comum)
+        response = client.get(reverse('lista_tcle'))
+        assert response.status_code == 302
+        assert response['Location'] == reverse('home')
+
     def test_assistente_visualiza_lista(self, client_assistente):
         response = client_assistente.get(reverse('lista_tcle'))
         assert response.status_code == 200
@@ -128,6 +134,16 @@ class TestNovaVersaoTcle:
             'versao': '1.0',   # tcle_ativo já tem versao=1.0
         })
         assert TCLE.objects.count() == count_antes
+
+    @pytest.mark.parametrize('versao', ['', '0', '-1'])
+    def test_post_versao_vazia_ou_nao_positiva_nao_cria_tcle(self, client_pesquisador, versao):
+        from ethics.models import TCLE
+        response = client_pesquisador.post(reverse('nova_versao_tcle'), {
+            'conteudo': 'Conteúdo válido',
+            'versao': versao,
+        })
+        assert response.status_code == 200   # reexibe o formulário com o erro
+        assert not TCLE.objects.exists()
 
     def test_post_valido_cria_tcle(self, client_pesquisador):
         from ethics.models import TCLE

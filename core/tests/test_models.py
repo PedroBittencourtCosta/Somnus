@@ -126,6 +126,22 @@ class TestRespostaQuestionarioModel:
         )
         assert r1.codigo_paciente != r2.codigo_paciente
 
+    def test_codigo_paciente_gera_novo_em_caso_de_colisao(self, usuario_pesquisador, questionario_simples, monkeypatch):
+        import uuid
+        from core.models import RespostaQuestionario
+        RespostaQuestionario.objects.create(
+            pesquisadora=usuario_pesquisador, questionario=questionario_simples,
+            paciente_nome='A', codigo_paciente='AAAAAAAAAA',
+        )
+        # Primeiro UUID colide com o código existente; o segundo é livre
+        uuids = iter([uuid.UUID('a' * 32), uuid.UUID('b' * 32)])
+        monkeypatch.setattr('core.models.uuid.uuid4', lambda: next(uuids))
+
+        r = RespostaQuestionario.objects.create(
+            pesquisadora=usuario_pesquisador, questionario=questionario_simples, paciente_nome='B'
+        )
+        assert r.codigo_paciente == 'BBBBBBBBBB'
+
     def test_str(self, usuario_pesquisador, questionario_simples):
         from core.models import RespostaQuestionario
         r = RespostaQuestionario.objects.create(

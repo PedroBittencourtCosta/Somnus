@@ -1,5 +1,5 @@
 
-from django.http import HttpRequest, HttpResponse
+from django.http import Http404, HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
@@ -9,6 +9,7 @@ from openpyxl.styles import Font, Alignment, PatternFill
 from openpyxl.utils import get_column_letter
 
 from core.Scaleprocessor import EscalaEngine, SafeParser
+from core.decorators import pesquisador_required, equipe_pesquisa_required
 from core.services import calcular_e_salvar_resultados
 
 from ethics.models import TCLE, AceiteTCLE
@@ -66,12 +67,6 @@ def responder_questionario(request, pk):
 
     if request.method == 'POST':
         acao = request.POST.get('acao')
-
-        # Aceite do TCLE
-        if acao == 'aceitar_tcle':
-            request.session['tcle_aceito'] = True
-            request.session.modified = True
-            return redirect(request.path)
 
         # Salva respostas da página atual na sessão
         if secao_atual:
@@ -270,7 +265,7 @@ def lista_questionarios(request):
     })
 
 
-@login_required
+@pesquisador_required
 def gerenciar_questionarios(request):
     """Tela de gestão centralizada (pesquisadores/staff). Exibe todos, ativos e inativos."""
     questionarios = Questionario.objects.all().order_by('-data_criacao')
@@ -279,7 +274,7 @@ def gerenciar_questionarios(request):
     })
 
 
-@login_required
+@pesquisador_required
 @require_POST
 def desativar_questionario(request, pk):
     """Soft-delete: marca o questionário como inativo. Não apaga do banco."""
@@ -296,7 +291,7 @@ def desativar_questionario(request, pk):
 
 
 
-@login_required
+@equipe_pesquisa_required
 def dashboard_respostas(request):
     from collections import Counter, defaultdict
     from .models import ResultadoEscala, RespostaPergunta
@@ -408,7 +403,7 @@ def dashboard_respostas(request):
         
     return render(request, 'dashboard_respostas.html', context)
 
-@login_required
+@equipe_pesquisa_required
 def relatorios_medicos(request):
     from django.core.paginator import Paginator
     from .models import Questionario, RespostaQuestionario
@@ -441,7 +436,7 @@ def relatorios_medicos(request):
     return render(request, 'relatorios_medicos.html', context)
 
 
-@login_required
+@equipe_pesquisa_required
 @require_POST
 def recalcular_escalas(request):
     """
@@ -479,16 +474,7 @@ def recalcular_escalas(request):
     })
 
 
-def get_answers_by_section(respostas_queryset, section_id):
-    """Filtra respostas de uma seção e mapeia pela posição relativa."""
-    respostas_secao = respostas_queryset.filter(
-        pergunta__secao_id=section_id
-    ).order_by('pergunta__ordem')
-    
-    return {i+1: rp.alternativa.valor for i, rp in enumerate(respostas_secao) if rp.alternativa}
-
-
-@login_required
+@equipe_pesquisa_required
 def exportar_respostas_excel(request, pk):
     # 1. BUSCA DE DADOS
     res_quest = get_object_or_404(RespostaQuestionario, pk=pk)
@@ -609,12 +595,8 @@ def exportar_respostas_excel(request, pk):
         column_letter = get_column_letter(i) # Pega a letra da coluna pelo índice (1=A, 2=B...)
         
         for cell in column_cells:
-            try:
-                if cell.value:
-                    if len(str(cell.value)) > max_length:
-                        max_length = len(str(cell.value))
-            except:
-                pass
+            if cell.value:
+                max_length = max(max_length, len(str(cell.value)))
         
         ws.column_dimensions[column_letter].width = min(max_length + 2, 60)
 
@@ -624,7 +606,7 @@ def exportar_respostas_excel(request, pk):
     wb.save(response)
     return response
 
-@login_required
+@equipe_pesquisa_required
 def exportar_resultados_massa_excel(request):
     questionario_id = request.GET.get('questionario')
     
@@ -709,7 +691,7 @@ def exportar_resultados_massa_excel(request):
     return response
 
 
-@login_required
+@pesquisador_required
 def editar_questionario_view(request, pk=None):
     questionario_json = "{}"
     questionario = None
@@ -762,7 +744,7 @@ def editar_questionario_view(request, pk=None):
         'questionario_json': questionario_json
     })
 
-@login_required
+@pesquisador_required
 @require_POST
 def salvar_questionario_api(request):
     try:
@@ -910,11 +892,12 @@ def salvar_questionario_api(request):
             
         return JsonResponse({'status': 'success', 'questionario_id': quest.id})
         
-    except Exception as e:
-        import traceback
-        return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+    except Exception:
+        # Detalhes ficam só no log do servidor; o cliente não recebe stack trace.
+        logger.exception('Falha ao salvar questionário')
+        return JsonResponse({'status': 'error', 'message': 'Não foi possível salvar o questionário. Verifique os dados e tente novamente.'}, status=400)
 
-@login_required
+@pesquisador_required
 def configurar_escala_view(request, pk):
     questionario = get_object_or_404(Questionario, pk=pk)
     
@@ -958,9 +941,11 @@ def configurar_escala_view(request, pk):
                 
             config.save()
             return JsonResponse({'status': 'success', 'escala_id': config.id, 'nome': config.nome})
-        except Exception as e:
-            import traceback
-            return JsonResponse({'status': 'error', 'message': str(e), 'trace': traceback.format_exc()}, status=400)
+        except Http404:
+            raise
+        except Exception:
+            logger.exception('Falha ao configurar escala do questionário %s', questionario.pk)
+            return JsonResponse({'status': 'error', 'message': 'Não foi possível salvar a configuração da escala.'}, status=400)
             
     # Coleta todas as perguntas que possuem um identificador (variáveis)
     perguntas_com_id = Pergunta.objects.filter(

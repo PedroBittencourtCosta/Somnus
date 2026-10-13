@@ -49,6 +49,10 @@ class TestSafeParserToFloat:
     def test_string_integer(self):
         assert SafeParser.to_float('42') == 42.0
 
+    def test_malformed_number_returns_zero(self):
+        # Ex.: data digitada no campo de peso — sobram dígitos e pontos inválidos
+        assert SafeParser.to_float('1.2.3') == 0.0
+
 
 # ── SafeParser.to_int ────────────────────────────────────────────────────────
 
@@ -417,6 +421,10 @@ class TestIMCCalculator:
         r_dot   = IMCCalculator.calculate({'peso': '70.0', 'altura': '1.75'})
         assert r_comma['imc_valor'] == r_dot['imc_valor']
 
+    def test_non_numeric_text_is_treated_as_missing(self):
+        result = IMCCalculator.calculate({'peso': 'setenta', 'altura': '1,75'})
+        assert result['peso'] == 0.0
+
 
 # ── DynamicResolver ──────────────────────────────────────────────────────────
 
@@ -474,6 +482,17 @@ class TestDynamicResolver:
         config = {'operacao': 'SUM', 'variaveis': ['q1', 'q2', 'q99'], 'limiares': []}
         result = DynamicResolver.resolve({'q1': 5}, config)
         assert result['total'] == 5.0
+
+    def test_value_above_all_thresholds_is_undefined(self):
+        config = {'operacao': 'SUM', 'variaveis': ['q1'], 'limiares': [{'max': 5, 'status': 'Baixo'}]}
+        result = DynamicResolver.resolve({'q1': 9}, config)
+        assert result['status'] == 'Indefinido'
+
+    def test_malformed_config_returns_error_instead_of_raising(self):
+        # Limiares deveriam ser dicts; config corrompida não pode derrubar a coleta
+        config = {'operacao': 'SUM', 'variaveis': ['q1'], 'limiares': ['invalido']}
+        result = DynamicResolver.resolve({'q1': 1}, config)
+        assert result['erro'].startswith('Falha no processamento dinâmico')
 
 
 # ── EscalaEngine ─────────────────────────────────────────────────────────────
